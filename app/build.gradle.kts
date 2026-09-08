@@ -41,10 +41,15 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.material)
 
-    // Firebase BoM, Auth e Storage
+    // Room Database
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+
+    // Firebase BoM, Auth, Storage e Firestore
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.firestore)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
