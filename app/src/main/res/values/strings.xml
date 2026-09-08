@@ -1,3 +1,43 @@
 <resources>
-    <string name="app_name">PariPariApp</string>
+    <string name="app_name">PariPari</string>
+
+    <!-- Bottom Navigation Labels -->
+    <string name="nav_spese">Spese</string>
+    <string name="nav_saldi">Saldi</string>
+    <string name="nav_valuta">Valuta</string>
+    <string name="nav_account">Account</string>
+
+    <!-- Titoli Schermate -->
+    <string name="title_schede_spese">Schede Spese</string>
+    <string name="title_saldi">I miei Saldi</string>
+    <string name="title_valuta">Converti Valuta</string>
+    <string name="title_account">Il mio Account</string>
+
+    <!-- Schede Spese -->
+    <string name="btn_nuova_scheda">Nuova Scheda</string>
+
+    <!-- Saldi -->
+    <string name="label_saldo_netto">Saldo netto</string>
+    <string name="default_saldo_zero">€ 0,00</string>
+    <string name="label_ti_devono">Ti devono</string>
+    <string name="label_devi_tu">Devi tu</string>
+
+    <!-- Convertitore Valuta -->
+    <string name="label_importo">Importo</string>
+    <string name="label_valuta_da">Da valuta</string>
+    <string name="label_valuta_a">A valuta</string>
+    <string name="btn_inverti">⇅ Inverti</string>
+    <string name="btn_converti">Converti</string>
+    <string name="label_risultato">Risultato</string>
+    <string name="placeholder_risultato">—</string>
+    <string name="valuta_in_arrivo">In arrivo</string>
+
+    <!-- Account -->
+    <string name="cd_avatar_utente">Avatar utente</string>
+    <string name="default_nome_utente">Nome Utente</string>
+    <string name="default_email_utente">email@esempio.com</string>
+    <string name="stat_zero">0</string>
+    <string name="stat_schede">Schede</string>
+    <string name="stat_spese">Spese</string>
+    <string name="btn_modifica_profilo">Modifica Profilo</string>
 </resources>

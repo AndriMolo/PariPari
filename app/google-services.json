@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "523752134020",
+    "project_id": "paripari-app-2026",
+    "storage_bucket": "paripari-app-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:523752134020:android:9fcacec9d503ef787a79d1",
+        "android_client_info": {
+          "package_name": "com.example.paripariapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTHw4Rae_oXlOOYeXDS6__IBw7du71PvI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
