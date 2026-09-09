@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.paripariapp.R;
+import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.databinding.FragmentAccountBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.google.android.material.snackbar.Snackbar;
@@ -48,6 +49,7 @@ public class AccountFragment extends Fragment {
 
         setupObservers();
         setupListeners();
+        setupCurrencySelector();
         updateFormModeUI();
     }
 
@@ -79,6 +81,13 @@ public class AccountFragment extends Fragment {
             binding.btnSwitchAuthMode.setEnabled(!Boolean.TRUE.equals(loading));
         });
 
+        // Osserva la valuta predefinita
+        viewModel.getDefaultCurrencyLive().observe(getViewLifecycleOwner(), currencyCode -> {
+            if (binding != null && currencyCode != null) {
+                binding.tvValutaPredefinitaValore.setText(currencyCode);
+            }
+        });
+
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error)) {
@@ -93,6 +102,28 @@ public class AccountFragment extends Fragment {
                 pulisciCampi();
             }
         });
+    }
+
+    private void setupCurrencySelector() {
+        binding.rowValutaPredefinita.setOnClickListener(v -> showCurrencySelectionDialog());
+    }
+
+    private void showCurrencySelectionDialog() {
+        String currentCode = viewModel.getDefaultCurrency();
+        int selectedIndex = UserPreferencesRepository.getIndexOfCurrencyCode(currentCode);
+        String[] items = UserPreferencesRepository.SUPPORTED_CURRENCIES.toArray(new String[0]);
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.label_valuta_predefinita)
+                .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
+                    String selected = items[which];
+                    String code = UserPreferencesRepository.extractCurrencyCode(selected);
+                    viewModel.setDefaultCurrency(code);
+                    Snackbar.make(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code), Snackbar.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
     }
 
     private void setupListeners() {

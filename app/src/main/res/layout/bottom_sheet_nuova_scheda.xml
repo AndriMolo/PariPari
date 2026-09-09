@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_badge_valuta" />
+
+    <!-- Titolo BottomSheet -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title_nuova_scheda"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Nome della Scheda (Obbligatorio) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_nome_scheda"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_nome_scheda"
+        android:layout_marginBottom="20dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_nome_scheda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapSentences"
+            android:maxLines="1"
+            android:imeOptions="actionNext"
+            android:importantForAutofill="no" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Sezione Partecipanti -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_partecipanti"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+        android:textColor="?android:attr/textColorSecondary"
+        android:layout_marginBottom="8dp" />
+
+    <!-- ChipGroup con i partecipanti aggiunti (inizialmente include "Io") -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_partecipanti"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:chipSpacing="8dp" />
+
+    <!-- Input per aggiungere un nuovo partecipante al volo -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_nuovo_partecipante"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_nuovo_partecipante"
+        app:endIconMode="custom"
+        app:endIconDrawable="@android:drawable/ic_input_add"
+        app:endIconTint="?attr/colorPrimary"
+        android:layout_marginBottom="24dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_nuovo_partecipante"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:imeOptions="actionDone"
+            android:importantForAutofill="no" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Pulsante Crea Scheda -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_crea_scheda"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="@string/btn_crea_scheda"
+        android:textAllCaps="false"
+        app:cornerRadius="16dp" />
+
+</LinearLayout>

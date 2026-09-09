@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.paripariapp.data.repository.PariPariRepository;
+import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,6 +29,7 @@ public class AccountViewModel extends AndroidViewModel {
     private static final String TAG = "AccountViewModel";
 
     private final PariPariRepository repository;
+    private final UserPreferencesRepository preferencesRepository;
     private final FirebaseAuth auth;
     private final FirebaseFirestore firestore;
 
@@ -42,6 +44,7 @@ public class AccountViewModel extends AndroidViewModel {
     public AccountViewModel(@NonNull Application application) {
         super(application);
         repository = PariPariRepository.getInstance(application);
+        preferencesRepository = UserPreferencesRepository.getInstance(application);
         auth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
 
@@ -93,6 +96,29 @@ public class AccountViewModel extends AndroidViewModel {
 
     public LiveData<String> getSuccessMessage() {
         return successMessage;
+    }
+
+    public LiveData<String> getDefaultCurrencyLive() {
+        return preferencesRepository.getDefaultCurrencyLive();
+    }
+
+    public String getDefaultCurrency() {
+        return preferencesRepository.getDefaultCurrency();
+    }
+
+    public void setDefaultCurrency(String currencyCode) {
+        preferencesRepository.setDefaultCurrency(currencyCode);
+
+        // Se l'utente è autenticato con account registrato, sincronizza su Firestore
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && !user.isAnonymous()) {
+            Map<String, Object> update = new HashMap<>();
+            update.put("valutaPredefinita", preferencesRepository.extractCurrencyCode(currencyCode));
+            update.put("updatedAt", FieldValue.serverTimestamp());
+            firestore.collection("users").document(user.getUid())
+                    .update(update)
+                    .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento valuta profilo fallito: " + e.getMessage()));
+        }
     }
 
     // ====================================================================

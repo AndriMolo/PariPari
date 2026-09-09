@@ -15,6 +15,17 @@
 
     <!-- Schede Spese -->
     <string name="btn_nuova_scheda">Nuova Scheda</string>
+    <string name="title_nuova_scheda">Nuova Scheda</string>
+    <string name="hint_nome_scheda">Nome della scheda (es. Vacanza, Cena)</string>
+    <string name="label_partecipanti">Partecipanti</string>
+    <string name="hint_nuovo_partecipante">Nome amico…</string>
+    <string name="btn_crea_scheda">Crea Scheda</string>
+    <string name="error_nome_scheda_obbligatorio">Inserisci il nome della scheda</string>
+    <string name="empty_spese_titolo">Nessuna scheda presente</string>
+    <string name="empty_spese_desc">Tocca il pulsante qui sotto per creare la tua prima scheda spese con gli amici.</string>
+    <string name="partecipante_io">Io</string>
+    <string name="msg_scheda_creata">Scheda creata con successo!</string>
+    <string name="valuta_eur">EUR</string>
 
     <!-- Saldi -->
     <string name="label_saldo_netto">Saldo netto</string>
@@ -58,4 +69,11 @@
     <string name="msg_registrazione_ok">Account creato con successo!</string>
     <string name="msg_login_ok">Accesso effettuato con successo!</string>
     <string name="msg_logout_ok">Disconnesso. Sei ora in modalità ospite.</string>
+
+    <!-- Preferenze Account -->
+    <string name="section_preferenze">Preferenze</string>
+    <string name="label_valuta_predefinita">Valuta predefinita</string>
+    <string name="hint_valuta_predefinita_desc">Utilizzata per le nuove schede create</string>
+    <string name="msg_valuta_aggiornata">Valuta predefinita impostata su %s</string>
+    <string name="btn_annulla">Annulla</string>
 </resources>
