@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PariPari</string>
+
+    <!-- Bottom Navigation Labels -->
+    <string name="nav_spese">Expenses</string>
+    <string name="nav_saldi">Balances</string>
+    <string name="nav_valuta">Currency</string>
+    <string name="nav_account">Account</string>
+
+    <!-- Screen Titles -->
+    <string name="title_schede_spese">Expense Groups</string>
+    <string name="title_saldi">My Balances</string>
+    <string name="title_valuta">Convert Currency</string>
+    <string name="title_account">My Account</string>
+
+    <!-- Expense Groups -->
+    <string name="btn_nuova_scheda">New Group</string>
+    <string name="title_nuova_scheda">New Expense Group</string>
+    <string name="hint_nome_scheda">Group name (e.g. Vacation, Dinner)</string>
+    <string name="label_partecipanti">Participants</string>
+    <string name="hint_nuovo_partecipante">Friend\'s name…</string>
+    <string name="btn_crea_scheda">Create Group</string>
+    <string name="error_nome_scheda_obbligatorio">Enter a name for the group</string>
+    <string name="empty_schede_titolo">No expense groups yet</string>
+    <string name="empty_schede_desc">Tap the button below to create your first expense group with friends.</string>
+    <string name="partecipante_io">Me</string>
+    <string name="msg_scheda_creata">Expense group created successfully!</string>
+    <string name="valuta_eur">EUR</string>
+
+    <!-- Balances -->
+    <string name="label_saldo_netto">Net balance</string>
+    <string name="default_saldo_zero">€ 0.00</string>
+    <string name="label_ti_devono">You are owed</string>
+    <string name="label_devi_tu">You owe</string>
+
+    <!-- Currency Converter -->
+    <string name="label_importo">Amount</string>
+    <string name="label_valuta_da">From currency</string>
+    <string name="label_valuta_a">To currency</string>
+    <string name="btn_inverti">⇅ Swap</string>
+    <string name="btn_converti">Convert</string>
+    <string name="label_risultato">Result</string>
+    <string name="placeholder_risultato">—</string>
+    <string name="tassi_bce_aggiornati">ECB rates updated: %s</string>
+    <string name="error_importo_valuta">Enter a valid amount (e.g. 10 or 12.50)</string>
+    <string name="error_importo_zero">The amount must be greater than zero</string>
+    <string name="error_formato_numerico">Invalid number format</string>
+
+    <!-- Account -->
+    <string name="cd_avatar_utente">User avatar</string>
+    <string name="title_account_ospite">Guest account</string>
+    <string name="desc_account_ospite">Sign up or log in to save and sync all your shared expenses to the cloud with friends.</string>
+    <string name="hint_nome">Name</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_crea_account">Create Account</string>
+    <string name="btn_accedi">Log In</string>
+    <string name="switch_to_login">Already have an account? Log in</string>
+    <string name="switch_to_register">Don\'t have an account? Sign up</string>
+    <string name="btn_logout">Log Out</string>
+    <string name="label_account_attivo">Active Account</string>
+    <string name="default_nome_utente">User Name</string>
+    <string name="default_email_utente">email@example.com</string>
+
+    <!-- Auth Errors & Messages -->
+    <string name="error_nome_obbligatorio">Please enter your name</string>
+    <string name="error_email_valida">Please enter a valid email</string>
+    <string name="error_password_minima">Password must be at least 6 characters</string>
+    <string name="msg_registrazione_ok">Account created successfully!</string>
+    <string name="msg_login_ok">Logged in successfully!</string>
+    <string name="msg_logout_ok">Logged out. You are now in guest mode.</string>
+
+    <!-- Account Preferences -->
+    <string name="section_preferenze">Preferences</string>
+    <string name="label_valuta_predefinita">Default currency</string>
+    <string name="hint_valuta_predefinita_desc">Used for newly created expense groups</string>
+    <string name="msg_valuta_aggiornata">Default currency set to %s</string>
+    <string name="label_lingua_app">App language</string>
+    <string name="hint_lingua_app_desc">Language and number format</string>
+    <string name="msg_lingua_aggiornata">Language set to %s</string>
+    <string name="lingua_sistema">System default</string>
+    <string name="btn_annulla">Cancel</string>
+
+    <!-- Group Details & Expenses -->
+    <string name="label_totale_spese">Total expenses</string>
+    <string name="empty_spese_titolo">No expenses recorded</string>
+    <string name="empty_spese_desc">Tap the + button below to add your first expense.</string>
+    <string name="btn_nuova_spesa">New Expense</string>
+    <string name="title_nuova_spesa">New Expense</string>
+    <string name="hint_descrizione_spesa">Description (e.g. Dinner, Taxi)</string>
+    <string name="hint_importo_spesa">Amount</string>
+    <string name="label_chi_ha_pagato">Who paid?</string>
+    <string name="btn_salva_spesa">Add Expense</string>
+    <string name="msg_spesa_aggiunta">Expense added successfully!</string>
+    <string name="error_descrizione_spesa">Enter a description for the expense</string>
+    <string name="error_importo_spesa">Enter an amount greater than zero</string>
+    <string name="error_nessun_pagatore">Select who paid</string>
+    <string name="label_pagato_da">Paid by %s</string>
+    <string name="label_divisione_equa">Split between %d people</string>
+    <string name="label_partecipanti_formato">Participants: %s</string>
+    <string name="cd_torna_indietro">Go back</string>
+
+    <!-- Currency Selector Bottom Sheet -->
+    <string name="title_seleziona_valuta">Select Currency</string>
+    <string name="hint_cerca_valuta">Search currency or code...</string>
+    <string name="label_valute_frequenti">Most popular</string>
+    <string name="label_tutte_le_valute">All ECB currencies</string>
+    <string name="empty_valute_ricerca">No currencies found</string>
+</resources>

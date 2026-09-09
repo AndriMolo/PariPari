@@ -6,4 +6,31 @@
     </style>
 
     <style name="Theme.PariPariApp" parent="Base.Theme.PariPariApp" />
+
+    <!-- Stile uniforme per le card delle liste (Schede e Spese) -->
+    <style name="Widget_PariPari_CardItem" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">?attr/colorSurfaceVariant</item>
+    </style>
+
+    <!-- Stile uniforme per il contenitore circolare dell'icona 48dp -->
+    <style name="Widget_PariPari_CircleIconBadge" parent="Widget.Material3.CardView.Filled">
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="cardBackgroundColor">?attr/colorPrimaryContainer</item>
+    </style>
+
+    <!-- Stile uniforme per la maniglia di trascinamento dei BottomSheet -->
+    <style name="Widget_PariPari_BottomSheetDragHandle">
+        <item name="android:layout_width">36dp</item>
+        <item name="android:layout_height">4dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:background">?android:attr/textColorSecondary</item>
+        <item name="android:alpha">0.3</item>
+    </style>
 </resources>

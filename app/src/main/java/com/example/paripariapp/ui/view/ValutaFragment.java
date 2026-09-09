@@ -15,10 +15,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.paripariapp.R;
+import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.databinding.FragmentValutaBinding;
 import com.example.paripariapp.ui.viewmodel.ValutaViewModel;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,20 +30,6 @@ public class ValutaFragment extends Fragment {
 
     private FragmentValutaBinding binding;
     private ValutaViewModel viewModel;
-
-    // Elenco delle valute ufficiali BCE supportate da Frankfurter
-    private static final List<String> VALUTE = Arrays.asList(
-            "EUR - Euro",
-            "USD - Dollaro USA",
-            "GBP - Sterlina britannica",
-            "JPY - Yen giapponese",
-            "CHF - Franco svizzero",
-            "CAD - Dollaro canadese",
-            "AUD - Dollaro australiano",
-            "CNY - Yuan cinese",
-            "SEK - Corona svedese",
-            "NOK - Corona norvegese"
-    );
 
     @Nullable
     @Override
@@ -60,27 +46,51 @@ public class ValutaFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(ValutaViewModel.class);
 
-        setupSpinners();
+        setupCurrencySelectors();
         setupObservers();
         setupListeners();
     }
 
-    private void setupSpinners() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                VALUTE
-        );
-        binding.spinnerValutaDa.setAdapter(adapter);
-        binding.spinnerValutaA.setAdapter(adapter);
+    private void setupCurrencySelectors() {
+        UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(requireContext());
+        String defaultCurrency = prefs.getDefaultCurrency();
+        if (TextUtils.isEmpty(defaultCurrency)) {
+            defaultCurrency = UserPreferencesRepository.DEFAULT_CURRENCY; // Fallback su EUR
+        }
 
-        // Selezioni predefinite: da EUR ad USD
-        binding.spinnerValutaDa.setText(VALUTE.get(0), false);
-        binding.spinnerValutaA.setText(VALUTE.get(1), false);
+        String valutaDa = UserPreferencesRepository.getDisplayItemForCode(defaultCurrency);
+        String targetCurrency = "USD".equalsIgnoreCase(defaultCurrency) ? "EUR" : "USD";
+        String valutaA = UserPreferencesRepository.getDisplayItemForCode(targetCurrency);
 
-        // Ricalcolo immediato quando l'utente cambia valuta dal dropdown
-        binding.spinnerValutaDa.setOnItemClickListener((parent, v, position, id) -> eseguiConversione());
-        binding.spinnerValutaA.setOnItemClickListener((parent, v, position, id) -> eseguiConversione());
+        binding.spinnerValutaDa.setText(valutaDa);
+        binding.spinnerValutaA.setText(valutaA);
+
+        // Apertura Searchable Bottom Sheet (Opzione A)
+        binding.spinnerValutaDa.setOnClickListener(v -> openCurrencyPicker(true));
+        binding.tilValutaDa.setOnClickListener(v -> openCurrencyPicker(true));
+        binding.tilValutaDa.setEndIconOnClickListener(v -> openCurrencyPicker(true));
+
+        binding.spinnerValutaA.setOnClickListener(v -> openCurrencyPicker(false));
+        binding.tilValutaA.setOnClickListener(v -> openCurrencyPicker(false));
+        binding.tilValutaA.setEndIconOnClickListener(v -> openCurrencyPicker(false));
+    }
+
+    private void openCurrencyPicker(boolean isDa) {
+        String currentSelection = isDa
+                ? (binding.spinnerValutaDa.getText() != null ? binding.spinnerValutaDa.getText().toString() : "")
+                : (binding.spinnerValutaA.getText() != null ? binding.spinnerValutaA.getText().toString() : "");
+
+        SelettoreValutaBottomSheet sheet = SelettoreValutaBottomSheet.newInstance(currentSelection);
+        sheet.setOnCurrencySelectedListener(currencyFull -> {
+            if (binding == null) return;
+            if (isDa) {
+                binding.spinnerValutaDa.setText(currencyFull);
+            } else {
+                binding.spinnerValutaA.setText(currencyFull);
+            }
+            eseguiConversione();
+        });
+        sheet.show(getChildFragmentManager(), isDa ? "PICKER_VALUTA_DA" : "PICKER_VALUTA_A");
     }
 
     private void setupObservers() {
@@ -140,11 +150,11 @@ public class ValutaFragment extends Fragment {
 
         // Pulsante Inverti valute: scambia e ricalcola all'istante
         binding.btnInverti.setOnClickListener(v -> {
-            String da = binding.spinnerValutaDa.getText().toString();
-            String a = binding.spinnerValutaA.getText().toString();
+            String da = binding.spinnerValutaDa.getText() != null ? binding.spinnerValutaDa.getText().toString() : "";
+            String a = binding.spinnerValutaA.getText() != null ? binding.spinnerValutaA.getText().toString() : "";
 
-            binding.spinnerValutaDa.setText(a, false);
-            binding.spinnerValutaA.setText(da, false);
+            binding.spinnerValutaDa.setText(a);
+            binding.spinnerValutaA.setText(da);
 
             eseguiConversione();
         });
@@ -152,8 +162,8 @@ public class ValutaFragment extends Fragment {
 
     private void eseguiConversione() {
         String importo = getTestoImporto();
-        String valutaDa = binding.spinnerValutaDa.getText().toString();
-        String valutaA = binding.spinnerValutaA.getText().toString();
+        String valutaDa = binding.spinnerValutaDa.getText() != null ? binding.spinnerValutaDa.getText().toString() : "";
+        String valutaA = binding.spinnerValutaA.getText() != null ? binding.spinnerValutaA.getText().toString() : "";
 
         viewModel.converti(importo, valutaDa, valutaA);
     }

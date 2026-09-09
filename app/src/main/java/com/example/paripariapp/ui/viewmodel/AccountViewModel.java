@@ -121,6 +121,29 @@ public class AccountViewModel extends AndroidViewModel {
         }
     }
 
+    public LiveData<String> getAppLanguageLive() {
+        return preferencesRepository.getAppLanguageLive();
+    }
+
+    public String getAppLanguage() {
+        return preferencesRepository.getAppLanguage();
+    }
+
+    public void setAppLanguage(String langCode) {
+        preferencesRepository.setAppLanguage(langCode);
+
+        // Se l'utente è autenticato con account registrato, sincronizza su Firestore
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && !user.isAnonymous()) {
+            Map<String, Object> update = new HashMap<>();
+            update.put("linguaPredefinita", UserPreferencesRepository.extractLanguageCode(langCode));
+            update.put("updatedAt", FieldValue.serverTimestamp());
+            firestore.collection("users").document(user.getUid())
+                    .update(update)
+                    .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento lingua profilo fallito: " + e.getMessage()));
+        }
+    }
+
     // ====================================================================
     // AZIONI DI AUTENTICAZIONE
     // ====================================================================

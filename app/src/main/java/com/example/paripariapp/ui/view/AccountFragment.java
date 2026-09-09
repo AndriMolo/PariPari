@@ -50,6 +50,7 @@ public class AccountFragment extends Fragment {
         setupObservers();
         setupListeners();
         setupCurrencySelector();
+        setupLanguageSelector();
         updateFormModeUI();
     }
 
@@ -88,6 +89,14 @@ public class AccountFragment extends Fragment {
             }
         });
 
+        // Osserva la lingua dell'applicazione
+        viewModel.getAppLanguageLive().observe(getViewLifecycleOwner(), langCode -> {
+            if (binding != null && langCode != null) {
+                String display = UserPreferencesRepository.getDisplayLanguageForCode(langCode);
+                binding.tvLinguaAppValore.setText(display);
+            }
+        });
+
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error)) {
@@ -120,6 +129,29 @@ public class AccountFragment extends Fragment {
                     String code = UserPreferencesRepository.extractCurrencyCode(selected);
                     viewModel.setDefaultCurrency(code);
                     Snackbar.make(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code), Snackbar.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
+    }
+
+    private void setupLanguageSelector() {
+        binding.rowLinguaApp.setOnClickListener(v -> showLanguageSelectionDialog());
+    }
+
+    private void showLanguageSelectionDialog() {
+        String currentCode = viewModel.getAppLanguage();
+        int selectedIndex = UserPreferencesRepository.getIndexOfLanguageCode(currentCode);
+        String[] items = UserPreferencesRepository.SUPPORTED_LANGUAGES.toArray(new String[0]);
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.label_lingua_app)
+                .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
+                    String selected = items[which];
+                    String code = UserPreferencesRepository.extractLanguageCode(selected);
+                    viewModel.setAppLanguage(code);
+                    String display = UserPreferencesRepository.getDisplayLanguageForCode(code);
+                    Snackbar.make(binding.getRoot(), getString(R.string.msg_lingua_aggiornata, display), Snackbar.LENGTH_SHORT).show();
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)

@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentSpeseBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 
@@ -44,23 +45,44 @@ public class SpeseFragment extends Fragment {
         setupRecyclerView();
         setupObservers();
         setupListeners();
+        setupEmptyState();
     }
 
     private void setupRecyclerView() {
         adapter = new SchedaAdapter(scheda -> {
-            // Predisposto per navigazione verso il Dettaglio Scheda
+            if (scheda != null && getParentFragmentManager() != null) {
+                getParentFragmentManager().beginTransaction()
+                        .setCustomAnimations(
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out,
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out
+                        )
+                        .replace(R.id.fragment_container, DettaglioSchedaFragment.newInstance(
+                                scheda.getId(),
+                                scheda.getTitolo(),
+                                scheda.getValutaPredefinita()
+                        ))
+                        .addToBackStack("dettaglio_scheda")
+                        .commit();
+            }
         });
         binding.recyclerSchede.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSchede.setAdapter(adapter);
     }
 
+    private void setupEmptyState() {
+        binding.layoutEmptyState.tvEmptyTitle.setText(R.string.empty_schede_titolo);
+        binding.layoutEmptyState.tvEmptyDesc.setText(R.string.empty_schede_desc);
+    }
+
     private void setupObservers() {
         viewModel.getSchede().observe(getViewLifecycleOwner(), schede -> {
             if (schede == null || schede.isEmpty()) {
-                binding.layoutEmptyState.setVisibility(View.VISIBLE);
+                binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
                 binding.recyclerSchede.setVisibility(View.GONE);
             } else {
-                binding.layoutEmptyState.setVisibility(View.GONE);
+                binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
                 binding.recyclerSchede.setVisibility(View.VISIBLE);
                 adapter.submitList(schede);
             }

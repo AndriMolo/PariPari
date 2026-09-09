@@ -198,15 +198,35 @@ public class CurrencyRepository {
 
     private void initDefaultFallbackRates() {
         ratesCache.put("EUR", 1.0);
-        ratesCache.put("USD", 1.085);
-        ratesCache.put("GBP", 0.854);
-        ratesCache.put("CHF", 0.957);
-        ratesCache.put("JPY", 160.20);
-        ratesCache.put("CAD", 1.482);
-        ratesCache.put("AUD", 1.655);
-        ratesCache.put("CNY", 7.850);
-        ratesCache.put("SEK", 11.350);
-        ratesCache.put("NOK", 11.580);
+        ratesCache.put("USD", 1.165);
+        ratesCache.put("GBP", 0.859);
+        ratesCache.put("CHF", 0.940);
+        ratesCache.put("JPY", 178.60);
+        ratesCache.put("CAD", 1.604);
+        ratesCache.put("AUD", 1.613);
+        ratesCache.put("BRL", 5.930);
+        ratesCache.put("CNY", 7.816);
+        ratesCache.put("CZK", 24.25);
+        ratesCache.put("DKK", 7.475);
+        ratesCache.put("HKD", 9.138);
+        ratesCache.put("HUF", 364.0);
+        ratesCache.put("IDR", 20362.0);
+        ratesCache.put("ILS", 3.518);
+        ratesCache.put("INR", 110.82);
+        ratesCache.put("ISK", 140.40);
+        ratesCache.put("KRW", 1557.0);
+        ratesCache.put("MXN", 19.69);
+        ratesCache.put("MYR", 4.742);
+        ratesCache.put("NOK", 10.70);
+        ratesCache.put("NZD", 1.990);
+        ratesCache.put("PHP", 72.82);
+        ratesCache.put("PLN", 4.315);
+        ratesCache.put("RON", 5.255);
+        ratesCache.put("SEK", 11.15);
+        ratesCache.put("SGD", 1.472);
+        ratesCache.put("THB", 38.31);
+        ratesCache.put("TRY", 56.49);
+        ratesCache.put("ZAR", 18.69);
     }
 
     private String formatDateForDisplay(String isoDate) {

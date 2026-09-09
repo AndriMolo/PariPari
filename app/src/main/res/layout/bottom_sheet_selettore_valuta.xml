@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingTop="12dp">
+
+    <!-- Barra di trascinamento superiore condivisa -->
+    <View style="@style/Widget_PariPari_BottomSheetDragHandle" />
+
+    <!-- Titolo Bottom Sheet -->
+    <TextView
+        android:id="@+id/tv_titolo_selettore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/title_seleziona_valuta"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:textStyle="bold"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Barra di ricerca rapida istantanea -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_cerca_valuta"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"
+        android:hint="@string/hint_cerca_valuta"
+        app:startIconDrawable="@drawable/ic_search"
+        app:endIconMode="clear_text"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_cerca_valuta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1"
+            android:imeOptions="actionDone" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Contenitore Valute Frequenti (Quick Chips) -->
+    <LinearLayout
+        android:id="@+id/layout_frequenti"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/label_valute_frequenti"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="?android:attr/textColorSecondary"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="8dp">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_frequenti"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_eur"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🇪🇺 EUR"
+                    app:chipCornerRadius="16dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_usd"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🇺🇸 USD"
+                    app:chipCornerRadius="16dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_gbp"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🇬🇧 GBP"
+                    app:chipCornerRadius="16dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_chf"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🇨🇭 CHF"
+                    app:chipCornerRadius="16dp" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_header_tutte"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/label_tutte_le_valute"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        android:textColor="?android:attr/textColorSecondary"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp" />
+
+    <!-- Stato vuoto per ricerca senza corrispondenze -->
+    <TextView
+        android:id="@+id/tv_empty_valute"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/empty_valute_ricerca"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        android:textColor="?android:attr/textColorSecondary"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone" />
+
+    <!-- Lista scorrevole fluida di tutte le valute -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_valute"
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:clipToPadding="false"
+        android:paddingBottom="24dp" />
+
+</LinearLayout>

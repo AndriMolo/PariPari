@@ -87,8 +87,8 @@ public class ValutaViewModel extends AndroidViewModel {
                 return;
             }
 
-            String codeDa = extractCurrencyCode(valutaDaFull);
-            String codeA = extractCurrencyCode(valutaAFull);
+            String codeDa = com.example.paripariapp.data.repository.UserPreferencesRepository.extractCurrencyCode(valutaDaFull);
+            String codeA = com.example.paripariapp.data.repository.UserPreferencesRepository.extractCurrencyCode(valutaAFull);
 
             double rateDa = repository.getRate(codeDa);
             double rateA = repository.getRate(codeA);
@@ -103,9 +103,9 @@ public class ValutaViewModel extends AndroidViewModel {
             // Calcolo tasso unitario tra le due valute
             double unitRate = (1.0 / rateDa) * rateA;
 
-            // Formattazione con 2 cifre decimali
-            String formattedResult = String.format(Locale.ITALY, "%.2f %s", convertedAmount, codeA);
-            String formattedDetail = String.format(Locale.ITALY, "1 %s = %.4f %s", codeDa, unitRate, codeA);
+            // Formattazione con 2 cifre decimali uniforme su Locale.getDefault()
+            String formattedResult = String.format(Locale.getDefault(), "%.2f %s", convertedAmount, codeA);
+            String formattedDetail = String.format(Locale.getDefault(), "1 %s = %.4f %s", codeDa, unitRate, codeA);
 
             conversionResult.setValue(formattedResult);
             rateDetail.setValue(formattedDetail);
@@ -117,12 +117,5 @@ public class ValutaViewModel extends AndroidViewModel {
 
     public void forceRefreshRates() {
         repository.fetchRatesIfNeeded(true);
-    }
-
-    private String extractCurrencyCode(String fullString) {
-        if (fullString != null && fullString.length() >= 3) {
-            return fullString.substring(0, 3).toUpperCase(Locale.ROOT).trim();
-        }
-        return "EUR";
     }
 }

@@ -371,8 +371,12 @@ public class PariPariRepository {
                                                 dataAgg != null ? dataAgg : System.currentTimeMillis(),
                                                 SyncStatus.SYNCED
                                         );
-                                        schedaDao.insert(remoteScheda);
-                                        attachSubcollectionListeners(groupId);
+                                        try {
+                                            schedaDao.insert(remoteScheda);
+                                            attachSubcollectionListeners(groupId);
+                                        } catch (Exception e) {
+                                            Log.w(TAG, "Sync scheda fallito: " + e.getMessage());
+                                        }
                                     }
                                     break;
 
@@ -406,7 +410,11 @@ public class PariPariRepository {
                                 String email = doc.getString("email");
                                 if (nome != null) {
                                     Partecipante p = new Partecipante(partId, groupId, nome, email, SyncStatus.SYNCED);
-                                    partecipanteDao.insert(p);
+                                    try {
+                                        partecipanteDao.insert(p);
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Sync partecipante fallito: " + e.getMessage());
+                                    }
                                 }
                             }
                         }
@@ -446,7 +454,11 @@ public class PariPariRepository {
                                             scontrinoUrl,
                                             SyncStatus.SYNCED
                                     );
-                                    spesaDao.insert(sp);
+                                    try {
+                                        spesaDao.insert(sp);
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Sync spesa fallito (vincolo o partecipante non ancora presente): " + e.getMessage());
+                                    }
                                 }
                             }
                         }
