@@ -30,7 +30,10 @@
     <string name="btn_converti">Converti</string>
     <string name="label_risultato">Risultato</string>
     <string name="placeholder_risultato">—</string>
-    <string name="valuta_in_arrivo">In arrivo</string>
+    <string name="tassi_bce_aggiornati">Tassi BCE aggiornati al: %s</string>
+    <string name="error_importo_valuta">Inserisci un importo valido (es. 10 oppure 12.50)</string>
+    <string name="error_importo_zero">L\'importo deve essere maggiore di zero</string>
+    <string name="error_formato_numerico">Formato numerico non valido</string>
 
     <!-- Account -->
     <string name="cd_avatar_utente">Avatar utente</string>
