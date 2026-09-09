@@ -63,7 +63,8 @@ service cloud.firestore {
     // ===============================================================
 
     match /groups/{groupId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() &&
+                  (resource.data.creatoreId == request.auth.uid || !('creatoreId' in resource.data));
       allow create: if isAuthenticated() &&
                     request.resource.data.titolo is string &&
                     request.resource.data.titolo.size() > 0 &&

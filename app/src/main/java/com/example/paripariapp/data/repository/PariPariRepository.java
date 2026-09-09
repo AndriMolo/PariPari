@@ -330,7 +330,8 @@ public class PariPariRepository {
     // ====================================================================
 
     public synchronized void startRealtimeSync() {
-        if (auth.getCurrentUser() == null) {
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser == null) {
             Log.d(TAG, "Realtime sync ignorata: utente non autenticato");
             return;
         }
@@ -338,6 +339,7 @@ public class PariPariRepository {
         stopRealtimeSync();
 
         ListenerRegistration reg = firestore.collection("groups")
+                .whereEqualTo("creatoreId", currentUser.getUid())
                 .addSnapshotListener((snapshots, error) -> {
                     if (error != null) {
                         Log.w(TAG, "Errore snapshot gruppi Firestore: " + error.getMessage());
