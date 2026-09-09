@@ -1,4 +1,10 @@
 {
+  "auth": {
+    "providers": {
+      "anonymous": true,
+      "emailPassword": true
+    }
+  },
   "storage": {
     "rules": "storage.rules"
   },

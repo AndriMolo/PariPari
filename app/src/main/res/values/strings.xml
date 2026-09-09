@@ -34,10 +34,25 @@
 
     <!-- Account -->
     <string name="cd_avatar_utente">Avatar utente</string>
+    <string name="title_account_ospite">Account ospite</string>
+    <string name="desc_account_ospite">Registrati o accedi per salvare e sincronizzare tutte le tue spese sul cloud con i tuoi amici.</string>
+    <string name="hint_nome">Nome</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_crea_account">Crea Account</string>
+    <string name="btn_accedi">Accedi</string>
+    <string name="switch_to_login">Hai già un account? Accedi</string>
+    <string name="switch_to_register">Non hai un account? Registrati</string>
+    <string name="btn_logout">Disconnetti</string>
+    <string name="label_account_attivo">Account Attivo</string>
     <string name="default_nome_utente">Nome Utente</string>
     <string name="default_email_utente">email@esempio.com</string>
-    <string name="stat_zero">0</string>
-    <string name="stat_schede">Schede</string>
-    <string name="stat_spese">Spese</string>
-    <string name="btn_modifica_profilo">Modifica Profilo</string>
+
+    <!-- Errori e Notifiche Auth -->
+    <string name="error_nome_obbligatorio">Inserisci il tuo nome</string>
+    <string name="error_email_valida">Inserisci un\'email valida</string>
+    <string name="error_password_minima">La password deve avere almeno 6 caratteri</string>
+    <string name="msg_registrazione_ok">Account creato con successo!</string>
+    <string name="msg_login_ok">Accesso effettuato con successo!</string>
+    <string name="msg_logout_ok">Disconnesso. Sei ora in modalità ospite.</string>
 </resources>

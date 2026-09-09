@@ -18,128 +18,237 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="top|center_horizontal"
+        android:fillViewport="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Avatar placeholder -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="48dp"
-            app:cardElevation="2dp">
-
-            <ImageView
-                android:id="@+id/iv_avatar"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_account"
-                android:padding="20dp"
-                android:contentDescription="@string/cd_avatar_utente" />
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Nome utente -->
-        <TextView
-            android:id="@+id/tv_nome_utente"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/default_nome_utente"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
-
-        <!-- Email utente -->
-        <TextView
-            android:id="@+id/tv_email_utente"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/default_email_utente"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-            android:layout_marginBottom="32dp" />
-
-        <!-- Statistiche rapide (baselineAligned=false per performance rendering) -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="top|center_horizontal">
 
+            <!-- ========================================================= -->
+            <!-- STATO 1: ACCOUNT OSPITE (FORM NOME, EMAIL, PASSWORD)      -->
+            <!-- ========================================================= -->
             <LinearLayout
+                android:id="@+id/layout_guest"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:baselineAligned="false"
-                android:padding="16dp">
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:visibility="visible">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <!-- Avatar Ospite -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="44dp"
+                    app:cardElevation="2dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_account"
+                        android:padding="18dp"
+                        android:contentDescription="@string/cd_avatar_utente" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/tv_guest_title"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    android:text="@string/title_account_ospite"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
 
-                    <TextView
-                        android:id="@+id/tv_num_schede"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/stat_zero"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/stat_schede"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    android:text="@string/desc_account_ospite"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:gravity="center"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="24dp" />
 
-                    <TextView
-                        android:id="@+id/tv_num_spese"
-                        android:layout_width="wrap_content"
+                <!-- Card del Form Registrazione/Accesso -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="3dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/stat_zero"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-                        android:textStyle="bold" />
+                        android:orientation="vertical"
+                        android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/stat_spese"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                        <!-- Campo Nome (visibile solo in registrazione) -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/til_nome"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_nome"
+                            android:importantForAutofill="no"
+                            android:layout_marginBottom="14dp">
 
-                </LinearLayout>
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_nome"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textCapWords|textNoSuggestions"
+                                android:importantForAutofill="no"
+                                android:maxLines="1" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Campo Email -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/til_email"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_email"
+                            android:layout_marginBottom="14dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_email"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textEmailAddress"
+                                android:maxLines="1" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Campo Password -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/til_password"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_password"
+                            app:endIconMode="password_toggle"
+                            android:layout_marginBottom="20dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_password"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:maxLines="1" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Indicatore di caricamento -->
+                        <ProgressBar
+                            android:id="@+id/progress_bar_auth"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginBottom="14dp"
+                            android:visibility="gone" />
+
+                        <!-- Pulsante Principale (Crea Account o Accedi) -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_submit_auth"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/btn_crea_account"
+                            android:textAllCaps="false"
+                            android:layout_marginBottom="8dp" />
+
+                        <!-- Pulsante Switch Modalità (Accedi / Registrati) -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_switch_auth_mode"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/switch_to_login"
+                            android:textAllCaps="false" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <!-- ========================================================= -->
+            <!-- STATO 2: ACCOUNT AUTENTICATO (NOME, EMAIL, STATS, LOGOUT) -->
+            <!-- ========================================================= -->
+            <LinearLayout
+                android:id="@+id/layout_logged_in"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:visibility="gone">
 
-        <!-- Bottone modifica profilo -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_modifica_profilo"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/btn_modifica_profilo"
-            android:textAllCaps="false" />
+                <!-- Avatar Utente Autenticato -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="48dp"
+                    app:cardElevation="3dp">
 
-    </LinearLayout>
+                    <ImageView
+                        android:id="@+id/iv_avatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_account"
+                        android:padding="20dp"
+                        android:contentDescription="@string/cd_avatar_utente" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Nome Utente -->
+                <TextView
+                    android:id="@+id/tv_nome_utente"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/default_nome_utente"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <!-- Email Utente -->
+                <TextView
+                    android:id="@+id/tv_email_utente"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/default_email_utente"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- Pulsante Disconnetti -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_logout"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/btn_logout"
+                    android:textAllCaps="false"
+                    android:layout_marginBottom="24dp" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
