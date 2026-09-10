@@ -106,5 +106,25 @@
     <string name="label_valute_frequenti">Più utilizzate</string>
     <string name="label_tutte_le_valute">Tutte le valute BCE</string>
     <string name="empty_valute_ricerca">Nessuna valuta trovata</string>
+
+
+    <!-- Spese Fragment -->
     <string name="Titolo_spese">I Tuoi Gruppi</string>
+    <string name="sugg_code">Codice invito</string>
+    <string name="dialog_titolo">Inserisci il codice invito alfanumerico per sincronizzare le spese con i tuoi amici.</string>
+    <string name="dialog_entra">Entra in un Gruppo</string>
+    <string name="dialog_cancel">Annulla</string>
+    <string name="dialog_partecipate">Partecipa</string>
+    <string name="titolo_spese">I Tuoi Gruppi</string>
+    <string name="btn_entra_testo">Entra con codice</string>
+    <string name="msg_gruppo_eliminato">Gruppo Eliminato</string>
+    <string name="action_annulla">Annulla</string>
+    <string name="error_codice_non_valido"> Codice non Valido</string>
+
+    <!-- Gestione Plurali Partecipanti -->
+    <plurals name="label_partecipanti_count">
+        <item quantity="one">%d partecipante</item>
+        <item quantity="other">%d partecipanti</item>
+    </plurals>
+
 </resources>

@@ -119,8 +119,8 @@ public class PariPariRepository {
         return schedaDao.getAllSchedeLive();
     }
 
-    public LiveData<Scheda> getSchedaById(String id) {
-        return schedaDao.getSchedaByIdLive(id);
+    public LiveData<List<PartecipanteDao.ConteggioPartecipantiTuple>> getAllConteggiPartecipanti() {
+        return partecipanteDao.getAllConteggiPartecipanti();
     }
 
     public void insertScheda(Scheda scheda, @Nullable List<Partecipante> partecipanti) {
@@ -151,6 +151,8 @@ public class PariPariRepository {
     public LiveData<List<Partecipante>> getPartecipanti(String schedaId) {
         return partecipanteDao.getPartecipantiBySchedaLive(schedaId);
     }
+
+
 
     public void insertPartecipante(Partecipante partecipante) {
         AppDatabase.databaseWriteExecutor.execute(() -> {

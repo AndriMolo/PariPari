@@ -6,8 +6,10 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Transformations;
 
 import com.example.paripariapp.R;
+import com.example.paripariapp.data.local.PartecipanteDao;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.repository.PariPariRepository;
@@ -16,8 +18,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -110,5 +114,18 @@ public class SpeseViewModel extends AndroidViewModel {
         if (scheda != null) {
             repository.insertScheda(scheda, null);
         }
+    }
+
+
+    public LiveData<Map<String, Integer>> getMappaConteggioPartecipanti() {
+        return Transformations.map(repository.getAllConteggiPartecipanti(), lista -> {
+            Map<String, Integer> map = new HashMap<>();
+            if (lista != null) {
+                for (PartecipanteDao.ConteggioPartecipantiTuple item : lista) {
+                    map.put(item.scheda_id, item.count);
+                }
+            }
+            return map;
+        });
     }
 }

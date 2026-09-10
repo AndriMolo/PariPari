@@ -37,6 +37,15 @@ public interface PartecipanteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Partecipante> partecipanti);
 
+
+    public static class ConteggioPartecipantiTuple {
+        public String scheda_id;
+        public int count;
+    }
+
+    @Query("SELECT scheda_id, COUNT(*) AS count FROM partecipanti GROUP BY scheda_id")
+    LiveData<List<ConteggioPartecipantiTuple>> getAllConteggiPartecipanti();
+
     @Update
     void update(Partecipante partecipante);
 

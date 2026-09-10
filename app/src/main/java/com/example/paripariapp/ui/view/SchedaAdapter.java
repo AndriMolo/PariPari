@@ -1,19 +1,25 @@
 package com.example.paripariapp.ui.view;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.databinding.ItemSchedaBinding;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -22,24 +28,56 @@ import java.util.Objects;
  */
 public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewHolder> {
 
-    public void moveItem(int fromPosition, int toPosition) {
-        java.util.List<Scheda> listaAggiornata = new java.util.ArrayList<>(getCurrentList());
-        java.util.Collections.swap(listaAggiornata, fromPosition, toPosition);
-        submitList(listaAggiornata);
-        notifyItemMoved(fromPosition, toPosition);
-    }
     public interface OnSchedaClickListener {
         void onSchedaClick(Scheda scheda);
     }
 
     private final OnSchedaClickListener listener;
+    private List<Scheda> localList = new ArrayList<>();
+    private final Map<String, Integer> partecipantiCountMap = new HashMap<>();
 
     public SchedaAdapter(OnSchedaClickListener listener) {
         super(DIFF_CALLBACK);
         this.listener = listener;
     }
 
-    private static final DiffUtil.ItemCallback<Scheda> DIFF_CALLBACK = new DiffUtil.ItemCallback<Scheda>() {
+    @Override
+    public void submitList(@Nullable List<Scheda> list) {
+        if (list != null) {
+            localList = new ArrayList<>(list);
+        } else {
+            localList = new ArrayList<>();
+        }
+        super.submitList(list);
+    }
+
+    public void moveItem(int fromPosition, int toPosition) {
+        if (fromPosition < toPosition) {
+            for (int i = fromPosition; i < toPosition; i++) {
+                Collections.swap(localList, i, i + 1);
+            }
+        } else {
+            for (int i = fromPosition; i > toPosition; i--) {
+                Collections.swap(localList, i, i - 1);
+            }
+        }
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    public List<Scheda> getLocalList() {
+        return localList;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void aggiornaConteggioPartecipanti(Map<String, Integer> mappaConteggi) {
+        if (mappaConteggi != null) {
+            partecipantiCountMap.clear();
+            partecipantiCountMap.putAll(mappaConteggi);
+            notifyDataSetChanged();
+        }
+    }
+
+    private static final DiffUtil.ItemCallback<Scheda> DIFF_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull Scheda oldItem, @NonNull Scheda newItem) {
             return Objects.equals(oldItem.getId(), newItem.getId());
@@ -64,36 +102,41 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
 
     @Override
     public void onBindViewHolder(@NonNull SchedaViewHolder holder, int position) {
-        holder.bind(getItem(position));
+        Scheda scheda = getItem(position);
+        Integer countObj = partecipantiCountMap.get(scheda.getId());
+        int count = countObj != null ? countObj : 1;
+        holder.bind(scheda, count);
     }
 
-    static class SchedaViewHolder extends RecyclerView.ViewHolder {
+    public static class SchedaViewHolder extends RecyclerView.ViewHolder {
 
         private final ItemSchedaBinding binding;
         private final OnSchedaClickListener listener;
 
-        SchedaViewHolder(@NonNull ItemSchedaBinding binding, OnSchedaClickListener listener) {
+        public SchedaViewHolder(@NonNull ItemSchedaBinding binding, OnSchedaClickListener listener) {
             super(binding.getRoot());
             this.binding = binding;
             this.listener = listener;
         }
 
-        void bind(Scheda scheda) {
+        public void bind(Scheda scheda, int count) {
+            Context context = itemView.getContext();
+
             binding.tvTitoloScheda.setText(scheda.getTitolo());
             binding.tvValutaBadge.setText(scheda.getValutaPredefinita());
 
-            Context context = itemView.getContext();
-            String dataFormatted = DateFormat.getDateFormat(context).format(new Date(scheda.getDataCreazione()));
-            binding.tvDataScheda.setText(dataFormatted);
+            String testoPartecipanti = context.getResources().getQuantityString(
+                    R.plurals.label_partecipanti_count,
+                    count,
+                    count
+            );
+            binding.tvPartecipantiCount.setText(testoPartecipanti);
 
             binding.getRoot().setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onSchedaClick(scheda);
                 }
             });
-
-
         }
     }
-
 }

@@ -108,4 +108,22 @@
     <string name="label_tutte_le_valute">All ECB currencies</string>
     <string name="empty_valute_ricerca">No currencies found</string>
     <string name="Titolo_spese">Your Groups</string>
+    <string name="sugg_code">Invite Code</string>
+    <string name="dialog_titolo">Enter the alphanumeric invitation code to synchronize expenses with your friends</string>
+    <string name="dialog_entra">Join a Group</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_partecipate">Join</string>
+    <string name="titolo_spese">Your Groups</string>
+
+    <string name="btn_entra_testo">Join with a Code</string>
+    <string name="error_codice_non_valido"> Code not Valid </string>
+
+    <!-- Gestione Plurali Partecipanti -->
+    <plurals name="label_partecipanti_count">
+        <item quantity="one">%d member</item>
+        <item quantity="other">%d members</item>
+    </plurals>
+    <string name="msg_gruppo_eliminato">Group Eliminated</string>
+    <string name="action_annulla">Cancel</string>
+
 </resources>

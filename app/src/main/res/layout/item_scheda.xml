@@ -56,13 +56,13 @@
                 tools:text="Vacanza a Madrid" />
 
             <TextView
-                android:id="@+id/tv_data_scheda"
+                android:id="@+id/tv_partecipanti_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginTop="2dp"
-                tools:text="Creata il 9 set 2026" />
+                android:drawablePadding="4dp"
+                android:textColor="#757575"
+                android:textSize="13sp"
+                />
 
         </LinearLayout>
 

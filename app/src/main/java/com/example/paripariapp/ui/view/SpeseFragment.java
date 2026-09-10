@@ -1,5 +1,9 @@
 package com.example.paripariapp.ui.view;
 
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +11,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -17,19 +22,18 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.databinding.FragmentSpeseBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import androidx.core.content.ContextCompat;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Fragment della pagina "Schede Spese".
  * Mostra la lista delle schede spese, l'empty state se vuota,
- * supporta riordinamento (drag & drop), eliminazione con swipe verso sinistra
- * e apre il BottomSheet per la creazione rapida di una nuova scheda.
+ * supporta riordinamento (drag & drop), eliminazione con swipe verso sinistra,
+ * accesso tramite codice invito e apertura BottomSheet per nuova scheda.
  */
 public class SpeseFragment extends Fragment {
 
@@ -60,7 +64,7 @@ public class SpeseFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new SchedaAdapter(scheda -> {
-            if (scheda != null && getParentFragmentManager() != null) {
+            if (scheda != null) {
                 getParentFragmentManager().beginTransaction()
                         .setCustomAnimations(
                                 android.R.anim.fade_in,
@@ -81,17 +85,16 @@ public class SpeseFragment extends Fragment {
         binding.recyclerSchede.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSchede.setAdapter(adapter);
 
-        // Configurazione Drag & Drop e Swipe
         setupItemTouchHelper();
     }
 
     private void setupItemTouchHelper() {
-        final ColorDrawable background = new ColorDrawable(Color.parseColor("#E53935")); // Rosso eliminazione
+        final ColorDrawable background = new ColorDrawable(Color.parseColor("#E53935"));
         final Drawable deleteIcon = ContextCompat.getDrawable(requireContext(), android.R.drawable.ic_menu_delete);
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP | ItemTouchHelper.DOWN, // Drag: Su e Giù
-                ItemTouchHelper.LEFT                      // Swipe: Solo verso sinistra
+                ItemTouchHelper.LEFT                      // Swipe: Solo a sinistra
         ) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView,
@@ -99,6 +102,7 @@ public class SpeseFragment extends Fragment {
                                   @NonNull RecyclerView.ViewHolder target) {
                 int fromPosition = viewHolder.getBindingAdapterPosition();
                 int toPosition = target.getBindingAdapterPosition();
+
                 adapter.moveItem(fromPosition, toPosition);
                 return true;
             }
@@ -106,15 +110,31 @@ public class SpeseFragment extends Fragment {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getBindingAdapterPosition();
-                Scheda schedaSelezionata = adapter.getCurrentList().get(position);
+                Scheda schedaSelezionata = adapter.getLocalList().get(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
                     viewModel.eliminaScheda(schedaSelezionata);
 
-                    Snackbar.make(binding.recyclerSchede, "Gruppo eliminato", Snackbar.LENGTH_LONG)
-                            .setAction("Annulla", v -> viewModel.ripristinaScheda(schedaSelezionata))
+                    Snackbar.make(binding.recyclerSchede, R.string.msg_gruppo_eliminato, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.action_annulla, v -> viewModel.ripristinaScheda(schedaSelezionata))
                             .show();
                 }
+            }
+
+            @Override
+            public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
+                super.onSelectedChanged(viewHolder, actionState);
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && viewHolder != null) {
+                    viewHolder.itemView.setAlpha(0.85f);
+                    viewHolder.itemView.setElevation(16f);
+                }
+            }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                viewHolder.itemView.setAlpha(1.0f);
+                viewHolder.itemView.setElevation(0f);
             }
 
             @Override
@@ -126,9 +146,7 @@ public class SpeseFragment extends Fragment {
 
                 View itemView = viewHolder.itemView;
 
-                // Se l'utente sta facendo lo swipe a sinistra (dX < 0)
-                if (dX < 0) {
-                    // 1. Disegna il rettangolo rosso
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && dX < 0) {
                     background.setBounds(
                             itemView.getRight() + (int) dX,
                             itemView.getTop(),
@@ -137,7 +155,6 @@ public class SpeseFragment extends Fragment {
                     );
                     background.draw(c);
 
-                    // 2. Disegna l'icona del cestino centrata in altezza
                     if (deleteIcon != null) {
                         int itemHeight = itemView.getBottom() - itemView.getTop();
                         int intrinsicWidth = deleteIcon.getIntrinsicWidth();
@@ -149,7 +166,6 @@ public class SpeseFragment extends Fragment {
                         int iconRight = itemView.getRight() - iconMargin;
                         int iconLeft = iconRight - intrinsicWidth;
 
-                        // Mostra l'icona solo se c'è abbastanza spazio
                         if (-dX > iconMargin) {
                             deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
                             deleteIcon.draw(c);
@@ -170,6 +186,7 @@ public class SpeseFragment extends Fragment {
     }
 
     private void setupObservers() {
+        // 1. Osserva la lista delle schede
         viewModel.getSchede().observe(getViewLifecycleOwner(), schede -> {
             if (schede == null || schede.isEmpty()) {
                 binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
@@ -182,17 +199,46 @@ public class SpeseFragment extends Fragment {
                 adapter.submitList(schede);
             }
         });
+
+        // 2. Osserva tutti i conteggi in una volta sola (nessun ciclo for, caricamento immediato)
+        viewModel.getMappaConteggioPartecipanti().observe(getViewLifecycleOwner(), mappaConteggi -> {
+            if (mappaConteggi != null) {
+                adapter.aggiornaConteggioPartecipanti(mappaConteggi);
+            }
+        });
     }
 
     private void setupListeners() {
-        binding.fabNuovaScheda.setOnClickListener(v -> {
-            NuovaSchedaBottomSheet.newInstance().show(getChildFragmentManager(), "NuovaSchedaBottomSheet");
+        binding.fabNuovaScheda.setOnClickListener(v ->
+                NuovaSchedaBottomSheet.newInstance().show(getChildFragmentManager(), "NuovaSchedaBottomSheet")
+        );
+
+        binding.btnEntraConCodice.setOnClickListener(v -> mostraDialogCodiceAccesso());
+    }
+
+    private void mostraDialogCodiceAccesso() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_entra_codice, binding.getRoot(), false);
+        dialog.setContentView(sheetView);
+
+        TextInputEditText etCodice = sheetView.findViewById(R.id.etCodice);
+        sheetView.findViewById(R.id.btnAnnulla).setOnClickListener(v -> dialog.dismiss());
+        sheetView.findViewById(R.id.btnConfermaPartecipa).setOnClickListener(v -> {
+            String codice = etCodice.getText() != null ? etCodice.getText().toString().trim() : "";
+            if (!codice.isEmpty()) {
+                dialog.dismiss();
+                // TODO: unisciti al gruppo tramite codice
+            } else {
+                etCodice.setError(getString(R.string.error_codice_non_valido));
+            }
         });
+
+        dialog.show();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null; // Evita memory leak
+        binding = null;
     }
 }
