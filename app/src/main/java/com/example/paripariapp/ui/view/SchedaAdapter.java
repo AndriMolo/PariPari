@@ -22,6 +22,12 @@ import java.util.Objects;
  */
 public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewHolder> {
 
+    public void moveItem(int fromPosition, int toPosition) {
+        java.util.List<Scheda> listaAggiornata = new java.util.ArrayList<>(getCurrentList());
+        java.util.Collections.swap(listaAggiornata, fromPosition, toPosition);
+        submitList(listaAggiornata);
+        notifyItemMoved(fromPosition, toPosition);
+    }
     public interface OnSchedaClickListener {
         void onSchedaClick(Scheda scheda);
     }
@@ -85,6 +91,9 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
                     listener.onSchedaClick(scheda);
                 }
             });
+
+
         }
     }
+
 }

@@ -107,4 +107,5 @@
     <string name="label_valute_frequenti">Most popular</string>
     <string name="label_tutte_le_valute">All ECB currencies</string>
     <string name="empty_valute_ricerca">No currencies found</string>
+    <string name="Titolo_spese">Your Groups</string>
 </resources>

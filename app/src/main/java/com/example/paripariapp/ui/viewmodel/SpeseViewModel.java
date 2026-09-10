@@ -22,8 +22,8 @@ import java.util.Set;
 
 /**
  * ViewModel per la gestione delle Schede Spese.
- * Fornisce l'elenco osservabile delle schede e il metodo per la creazione
- * di una nuova scheda con i rispettivi partecipanti.
+ * Fornisce l'elenco osservabile delle schede e i metodi per la creazione,
+ * eliminazione e ripristino di una scheda.
  */
 public class SpeseViewModel extends AndroidViewModel {
 
@@ -92,5 +92,23 @@ public class SpeseViewModel extends AndroidViewModel {
 
         // Inserimento asincrono nel DB Room (e sync cloud se connesso)
         repository.insertScheda(nuovaScheda, partecipanti);
+    }
+
+    /**
+     * Elimina una scheda esistente (chiamato dallo swipe verso sinistra).
+     */
+    public void eliminaScheda(Scheda scheda) {
+        if (scheda != null) {
+            repository.deleteScheda(scheda.getId());
+        }
+    }
+
+    /**
+     * Ripristina la scheda eliminata (chiamato dal tasto ANNULLA della Snackbar).
+     */
+    public void ripristinaScheda(Scheda scheda) {
+        if (scheda != null) {
+            repository.insertScheda(scheda, null);
+        }
     }
 }

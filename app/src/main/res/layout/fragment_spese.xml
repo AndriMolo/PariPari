@@ -5,39 +5,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar_spese"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:title="@string/title_schede_spese"
-            app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- Lista delle Schede -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_schede"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="96dp"
-        android:clipToPadding="false"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:orientation="vertical">
 
-    <!-- Layout Empty State (visibile se la lista è vuota) -->
+        <!-- Titolo principale della schermata -->
+        <TextView
+            android:id="@+id/tv_titolo_gruppi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/Titolo_spese"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <!-- Lista delle Schede -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_schede"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:clipToPadding="false" />
+
+    </LinearLayout>
+
+    <!-- Layout Empty State -->
     <include
         android:id="@+id/layout_empty_state"
         layout="@layout/layout_empty_state"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:visibility="gone" />
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_nuova_scheda"

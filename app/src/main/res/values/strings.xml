@@ -106,4 +106,5 @@
     <string name="label_valute_frequenti">Più utilizzate</string>
     <string name="label_tutte_le_valute">Tutte le valute BCE</string>
     <string name="empty_valute_ricerca">Nessuna valuta trovata</string>
+    <string name="Titolo_spese">I Tuoi Gruppi</string>
 </resources>
