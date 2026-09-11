@@ -232,7 +232,7 @@ public class PariPariRepository {
             for (Scheda s : pendingSchede) {
                 if (s.getSyncStatus() == SyncStatus.PENDING_DELETE) {
                     firestore.collection("groups").document(s.getId()).delete()
-                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> schedaDao.deleteById(s.getId())));
+                            .addOnSuccessListener(AppDatabase.databaseWriteExecutor, v -> schedaDao.deleteById(s.getId()));
                 } else {
                     List<Partecipante> parts = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
                     uploadScheda(s, parts);
@@ -244,7 +244,7 @@ public class PariPariRepository {
                 if (p.getSyncStatus() == SyncStatus.PENDING_DELETE) {
                     firestore.collection("groups").document(p.getSchedaId())
                             .collection("participants").document(p.getId()).delete()
-                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> partecipanteDao.deleteById(p.getId())));
+                            .addOnSuccessListener(AppDatabase.databaseWriteExecutor, v -> partecipanteDao.deleteById(p.getId()));
                 } else {
                     uploadPartecipante(p);
                 }
@@ -255,10 +255,10 @@ public class PariPariRepository {
                 if (sp.getSyncStatus() == SyncStatus.PENDING_DELETE) {
                     firestore.collection("groups").document(sp.getSchedaId())
                             .collection("expenses").document(sp.getId()).delete()
-                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> {
+                            .addOnSuccessListener(AppDatabase.databaseWriteExecutor, v -> {
                                 spesaDao.deleteQuoteBySpesaId(sp.getId());
                                 spesaDao.deleteById(sp.getId());
-                            }));
+                            });
                 } else {
                     List<SpesaPartecipante> quote = spesaDao.getQuoteBySpesaSync(sp.getId());
                     uploadSpesaConQuote(sp, quote);
@@ -294,14 +294,14 @@ public class PariPariRepository {
         }
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> AppDatabase.databaseWriteExecutor.execute(() -> {
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
                     schedaDao.updateSyncStatus(scheda.getId(), SyncStatus.SYNCED);
                     if (partecipanti != null) {
                         for (Partecipante p : partecipanti) {
                             partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED);
                         }
                     }
-                }))
+                })
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento scheda differito: " + e.getMessage()));
     }
 
@@ -315,8 +315,8 @@ public class PariPariRepository {
         firestore.collection("groups").document(p.getSchedaId())
                 .collection("participants").document(p.getId())
                 .set(data)
-                .addOnSuccessListener(aVoid -> AppDatabase.databaseWriteExecutor.execute(() ->
-                        partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED)))
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid ->
+                        partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED))
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento partecipante fallito: " + e.getMessage()));
     }
 
@@ -349,8 +349,8 @@ public class PariPariRepository {
         }
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> AppDatabase.databaseWriteExecutor.execute(() ->
-                        spesaDao.updateSyncStatus(spesa.getId(), SyncStatus.SYNCED)))
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid ->
+                        spesaDao.updateSyncStatus(spesa.getId(), SyncStatus.SYNCED))
                 .addOnFailureListener(e -> Log.e(TAG, "Upload spesa fallito: " + e.getMessage()));
     }
 
@@ -380,15 +380,28 @@ public class PariPariRepository {
                                     Long dataAggAdd = doc.getLong("dataAggiornamento");
 
                                     if (titoloAdd != null) {
-                                        // PROTEZIONE CASCADE:
-                                        // Non fare REPLACE se la scheda esiste già in locale, altrimenti SQLite attiva il CASCADE
-                                        // ed elimina tutte le spese collegate!
-                                        schedaDao.updateTitolo(
-                                                groupId,
-                                                titoloAdd,
-                                                dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
-                                                SyncStatus.SYNCED
-                                        );
+                                        // Verifica preventiva: se la scheda non esiste in locale, inseriscila per evitare chiavi esterne orfane
+                                        Scheda schedaEsistente = schedaDao.getSchedaById(groupId);
+                                        if (schedaEsistente == null) {
+                                            Scheda nuovaScheda = new Scheda(
+                                                    groupId,
+                                                    titoloAdd,
+                                                    descAdd != null ? descAdd : "",
+                                                    valutaAdd != null ? valutaAdd : "EUR",
+                                                    creatoreId != null ? creatoreId : "",
+                                                    dataCreaz != null ? dataCreaz : System.currentTimeMillis(),
+                                                    dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
+                                                    SyncStatus.SYNCED
+                                            );
+                                            schedaDao.insert(nuovaScheda);
+                                        } else {
+                                            schedaDao.updateTitolo(
+                                                    groupId,
+                                                    titoloAdd,
+                                                    dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
+                                                    SyncStatus.SYNCED
+                                            );
+                                        }
 
                                         // Aggancia sempre i listener
                                         attachSubcollectionListeners(groupId);
@@ -501,7 +514,7 @@ public class PariPariRepository {
                                     try {
                                         spesaDao.insert(sp);
 
-                                        doc.getReference().collection("shares").get().addOnSuccessListener(shareSnaps -> {
+                                        doc.getReference().collection("shares").get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, shareSnaps -> {
                                             if (shareSnaps != null && !shareSnaps.isEmpty()) {
                                                 List<SpesaPartecipante> quoteRemote = new ArrayList<>();
                                                 for (DocumentSnapshot sDoc : shareSnaps.getDocuments()) {
@@ -515,7 +528,7 @@ public class PariPariRepository {
                                                         quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, SyncStatus.SYNCED));
                                                     }
                                                 }
-                                                AppDatabase.databaseWriteExecutor.execute(() -> spesaDao.insertQuote(quoteRemote));
+                                                spesaDao.insertQuote(quoteRemote);
                                             }
                                         });
 

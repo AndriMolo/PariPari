@@ -14,14 +14,10 @@ import java.util.UUID;
  */
 @Entity(
         tableName = "partecipanti",
-        foreignKeys = @ForeignKey(
-                entity = Scheda.class,
-                parentColumns = "id",
-                childColumns = "scheda_id",
-                onDelete = ForeignKey.CASCADE
-        ),
         indices = {@Index("scheda_id")}
 )
+
+
 public class Partecipante {
 
     @PrimaryKey
