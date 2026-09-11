@@ -60,4 +60,7 @@ public interface SpesaDao {
             "WHERE s.scheda_id = :schedaId AND s.sync_status != " + SyncStatus.PENDING_DELETE + " " +
             "ORDER BY s.data_spesa DESC")
     LiveData<List<SpesaConDettagli>> getSpeseConDettagliBySchedaLive(String schedaId);
+
+    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
+    LiveData<List<SpesaPartecipante>> getTutteQuoteBySchedaLive(String schedaId);
 }

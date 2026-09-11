@@ -14,20 +14,6 @@ import java.util.UUID;
  */
 @Entity(
         tableName = "spese",
-        foreignKeys = {
-                @ForeignKey(
-                        entity = Scheda.class,
-                        parentColumns = "id",
-                        childColumns = "scheda_id",
-                        onDelete = ForeignKey.CASCADE
-                ),
-                @ForeignKey(
-                        entity = Partecipante.class,
-                        parentColumns = "id",
-                        childColumns = "pagato_da_id",
-                        onDelete = ForeignKey.RESTRICT
-                )
-        },
         indices = {
                 @Index("scheda_id"),
                 @Index("pagato_da_id")

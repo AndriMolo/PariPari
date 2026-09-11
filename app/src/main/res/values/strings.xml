@@ -176,6 +176,7 @@
     <string name="btn_elimina">Elimina</string>
     <string name="btn_annulla">Annulla</string>
     <string name="action_annulla">Annulla</string>
+    <string name="btn_aggiungi">Aggiungi</string>
 
     <!-- Schermata Nuova Spesa & Divisione Quote -->
     <string name="spesa_titolo">Nuova Spesa</string>
@@ -195,6 +196,8 @@
     <string name="dettaglio_rinomina_partecipante">Rinomina partecipante</string>
     <string name="dettaglio_elimina_partecipante">Elimina partecipante</string>
     <string name="dialog_titolo_rinomina">Rinomina membro</string>
+    <string name="titolo_aggiungi_membro">Aggiungi Partecipante</string>
+    <string name="hint_nome_partecipante">Nome</string>
 
     <!-- Spese -->
     <string name="spesa_formato_importo">%.2f %s</string>
@@ -204,12 +207,54 @@
         <item quantity="other">Diviso tra %d persone</item>
     </plurals>
 
-
+    <!-- Saldi -->
     <string name="titolo_dialog_saldi">Saldi e Pareggio Conti</string>
     <string name="saldi_tutti_in_pari">Tutti i conti sono in pari!</string>
     <string name="saldi_formato_importo">%.2f %s</string>
     <string name="saldi_descrizione_trasferimento">%1$s deve dare a %2$s</string>
     <string name="btn_chiudi">Chiudi</string>
+    <string name="spesa_errore_somma_percentuali">La somma delle percentuali deve fare 100%% (attuale: %.1f%%)</string>
+    <string name="lbl_nome_partecipante">Nome Partecipante</string>
 
+    <!-- Navigazione interna alla Scheda -->
+    <string name="tab_scheda_spese">Spese</string>
+    <string name="tab_scheda_saldi">Saldi</string>
+    <string name="tab_scheda_membri">Membri</string>
+
+    <!-- Titoli sezioni dettaglio scheda -->
+    <string name="titolo_sezione_saldi">Pareggio Conti</string>
+    <string name="titolo_sezione_membri">Partecipanti del Gruppo</string>
+
+    <!-- Ricerca e filtri -->
+    <string name="hint_ricerca_spese">Cerca descrizione…</string>
+    <string name="filtro_tutte">Tutte</string>
+
+    <!-- Toolbar e azioni -->
+    <string name="action_invita">Invita</string>
+    <string name="action_modifica_titolo">Modifica nome</string>
+    <string name="action_elimina_scheda">Elimina scheda</string>
+
+    <!-- Dettagli spesa nell'adapter -->
+    <string name="spesa_formato_dettagli">Pagato da %1$s • Diviso tra %2$d</string>
+
+    <!-- Invito e condivisione codice -->
+    <string name="titolo_dialog_invito">Codice Gruppo</string>
+    <string name="desc_dialog_invito">Condividi questo codice con i tuoi amici per farli entrare nel gruppo:</string>
+    <string name="btn_copia_codice">Copia</string>
+    <string name="btn_condividi_whatsapp">Condividi su WhatsApp</string>
+    <string name="msg_codice_copiato">Codice copiato negli appunti!</string>
+    <string name="msg_whatsapp_non_installato">WhatsApp non è installato sul dispositivo.</string>
+    <string name="msg_invito_whatsapp">Unisciti al mio gruppo \"%1$s\" su PariPari! Usa questo codice: %2$s</string>
+
+    <!-- Saldi Globale -->
+    <string name="label_da_ricevere">Da ricevere</string>
+    <string name="label_da_dare">Da dare</string>
+    <string name="saldi_nessun_debito">Nessun debito o credito attivo!</string>
+    <string name="saldi_devi_a">Devi a %1$s (%2$s)</string>
+    <string name="saldi_ti_deve">%1$s ti deve (%2$s)</string>
+
+    <string name="dettaglio_persone_lbl">Dettaglio Persone</string>
+    <string name="da_ricevere_lbl">◉ Da ricevere</string>
+    <string name="da_dare_lbl">◉ Da dare</string>
 
 </resources>

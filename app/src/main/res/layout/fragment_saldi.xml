@@ -1,96 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar_saldi"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="?attr/actionBarSize"
+        app:title="@string/title_saldi" />
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar_saldi"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:title="@string/title_saldi"
-            app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
+    <!-- Container Card Bilanci -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:padding="16dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:baselineAligned="false">
 
-        <!-- Riepilogo Saldo Netto -->
+        <!-- Card Verde: Da Ricevere -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_saldo_netto"
-            android:layout_width="match_parent"
+            android:id="@+id/card_da_ricevere"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1.5dp"
+            app:strokeColor="#81C784"
+            app:cardBackgroundColor="#1A81C784">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/label_saldo_netto"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    android:text="@string/da_ricevere_lbl"
+                    android:textStyle="bold"
+                    android:textColor="#2E7D32"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
 
                 <TextView
-                    android:id="@+id/tv_saldo_netto"
+                    android:id="@+id/tv_totale_da_ricevere"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/default_saldo_zero"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline4"
-                    android:textStyle="bold" />
-
+                    android:layout_marginTop="10dp"
+                    android:textStyle="bold"
+                    android:textColor="#2E7D32"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    tools:text="66,67 €" />
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Sezione: Ti devono -->
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Card Rossa: Da Dare -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_da_dare"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/label_ti_devono"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_devo_ricevere"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
             android:layout_weight="1"
-            android:nestedScrollingEnabled="true" />
+            android:layout_marginStart="8dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1.5dp"
+            app:strokeColor="#E57373"
+            app:cardBackgroundColor="#1AE57373">
 
-        <!-- Sezione: Devi tu -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_devi_tu"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_devo_pagare"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:nestedScrollingEnabled="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/da_dare_lbl"
+                    android:textStyle="bold"
+                    android:textColor="#C62828"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
 
+                <TextView
+                    android:id="@+id/tv_totale_da_dare"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textStyle="bold"
+                    android:textColor="#C62828"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    tools:text="0,00 €" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <TextView
+        android:id="@+id/tv_titolo_elenco"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/dettaglio_persone_lbl"
+        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <TextView
+        android:id="@+id/tv_vuoto"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:visibility="gone"
+        android:text="@string/saldi_nessun_debito"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_bilanci"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp" />
+
+</LinearLayout>

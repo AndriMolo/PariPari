@@ -2,15 +2,19 @@ package com.example.paripariapp.ui.view;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
+import com.example.paripariapp.data.model.SpesaListItem;
 import com.example.paripariapp.databinding.ItemSpesaBinding;
 
 import java.text.SimpleDateFormat;
@@ -18,53 +22,84 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
-import com.example.paripariapp.R;
-
 /**
- * Adapter per la lista delle spese in una scheda.
- * Utilizza ListAdapter con DiffUtil e SpesaConDettagli per visualizzare pagatore e split reale.
+ * Adapter per la visualizzazione raggruppata per data delle spese.
+ * Gestisce due ViewType: TYPE_HEADER (per la data) e TYPE_ITEM (per la spesa).
  */
-public class SpesaAdapter extends ListAdapter<SpesaConDettagli, SpesaAdapter.SpesaViewHolder> {
+public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHolder> {
 
     public SpesaAdapter() {
         super(DIFF_CALLBACK);
     }
 
-    private static final DiffUtil.ItemCallback<SpesaConDettagli> DIFF_CALLBACK = new DiffUtil.ItemCallback<SpesaConDettagli>() {
+    private static final DiffUtil.ItemCallback<SpesaListItem> DIFF_CALLBACK = new DiffUtil.ItemCallback<SpesaListItem>() {
         @Override
-        public boolean areItemsTheSame(@NonNull SpesaConDettagli oldItem, @NonNull SpesaConDettagli newItem) {
-            return Objects.equals(oldItem.getSpesa().getId(), newItem.getSpesa().getId());
+        public boolean areItemsTheSame(@NonNull SpesaListItem oldItem, @NonNull SpesaListItem newItem) {
+            if (oldItem.getType() != newItem.getType()) return false;
+            if (oldItem.getType() == SpesaListItem.TYPE_HEADER) {
+                return Objects.equals(oldItem.getHeaderTitle(), newItem.getHeaderTitle());
+            } else {
+                return Objects.equals(oldItem.getSpesa().getSpesa().getId(), newItem.getSpesa().getSpesa().getId());
+            }
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull SpesaConDettagli oldItem, @NonNull SpesaConDettagli newItem) {
-            Spesa o = oldItem.getSpesa();
-            Spesa n = newItem.getSpesa();
-            return Objects.equals(o.getTitolo(), n.getTitolo()) &&
-                    Double.compare(o.getImporto(), n.getImporto()) == 0 &&
-                    Objects.equals(o.getValuta(), n.getValuta()) &&
-                    Objects.equals(oldItem.getNomePagatore(), newItem.getNomePagatore()) &&
-                    oldItem.getNumeroPartecipanti() == newItem.getNumeroPartecipanti() &&
-                    o.getDataSpesa() == n.getDataSpesa();
+        public boolean areContentsTheSame(@NonNull SpesaListItem oldItem, @NonNull SpesaListItem newItem) {
+            if (oldItem.getType() == SpesaListItem.TYPE_HEADER) {
+                return Objects.equals(oldItem.getHeaderTitle(), newItem.getHeaderTitle());
+            }
+            SpesaConDettagli o = oldItem.getSpesa();
+            SpesaConDettagli n = newItem.getSpesa();
+            return Objects.equals(o.getSpesa().getTitolo(), n.getSpesa().getTitolo()) &&
+                    Double.compare(o.getSpesa().getImporto(), n.getSpesa().getImporto()) == 0 &&
+                    Objects.equals(o.getSpesa().getValuta(), n.getSpesa().getValuta()) &&
+                    Objects.equals(o.getNomePagatore(), n.getNomePagatore()) &&
+                    o.getNumeroPartecipanti() == n.getNumeroPartecipanti() &&
+                    o.getSpesa().getDataSpesa() == n.getSpesa().getDataSpesa();
         }
     };
 
+    @Override
+    public int getItemViewType(int position) {
+        return getItem(position).getType();
+    }
+
     @NonNull
     @Override
-    public SpesaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemSpesaBinding binding = ItemSpesaBinding.inflate(
-                LayoutInflater.from(parent.getContext()), parent, false
-        );
-        return new SpesaViewHolder(binding);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == SpesaListItem.TYPE_HEADER) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_spesa_header_data, parent, false);
+            return new HeaderViewHolder(view);
+        } else {
+            ItemSpesaBinding binding = ItemSpesaBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+            return new SpesaViewHolder(binding);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SpesaViewHolder holder, int position) {
-        holder.bind(getItem(position));
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        SpesaListItem item = getItem(position);
+        if (holder instanceof HeaderViewHolder) {
+            ((HeaderViewHolder) holder).bind(item.getHeaderTitle());
+        } else if (holder instanceof SpesaViewHolder) {
+            ((SpesaViewHolder) holder).bind(item.getSpesa());
+        }
+    }
+
+    static class HeaderViewHolder extends RecyclerView.ViewHolder {
+        private final TextView tvHeader;
+
+        HeaderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvHeader = itemView.findViewById(R.id.tv_header_data);
+        }
+
+        public void bind(String dataTitolo) {
+            tvHeader.setText(dataTitolo);
+        }
     }
 
     static class SpesaViewHolder extends RecyclerView.ViewHolder {
-
         private final ItemSpesaBinding binding;
 
         SpesaViewHolder(@NonNull ItemSpesaBinding binding) {
@@ -82,20 +117,18 @@ public class SpesaAdapter extends ListAdapter<SpesaConDettagli, SpesaAdapter.Spe
                     context.getString(R.string.spesa_formato_importo, spesa.getImporto(), spesa.getValuta())
             );
 
-            // Pagatore e Data localizzata
+            // Pagatore e Data
             String dataFmt = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date(spesa.getDataSpesa()));
+            String pagatore = item.getNomePagatore() != null ? item.getNomePagatore() : "—";
             binding.tvDettaglioPagatore.setText(
-                    context.getString(R.string.spesa_pagato_da, item.getNomePagatore(), dataFmt)
+                    context.getString(R.string.spesa_pagato_da, pagatore, dataFmt)
             );
 
-            // Conteggio partecipanti con plurali (gestisce singolare/plurale correttamente)
+            // Divisione partecipanti tramite risorsa plurals
             int persone = item.getNumeroPartecipanti();
-            String testoDivisione = context.getResources().getQuantityString(
-                    R.plurals.spesa_split_persone,
-                    persone,
-                    persone
+            binding.tvInfoDivisione.setText(
+                    context.getResources().getQuantityString(R.plurals.spesa_split_persone, persone, persone)
             );
-            binding.tvInfoDivisione.setText(testoDivisione);
         }
     }
 }

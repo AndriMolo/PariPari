@@ -1,6 +1,7 @@
 package com.example.paripariapp;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,6 +9,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.example.paripariapp.databinding.ActivityMainBinding;
 import com.example.paripariapp.ui.view.AccountFragment;
@@ -30,20 +32,22 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Gestione padding Edge-to-Edge: applica top/left/right per la status bar,
-        // lasciando che BottomNavigationView gestisca internamente il padding della navigation bar.
         ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
 
-        // Carica il Fragment di default (Schede Spese) al primo avvio
+        // Controlla automaticamente se nascondere o mostrare la barra
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            boolean isRootScreen = getSupportFragmentManager().getBackStackEntryCount() == 0;
+            binding.bottomNavigation.setVisibility(isRootScreen ? View.VISIBLE : View.GONE);
+        });
+
         if (savedInstanceState == null) {
             loadFragment(new SpeseFragment());
         }
 
-        // Listener per il cambio di tab nella BottomNavigationView
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
@@ -61,20 +65,16 @@ public class MainActivity extends AppCompatActivity {
             return loadFragment(selectedFragment);
         });
 
-        // Best practice: evita la ricreazione inutile del Fragment se si tocca il tab già attivo
         binding.bottomNavigation.setOnItemReselectedListener(item -> {
-            // No-op: nessuna ricarica superflua
+            // No-op
         });
     }
 
-    /**
-     * Sostituisce il Fragment nel container principale.
-     *
-     * @param fragment Il Fragment da visualizzare
-     * @return true se l'operazione è riuscita, false altrimenti
-     */
     private boolean loadFragment(Fragment fragment) {
         if (fragment == null) return false;
+        // Pulisce l'eventuale backstack residuo quando si passa da un tab principale all'altro
+        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)

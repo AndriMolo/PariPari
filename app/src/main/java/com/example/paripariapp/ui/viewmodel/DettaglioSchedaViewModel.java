@@ -94,5 +94,9 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.insertPartecipante(partecipante);
     }
 
+    public LiveData<List<SpesaPartecipante>> getQuoteDellaScheda(String schedaId) {
+        return repository.getQuoteDellaScheda(schedaId);
+    }
+
 
 }

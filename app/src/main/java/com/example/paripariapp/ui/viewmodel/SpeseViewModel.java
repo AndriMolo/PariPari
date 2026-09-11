@@ -1,131 +1,153 @@
 package com.example.paripariapp.ui.viewmodel;
 
 import android.app.Application;
-import android.text.TextUtils;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
 
-import com.example.paripariapp.R;
 import com.example.paripariapp.data.local.PartecipanteDao;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Scheda;
+import com.example.paripariapp.data.model.Spesa;
+import com.example.paripariapp.data.model.SpesaPartecipante;
+import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.data.repository.PariPariRepository;
-import com.example.paripariapp.data.repository.UserPreferencesRepository;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
-/**
- * ViewModel per la gestione delle Schede Spese.
- * Fornisce l'elenco osservabile delle schede e i metodi per la creazione,
- * eliminazione e ripristino di una scheda.
- */
 public class SpeseViewModel extends AndroidViewModel {
 
     private final PariPariRepository repository;
-    private final UserPreferencesRepository preferencesRepository;
-    private final FirebaseAuth auth;
-    private final LiveData<List<Scheda>> schede;
 
     public SpeseViewModel(@NonNull Application application) {
         super(application);
-        repository = PariPariRepository.getInstance(application);
-        preferencesRepository = UserPreferencesRepository.getInstance(application);
-        auth = FirebaseAuth.getInstance();
-        schede = repository.getAllSchede();
+        this.repository = PariPariRepository.getInstance(application);
     }
+
+    // --- SCHEDE ---
 
     public LiveData<List<Scheda>> getSchede() {
-        return schede;
+        return repository.getAllSchede();
     }
 
-    public String getDefaultCurrency() {
-        return preferencesRepository.getDefaultCurrency();
+    public LiveData<List<Scheda>> getTutteLeSchede() {
+        return repository.getAllSchede();
     }
 
-    /**
-     * Crea una nuova scheda spese con la lista di partecipanti specificata.
-     * Include sempre "Io" come primo partecipante se non diversamente specificato.
-     *
-     * @param titolo           Nome obbligatorio della scheda (es. "Vacanza", "Cena")
-     * @param valuta           Valuta predefinita (se null o vuota usa la preferenza impostata)
-     * @param nomiPartecipanti Lista dei nomi degli amici inseriti dall'utente
-     */
-    public void creaScheda(String titolo, String valuta, List<String> nomiPartecipanti) {
-        if (TextUtils.isEmpty(titolo)) {
-            return;
-        }
+    public void eliminaScheda(String schedaId) {
+        repository.deleteScheda(schedaId);
+    }
 
-        String titoloPulito = titolo.trim();
-        String valutaScelta = !TextUtils.isEmpty(valuta) ? valuta.trim().toUpperCase() : preferencesRepository.getDefaultCurrency();
+    public void ripristinaScheda(Scheda scheda, List<Partecipante> partecipanti) {
+        repository.insertScheda(scheda, partecipanti);
+    }
 
-        FirebaseUser user = auth.getCurrentUser();
-        String creatoreId = user != null ? user.getUid() : "guest";
+    public void creaScheda(String nomeScheda, String valuta, List<String> nomiPartecipanti) {
+        String schedaId = UUID.randomUUID().toString();
+        Scheda nuovaScheda = Scheda.createNew(nomeScheda, "", valuta, null);
+        nuovaScheda.setId(schedaId);
 
-        // Creazione dell'entità Scheda (senza descrizione, come richiesto)
-        Scheda nuovaScheda = Scheda.createNew(titoloPulito, "", valutaScelta, creatoreId);
-
-        // Creazione partecipanti: garantiamo sempre la presenza di "Io"
         List<Partecipante> partecipanti = new ArrayList<>();
-        Set<String> nomiInseriti = new HashSet<>();
-
-        String nomeIo = getApplication().getString(R.string.partecipante_io);
-        partecipanti.add(Partecipante.createNew(nuovaScheda.getId(), nomeIo, user != null ? user.getEmail() : null));
-        nomiInseriti.add(nomeIo.toLowerCase());
-
         if (nomiPartecipanti != null) {
             for (String nome : nomiPartecipanti) {
-                if (!TextUtils.isEmpty(nome)) {
-                    String nomeTrim = nome.trim();
-                    if (!nomiInseriti.contains(nomeTrim.toLowerCase())) {
-                        partecipanti.add(Partecipante.createNew(nuovaScheda.getId(), nomeTrim, null));
-                        nomiInseriti.add(nomeTrim.toLowerCase());
-                    }
+                if (nome != null && !nome.trim().isEmpty()) {
+                    partecipanti.add(new Partecipante(
+                            UUID.randomUUID().toString(),
+                            schedaId,
+                            nome.trim(),
+                            null,
+                            SyncStatus.PENDING_INSERT
+                    ));
                 }
             }
         }
 
-        // Inserimento asincrono nel DB Room (e sync cloud se connesso)
         repository.insertScheda(nuovaScheda, partecipanti);
     }
 
-    /**
-     * Elimina una scheda esistente (chiamato dallo swipe verso sinistra).
-     */
-    public void eliminaScheda(Scheda scheda) {
-        if (scheda != null) {
-            repository.deleteScheda(scheda.getId());
-        }
+    // --- CONTEGGI PARTECIPANTI ---
+
+    public LiveData<Map<String, Integer>> getMappaConteggioPartecipanti() {
+        return Transformations.map(repository.getAllConteggiPartecipanti(), listaTuple -> {
+            Map<String, Integer> mappa = new HashMap<>();
+            if (listaTuple != null) {
+                for (PartecipanteDao.ConteggioPartecipantiTuple tuple : listaTuple) {
+                    mappa.put(tuple.scheda_id, tuple.count);
+                }
+            }
+            return mappa;
+        });
     }
 
-    /**
-     * Ripristina la scheda eliminata (chiamato dal tasto ANNULLA della Snackbar).
-     */
+    // --- PARTECIPANTI, SPESE E QUOTE ---
+
+    public LiveData<List<Partecipante>> getPartecipanti(String schedaId) {
+        return repository.getPartecipanti(schedaId);
+    }
+
+    public LiveData<List<Spesa>> getSpese(String schedaId) {
+        return repository.getSpese(schedaId);
+    }
+
+    public LiveData<List<SpesaPartecipante>> getQuoteDellaScheda(String schedaId) {
+        return repository.getQuoteDellaScheda(schedaId);
+    }
+
+    // --- PREFERENZE ---
+
+    public String getDefaultCurrency() {
+        SharedPreferences prefs = getApplication().getSharedPreferences(
+                getApplication().getPackageName() + "_preferences",
+                Context.MODE_PRIVATE
+        );
+        return prefs.getString("valuta_predefinita", "EUR");
+    }
+
+    public void eliminaScheda(Scheda scheda) {
+        if (scheda != null) {
+            eliminaScheda(scheda.getId());
+        }
+    }
     public void ripristinaScheda(Scheda scheda) {
         if (scheda != null) {
             repository.insertScheda(scheda, null);
         }
     }
+    public void registraPagamento(String schedaId, String daPartecipanteId, String aPartecipanteId, double importo, String valuta) {
+        String spesaId = UUID.randomUUID().toString();
 
+        // 1. Spesa fittizia di pareggio
+        Spesa pagamento = new Spesa(
+                spesaId,
+                schedaId,
+                "Pareggio conti",
+                importo,
+                valuta != null ? valuta : "EUR",
+                System.currentTimeMillis(),
+                "Pareggio",
+                daPartecipanteId, // Chi paga realmente
+                null,
+                SyncStatus.PENDING_INSERT
+        );
 
-    public LiveData<Map<String, Integer>> getMappaConteggioPartecipanti() {
-        return Transformations.map(repository.getAllConteggiPartecipanti(), lista -> {
-            Map<String, Integer> map = new HashMap<>();
-            if (lista != null) {
-                for (PartecipanteDao.ConteggioPartecipantiTuple item : lista) {
-                    map.put(item.scheda_id, item.count);
-                }
-            }
-            return map;
-        });
+        // 2. La quota appartiene al 100% a chi riceve
+        List<SpesaPartecipante> quote = new ArrayList<>();
+        quote.add(new SpesaPartecipante(
+                spesaId,
+                aPartecipanteId, // Chi riceve il denaro
+                importo,
+                SyncStatus.PENDING_INSERT
+        ));
+
+        repository.insertSpesaConQuote(pagamento, quote);
     }
+
 }

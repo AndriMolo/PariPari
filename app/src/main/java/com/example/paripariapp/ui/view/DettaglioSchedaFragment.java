@@ -2,6 +2,8 @@ package com.example.paripariapp.ui.view;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,20 +18,30 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
+import com.example.paripariapp.data.model.SpesaListItem;
+import com.example.paripariapp.data.model.SpesaPartecipante;
+import com.example.paripariapp.data.model.SyncStatus;
+import com.example.paripariapp.data.model.TrasferimentoSaldo;
 import com.example.paripariapp.databinding.FragmentDettaglioSchedaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.EsportatoreDati;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class DettaglioSchedaFragment extends Fragment {
 
@@ -40,13 +52,21 @@ public class DettaglioSchedaFragment extends Fragment {
     private FragmentDettaglioSchedaBinding binding;
     private DettaglioSchedaViewModel viewModel;
     private SpesaAdapter adapter;
+    private SaldoAdapter saldoAdapter;
 
     private String schedaId;
     private String titolo;
     private String valuta;
 
     private List<Partecipante> partecipantiCache = new ArrayList<>();
-    private List<Spesa> speseCache = new ArrayList<>();
+    private List<SpesaPartecipante> quoteCache = new ArrayList<>();
+    private final List<Spesa> speseCache = new ArrayList<>();
+    private List<SpesaConDettagli> tutteSpeseRaw = new ArrayList<>();
+    private MembroAdapter membroAdapter;
+
+    private String queryFiltroTesto = "";
+    private String categoriaSelezionata = "";
+    private final SimpleDateFormat dateFormatHeader = new SimpleDateFormat("d MMMM yyyy", Locale.ITALIAN);
 
     public static DettaglioSchedaFragment newInstance(String schedaId, String titolo, String valuta) {
         DettaglioSchedaFragment fragment = new DettaglioSchedaFragment();
@@ -79,20 +99,56 @@ public class DettaglioSchedaFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         viewModel = new ViewModelProvider(requireActivity()).get(DettaglioSchedaViewModel.class);
 
+        categoriaSelezionata = getString(R.string.filtro_tutte);
+
+        impostaBottomNavPrincipaleVisibile(false);
+
         setupToolbar();
-        setupActionButtons();
         setupRecyclerView();
-        setupEmptyState();
+        setupRecyclerSaldi();
+        setupRicercaEFiltri();
         setupObservers();
         setupFab();
+        setupBottomNavScheda();
+        setupRecyclerMembri();
+
     }
 
-    private void setupEmptyState() {
-        binding.layoutEmptySpese.tvEmptyTitle.setText(R.string.empty_spese_titolo);
-        binding.layoutEmptySpese.tvEmptyDesc.setText(R.string.empty_spese_desc);
+    private void setupBottomNavScheda() {
+        binding.bottomNavScheda.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            binding.sezioneSpese.setVisibility(id == R.id.nav_scheda_spese ? View.VISIBLE : View.GONE);
+            binding.sezioneSaldi.setVisibility(id == R.id.nav_scheda_saldi ? View.VISIBLE : View.GONE);
+            binding.sezioneMembri.setVisibility(id == R.id.nav_scheda_membri ? View.VISIBLE : View.GONE);
+
+            if (id == R.id.nav_scheda_spese) {
+                binding.fabNuovaSpesa.show();
+            } else {
+                binding.fabNuovaSpesa.hide();
+            }
+            return true;
+        });
+    }
+
+    private void setupRecyclerSaldi() {
+        saldoAdapter = new SaldoAdapter();
+        binding.recyclerSaldi.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerSaldi.setAdapter(saldoAdapter);
+    }
+
+    private void aggiornaSaldi() {
+        if (saldoAdapter != null) {
+            List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
+                    partecipantiCache,
+                    speseCache,
+                    quoteCache,
+                    valuta != null ? valuta : "EUR"
+            );
+            saldoAdapter.submitList(trasferimenti);
+        }
     }
 
     private void setupToolbar() {
@@ -107,7 +163,13 @@ public class DettaglioSchedaFragment extends Fragment {
 
         binding.toolbarDettaglio.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.action_modifica_titolo) {
+            if (itemId == R.id.action_esporta) {
+                mostraSceltaEsportazione();
+                return true;
+            } else if (itemId == R.id.action_invita) {
+                condividiCodiceInvito();
+                return true;
+            } else if (itemId == R.id.action_modifica_titolo) {
                 mostraDialogModificaNome();
                 return true;
             } else if (itemId == R.id.action_elimina_scheda) {
@@ -118,34 +180,57 @@ public class DettaglioSchedaFragment extends Fragment {
         });
     }
 
-    private void setupActionButtons() {
-        binding.btnInvita.setOnClickListener(v -> condividiCodiceInvito());
-        binding.btnGestisciGruppo.setOnClickListener(v -> mostraDialogGestioneMembri());
-        binding.btnEsporta.setOnClickListener(v -> mostraSceltaEsportazione());
-    }
-
     private void setupRecyclerView() {
         adapter = new SpesaAdapter();
         binding.recyclerSpese.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSpese.setAdapter(adapter);
     }
 
+    private void setupRicercaEFiltri() {
+        binding.inputRicercaSpese.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                queryFiltroTesto = s != null ? s.toString().trim().toLowerCase() : "";
+                applicaFiltriERaggruppa();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Listener compatibile sia con versioni Material vecchie che recenti
+        binding.chipGroupCategorie.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == View.NO_ID || checkedId == R.id.chip_cat_tutte) {
+                categoriaSelezionata = getString(R.string.filtro_tutte);
+            } else {
+                Chip chip = group.findViewById(checkedId);
+                categoriaSelezionata = chip != null ? chip.getText().toString() : getString(R.string.filtro_tutte);
+            }
+            applicaFiltriERaggruppa();
+        });
+    }
+
     private void setupObservers() {
+        viewModel.getQuoteDellaScheda(schedaId).observe(getViewLifecycleOwner(), quote -> {
+            this.quoteCache = (quote != null) ? quote : new ArrayList<>();
+            aggiornaSaldi();
+        });
+
         viewModel.getSpeseConDettagli(schedaId).observe(getViewLifecycleOwner(), (List<SpesaConDettagli> speseConDettagli) -> {
             if (binding == null) return;
 
+            this.tutteSpeseRaw = (speseConDettagli != null) ? speseConDettagli : new ArrayList<>();
+
             this.speseCache.clear();
-            if (speseConDettagli != null) {
-                for (SpesaConDettagli item : speseConDettagli) {
-                    this.speseCache.add(item.getSpesa());
-                }
+            for (SpesaConDettagli item : this.tutteSpeseRaw) {
+                this.speseCache.add(item.getSpesa());
             }
 
-            boolean hasSpese = !this.speseCache.isEmpty();
-            binding.layoutEmptySpese.getRoot().setVisibility(hasSpese ? View.GONE : View.VISIBLE);
-            binding.recyclerSpese.setVisibility(hasSpese ? View.VISIBLE : View.GONE);
-
-            adapter.submitList(speseConDettagli);
+            applicaFiltriERaggruppa();
+            aggiornaSaldi();
         });
 
         viewModel.getTotaleSpese(schedaId).observe(getViewLifecycleOwner(), totale -> {
@@ -158,13 +243,47 @@ public class DettaglioSchedaFragment extends Fragment {
             if (binding == null || partecipanti == null) return;
             this.partecipantiCache = partecipanti;
 
-            List<String> nomi = new ArrayList<>();
-            for (Partecipante p : partecipanti) {
-                nomi.add(p.getNome());
+            // Invia la lista aggiornata al RecyclerView della sezione Membri
+            if (membroAdapter != null) {
+                membroAdapter.submitList(partecipanti);
             }
-            String partecipantiStr = String.join(", ", nomi);
-            binding.tvListaPartecipanti.setText(getString(R.string.label_partecipanti_formato, partecipantiStr));
+
+            aggiornaSaldi();
         });
+    }
+
+    private void applicaFiltriERaggruppa() {
+        List<SpesaConDettagli> filtrate = new ArrayList<>();
+        String labelTutte = getString(R.string.filtro_tutte);
+
+        for (SpesaConDettagli scd : tutteSpeseRaw) {
+            Spesa s = scd.getSpesa();
+            boolean matchTesto = queryFiltroTesto.isEmpty() ||
+                    s.getTitolo().toLowerCase().contains(queryFiltroTesto);
+
+            boolean matchCat = categoriaSelezionata.equalsIgnoreCase(labelTutte) ||
+                    categoriaSelezionata.equalsIgnoreCase(s.getCategoria());
+
+            if (matchTesto && matchCat) {
+                filtrate.add(scd);
+            }
+        }
+
+        filtrate.sort((a, b) -> Long.compare(b.getSpesa().getDataSpesa(), a.getSpesa().getDataSpesa()));
+
+        List<SpesaListItem> itemsConHeader = new ArrayList<>();
+        String ultimoHeader = "";
+
+        for (SpesaConDettagli item : filtrate) {
+            String dataHeader = dateFormatHeader.format(new Date(item.getSpesa().getDataSpesa()));
+            if (!dataHeader.equals(ultimoHeader)) {
+                ultimoHeader = dataHeader;
+                itemsConHeader.add(new SpesaListItem(dataHeader));
+            }
+            itemsConHeader.add(new SpesaListItem(item));
+        }
+
+        adapter.submitList(itemsConHeader);
     }
 
     private void setupFab() {
@@ -222,18 +341,56 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
-    private void condividiCodiceInvito() {
-        String testoMessaggio = getString(R.string.msg_codice_invito_body, titolo, schedaId);
+    public void condividiCodiceInvito() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_invito_gruppo, null);
+        TextView tvCodice = dialogView.findViewById(R.id.tv_codice_gruppo);
+        View btnCopia = dialogView.findViewById(R.id.btn_copia_codice);
+        View btnWhatsApp = dialogView.findViewById(R.id.btn_invia_whatsapp);
 
-        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.setType("text/plain");
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.msg_codice_invito_titolo));
-        sendIntent.putExtra(Intent.EXTRA_TEXT, testoMessaggio);
+        tvCodice.setText(schedaId);
 
-        startActivity(Intent.createChooser(sendIntent, getString(R.string.condividi_con)));
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.titolo_dialog_invito)
+                .setView(dialogView)
+                .setPositiveButton(R.string.btn_chiudi, null)
+                .create();
+
+        // 1. Azione Copia negli appunti
+        btnCopia.setOnClickListener(v -> {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
+                    requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("Codice Gruppo", schedaId);
+            if (clipboard != null) {
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(requireContext(), R.string.msg_codice_copiato, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // 2. Azione WhatsApp mirata
+        btnWhatsApp.setOnClickListener(v -> {
+            String messaggio = getString(R.string.msg_invito_whatsapp, titolo, schedaId);
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("text/plain");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, messaggio);
+            sendIntent.setPackage("com.whatsapp");
+
+            try {
+                startActivity(sendIntent);
+            } catch (android.content.ActivityNotFoundException ex) {
+                // Fallback nel caso WhatsApp standard non sia installato (es. WhatsApp Business o browser)
+                try {
+                    sendIntent.setPackage(null);
+                    startActivity(Intent.createChooser(sendIntent, getString(R.string.condividi_con)));
+                } catch (Exception e) {
+                    Toast.makeText(requireContext(), R.string.msg_whatsapp_non_installato, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        dialog.show();
     }
 
-    private void mostraDialogGestioneMembri() {
+    public void mostraDialogGestioneMembri() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_gestione_membri, null);
         EditText inputNuovo = dialogView.findViewById(R.id.input_nome_nuovo_membro);
         View btnAggiungi = dialogView.findViewById(R.id.bottone_conferma_aggiungi);
@@ -250,11 +407,11 @@ public class DettaglioSchedaFragment extends Fragment {
             String nome = inputNuovo.getText() != null ? inputNuovo.getText().toString().trim() : "";
             if (!nome.isEmpty()) {
                 Partecipante nuovoP = new Partecipante(
-                        java.util.UUID.randomUUID().toString(),
+                        UUID.randomUUID().toString(),
                         schedaId,
                         nome,
                         null,
-                        com.example.paripariapp.data.model.SyncStatus.PENDING_INSERT
+                        SyncStatus.PENDING_INSERT
                 );
                 viewModel.aggiungiPartecipante(nuovoP);
                 inputNuovo.setText("");
@@ -312,7 +469,7 @@ public class DettaglioSchedaFragment extends Fragment {
         }
     }
 
-    private void mostraSceltaEsportazione() {
+    public void mostraSceltaEsportazione() {
         String[] opzioni = {
                 getString(R.string.opzione_esporta_csv),
                 getString(R.string.opzione_esporta_pdf)
@@ -321,7 +478,7 @@ public class DettaglioSchedaFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(getString(R.string.titolo_dialog_esporta))
                 .setItems(opzioni, (dialog, which) -> {
-                    if (speseCache == null || speseCache.isEmpty()) {
+                    if (speseCache.isEmpty()) {
                         Toast.makeText(requireContext(), R.string.msg_nessuna_spesa_export, Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -343,9 +500,87 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
+    private void impostaBottomNavPrincipaleVisibile(boolean visibile) {
+        if (getActivity() != null) {
+            View mainBottomNav = getActivity().findViewById(R.id.bottom_navigation);
+            if (mainBottomNav != null) {
+                mainBottomNav.setVisibility(visibile ? View.VISIBLE : View.GONE);
+            }
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        impostaBottomNavPrincipaleVisibile(true);
         binding = null;
+    }
+    private void setupRecyclerMembri() {
+        membroAdapter = new MembroAdapter();
+        binding.recyclerMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerMembri.setAdapter(membroAdapter);
+
+        membroAdapter.setOnEliminaClickListener(p -> {
+            boolean haSpese = false;
+            for (Spesa s : speseCache) {
+                if (p.getId().equals(s.getPagatoDaId())) {
+                    haSpese = true;
+                    break;
+                }
+            }
+
+            if (haSpese) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.dialog_titolo_gestione_gruppo)
+                        .setMessage(getString(R.string.msg_errore_rimozione_membro))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            } else {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.btn_rimuovi)
+                        .setMessage(getString(R.string.msg_conferma_rimuovi_membro, p.getNome()))
+                        .setPositiveButton(R.string.btn_rimuovi, (d, which) -> {
+                            viewModel.eliminaPartecipante(p.getId());
+                        })
+                        .setNegativeButton(R.string.btn_annulla, null)
+                        .show();
+            }
+        });
+
+        binding.btnAggiungiMembroTab.setOnClickListener(v -> mostraDialogAggiungiSingoloMembro());
+    }
+
+    private void mostraDialogAggiungiSingoloMembro() {
+        final EditText input = new EditText(requireContext());
+        input.setHint(R.string.hint_nome_partecipante);
+        input.setSingleLine(true);
+
+        FrameLayout container = new FrameLayout(requireContext());
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (20 * getResources().getDisplayMetrics().density);
+        params.leftMargin = margin;
+        params.rightMargin = margin;
+        input.setLayoutParams(params);
+        container.addView(input);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.titolo_aggiungi_membro)
+                .setView(container)
+                .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
+                    String nome = input.getText().toString().trim();
+                    if (!nome.isEmpty()) {
+                        Partecipante nuovoP = new Partecipante(
+                                UUID.randomUUID().toString(),
+                                schedaId,
+                                nome,
+                                null,
+                                SyncStatus.PENDING_INSERT
+                        );
+                        viewModel.aggiungiPartecipante(nuovoP);
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
     }
 }

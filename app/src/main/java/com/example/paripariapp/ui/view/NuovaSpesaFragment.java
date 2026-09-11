@@ -187,6 +187,7 @@ public class NuovaSpesaFragment extends Fragment {
             String spesaId = java.util.UUID.randomUUID().toString();
 
             if (!binding.interruttorePersonalizzata.isChecked()) {
+                // Divisione Equa standard
                 List<Partecipante> partecipantiInclusi = new ArrayList<>();
                 for (Partecipante p : partecipanti) {
                     CheckBox cb = checkMap.get(p.getId());
@@ -205,25 +206,56 @@ public class NuovaSpesaFragment extends Fragment {
                     quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaSingola, SyncStatus.PENDING_INSERT));
                 }
             } else {
-                double sommaQuote = 0.0;
+                // Divisione Personalizzata in Percentuale (%)
+                List<Partecipante> partecipantiInclusi = new ArrayList<>();
+                Map<String, Double> percentualiInserite = new HashMap<>();
+                double sommaPercentuali = 0.0;
+
                 for (Partecipante p : partecipanti) {
                     CheckBox cb = checkMap.get(p.getId());
                     if (cb != null && cb.isChecked()) {
+                        partecipantiInclusi.add(p);
                         EditText et = quotaInputMap.get(p.getId());
-                        double q = 0.0;
+                        double perc = 0.0;
                         try {
-                            if (et != null && et.getText() != null && !et.getText().toString().isEmpty()) {
-                                q = Double.parseDouble(et.getText().toString().replace(",", "."));
+                            if (et != null && et.getText() != null && !et.getText().toString().trim().isEmpty()) {
+                                perc = Double.parseDouble(et.getText().toString().replace(",", "."));
                             }
                         } catch (Exception ignored) {}
-                        sommaQuote += q;
-                        quote.add(new SpesaPartecipante(spesaId, p.getId(), q, SyncStatus.PENDING_INSERT));
+
+                        percentualiInserite.put(p.getId(), perc);
+                        sommaPercentuali += perc;
                     }
                 }
 
-                if (Math.abs(sommaQuote - importo) > 0.05) {
-                    Toast.makeText(requireContext(), getString(R.string.spesa_errore_somma_quote, sommaQuote, importo), Toast.LENGTH_LONG).show();
+                if (partecipantiInclusi.isEmpty()) {
+                    Toast.makeText(requireContext(), R.string.spesa_errore_nessun_partecipante, Toast.LENGTH_SHORT).show();
                     return;
+                }
+
+                // Verifica che la somma sia il 100% (tolleranza 0.05 per decimali)
+                if (Math.abs(sommaPercentuali - 100.0) > 0.05) {
+                    Toast.makeText(requireContext(),
+                            getString(R.string.spesa_errore_somma_percentuali, sommaPercentuali),
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                // Conversione percentuale -> importo in valuta con bilanciamento centesimi sull'ultimo partecipante
+                double totaleAssegnato = 0.0;
+                for (int i = 0; i < partecipantiInclusi.size(); i++) {
+                    Partecipante p = partecipantiInclusi.get(i);
+                    double perc = percentualiInserite.get(p.getId());
+                    double quotaEuro;
+
+                    if (i == partecipantiInclusi.size() - 1) {
+                        quotaEuro = Math.round((importo - totaleAssegnato) * 100.0) / 100.0;
+                    } else {
+                        quotaEuro = Math.round((importo * (perc / 100.0)) * 100.0) / 100.0;
+                        totaleAssegnato += quotaEuro;
+                    }
+
+                    quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaEuro, SyncStatus.PENDING_INSERT));
                 }
             }
 

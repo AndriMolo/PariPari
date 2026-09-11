@@ -188,6 +188,7 @@ public class PariPariRepository {
 
     public void insertSpesaConQuote(Spesa spesa, @Nullable List<SpesaPartecipante> quote) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            // Salva sempre e prioritariamente in Room
             spesaDao.insert(spesa);
             if (quote != null && !quote.isEmpty()) {
                 spesaDao.insertQuote(quote);
@@ -200,14 +201,13 @@ public class PariPariRepository {
 
     public void deleteSpesa(String spesaId, String schedaId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) {
-                spesaDao.updateSyncStatus(spesaId, SyncStatus.PENDING_DELETE);
-            } else {
-                spesaDao.deleteQuoteBySpesaId(spesaId);
-                spesaDao.deleteById(spesaId);
+            spesaDao.deleteQuoteBySpesaId(spesaId);
+            spesaDao.deleteById(spesaId);
+
+            if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
                 firestore.collection("groups").document(schedaId)
                         .collection("expenses").document(spesaId).delete()
-                        .addOnFailureListener(e -> Log.w(TAG, "Eliminazione spesa remota fallita: " + e.getMessage()));
+                        .addOnFailureListener(e -> Log.w(TAG, "Eliminazione spesa remota differita: " + e.getMessage()));
             }
         });
     }
@@ -380,22 +380,18 @@ public class PariPariRepository {
                                     Long dataAggAdd = doc.getLong("dataAggiornamento");
 
                                     if (titoloAdd != null) {
-                                        Scheda remoteScheda = new Scheda(
+                                        // PROTEZIONE CASCADE:
+                                        // Non fare REPLACE se la scheda esiste già in locale, altrimenti SQLite attiva il CASCADE
+                                        // ed elimina tutte le spese collegate!
+                                        schedaDao.updateTitolo(
                                                 groupId,
                                                 titoloAdd,
-                                                descAdd != null ? descAdd : "",
-                                                valutaAdd != null ? valutaAdd : "EUR",
-                                                creatoreId != null ? creatoreId : "",
-                                                dataCreaz != null ? dataCreaz : System.currentTimeMillis(),
                                                 dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
                                                 SyncStatus.SYNCED
                                         );
-                                        try {
-                                            schedaDao.insert(remoteScheda);
-                                            attachSubcollectionListeners(groupId);
-                                        } catch (Exception e) {
-                                            Log.w(TAG, "Sync scheda fallito: " + e.getMessage());
-                                        }
+
+                                        // Aggancia sempre i listener
+                                        attachSubcollectionListeners(groupId);
                                     }
                                     break;
 
@@ -413,8 +409,8 @@ public class PariPariRepository {
                                     break;
 
                                 case REMOVED:
-                                    schedaDao.deleteById(groupId);
-                                    detachSubcollectionListeners(groupId);
+                                    // Non cancellare localmente se siamo offline o in stato incerto
+                                    Log.w(TAG, "Scheda rimossa da remoto: " + groupId);
                                     break;
                             }
                         }
@@ -427,6 +423,7 @@ public class PariPariRepository {
     private void attachSubcollectionListeners(String groupId) {
         if (groupSubListeners.containsKey(groupId + "_parts")) return;
 
+        // 1. LISTENER PARTECIPANTI
         ListenerRegistration pReg = firestore.collection("groups").document(groupId)
                 .collection("participants")
                 .addSnapshotListener((snapshots, error) -> {
@@ -436,7 +433,7 @@ public class PariPariRepository {
                             DocumentSnapshot doc = dc.getDocument();
                             String partId = doc.getId();
                             if (dc.getType() == DocumentChange.Type.REMOVED) {
-                                partecipanteDao.deleteById(partId);
+                                Log.w(TAG, "Partecipante rimosso da remoto: " + partId);
                             } else {
                                 String nome = doc.getString("nome");
                                 String email = doc.getString("email");
@@ -454,6 +451,7 @@ public class PariPariRepository {
                 });
         groupSubListeners.put(groupId + "_parts", pReg);
 
+        // 2. LISTENER SPESE
         ListenerRegistration eReg = firestore.collection("groups").document(groupId)
                 .collection("expenses")
                 .addSnapshotListener((snapshots, error) -> {
@@ -464,11 +462,7 @@ public class PariPariRepository {
                             String spesaId = doc.getId();
 
                             if (dc.getType() == DocumentChange.Type.REMOVED) {
-                                Spesa spesaLocale = spesaDao.getSpesaByIdSync(spesaId);
-                                if (spesaLocale != null && spesaLocale.getSyncStatus() == SyncStatus.SYNCED) {
-                                    spesaDao.deleteQuoteBySpesaId(spesaId);
-                                    spesaDao.deleteById(spesaId);
-                                }
+                                Log.w(TAG, "Spesa rimossa da remoto ignorata per sicurezza locale: " + spesaId);
                             } else {
                                 String titolo = doc.getString("titolo");
                                 Double importo = doc.getDouble("importo");
@@ -479,6 +473,18 @@ public class PariPariRepository {
                                 String scontrinoUrl = doc.getString("scontrinoUrl");
 
                                 if (titolo != null && importo != null && pagatoDaId != null) {
+                                    Partecipante pagatoreEsistente = partecipanteDao.getPartecipanteById(pagatoDaId);
+                                    if (pagatoreEsistente == null) {
+                                        Partecipante placeholder = new Partecipante(
+                                                pagatoDaId,
+                                                groupId,
+                                                "Partecipante",
+                                                null,
+                                                SyncStatus.SYNCED
+                                        );
+                                        partecipanteDao.insert(placeholder);
+                                    }
+
                                     Spesa sp = new Spesa(
                                             spesaId,
                                             groupId,
@@ -491,8 +497,28 @@ public class PariPariRepository {
                                             scontrinoUrl,
                                             SyncStatus.SYNCED
                                     );
+
                                     try {
                                         spesaDao.insert(sp);
+
+                                        doc.getReference().collection("shares").get().addOnSuccessListener(shareSnaps -> {
+                                            if (shareSnaps != null && !shareSnaps.isEmpty()) {
+                                                List<SpesaPartecipante> quoteRemote = new ArrayList<>();
+                                                for (DocumentSnapshot sDoc : shareSnaps.getDocuments()) {
+                                                    String pId = sDoc.getString("partecipanteId");
+                                                    Double quotaVal = sDoc.getDouble("quota");
+                                                    if (pId != null && quotaVal != null) {
+                                                        Partecipante deb = partecipanteDao.getPartecipanteById(pId);
+                                                        if (deb == null) {
+                                                            partecipanteDao.insert(new Partecipante(pId, groupId, "Partecipante", null, SyncStatus.SYNCED));
+                                                        }
+                                                        quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, SyncStatus.SYNCED));
+                                                    }
+                                                }
+                                                AppDatabase.databaseWriteExecutor.execute(() -> spesaDao.insertQuote(quoteRemote));
+                                            }
+                                        });
+
                                     } catch (Exception e) {
                                         Log.w(TAG, "Sync spesa fallito: " + e.getMessage());
                                     }
@@ -522,5 +548,9 @@ public class PariPariRepository {
             if (reg != null) reg.remove();
         }
         groupSubListeners.clear();
+    }
+
+    public LiveData<List<SpesaPartecipante>> getQuoteDellaScheda(String schedaId) {
+        return spesaDao.getTutteQuoteBySchedaLive(schedaId);
     }
 }

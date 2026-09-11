@@ -137,6 +137,7 @@ public class SpeseFragment extends Fragment {
                 viewHolder.itemView.setElevation(0f);
             }
 
+
             @Override
             public void onChildDraw(@NonNull Canvas c,
                                     @NonNull RecyclerView recyclerView,

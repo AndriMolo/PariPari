@@ -2,19 +2,27 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Tasto solo immagine: Modifica nome -->
     <item
-        android:id="@+id/action_modifica_titolo"
-        android:icon="@drawable/ic_edit"
-        android:title="@string/cd_modifica_nome_scheda"
+        android:id="@+id/action_esporta"
+        android:icon="@drawable/ic_file_download"
+        android:title="@string/btn_esporta"
         app:showAsAction="ifRoom" />
 
-    <!-- Tasto solo immagine: Cestino rosso -->
+    <item
+        android:id="@+id/action_invita"
+        android:icon="@drawable/ic_group"
+        android:title="@string/action_invita"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_modifica_titolo"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/action_modifica_titolo"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/action_elimina_scheda"
-        android:icon="@drawable/ic_delete"
-        android:title="@string/cd_elimina_scheda"
-        app:iconTint="@android:color/holo_red_dark"
-        app:showAsAction="always" />
-
+        android:icon="@android:drawable/ic_menu_delete"
+        android:title="@string/action_elimina_scheda"
+        app:showAsAction="never" />
 </menu>
