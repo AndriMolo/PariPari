@@ -1,5 +1,6 @@
 package com.example.paripariapp.ui.view;
 
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -65,20 +66,11 @@ public class SpeseFragment extends Fragment {
     private void setupRecyclerView() {
         adapter = new SchedaAdapter(scheda -> {
             if (scheda != null) {
-                getParentFragmentManager().beginTransaction()
-                        .setCustomAnimations(
-                                android.R.anim.fade_in,
-                                android.R.anim.fade_out,
-                                android.R.anim.fade_in,
-                                android.R.anim.fade_out
-                        )
-                        .replace(R.id.fragment_container, DettaglioSchedaFragment.newInstance(
-                                scheda.getId(),
-                                scheda.getTitolo(),
-                                scheda.getValutaPredefinita()
-                        ))
-                        .addToBackStack("dettaglio_scheda")
-                        .commit();
+                Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
+                intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, scheda.getId());
+                intent.putExtra(DettaglioSchedaActivity.EXTRA_TITOLO, scheda.getTitolo());
+                intent.putExtra(DettaglioSchedaActivity.EXTRA_VALUTA, scheda.getValutaPredefinita());
+                startActivity(intent);
             }
         });
 

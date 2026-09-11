@@ -38,11 +38,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Controlla automaticamente se nascondere o mostrare la barra
-        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
-            boolean isRootScreen = getSupportFragmentManager().getBackStackEntryCount() == 0;
-            binding.bottomNavigation.setVisibility(isRootScreen ? View.VISIBLE : View.GONE);
-        });
 
         if (savedInstanceState == null) {
             loadFragment(new SpeseFragment());

@@ -103,8 +103,6 @@ public class DettaglioSchedaFragment extends Fragment {
 
         categoriaSelezionata = getString(R.string.filtro_tutte);
 
-        impostaBottomNavPrincipaleVisibile(false);
-
         setupToolbar();
         setupRecyclerView();
         setupRecyclerSaldi();
@@ -156,8 +154,8 @@ public class DettaglioSchedaFragment extends Fragment {
             binding.toolbarDettaglio.setTitle(titolo);
         }
         binding.toolbarDettaglio.setNavigationOnClickListener(v -> {
-            if (getParentFragmentManager() != null) {
-                getParentFragmentManager().popBackStack();
+            if (getActivity() != null) {
+                getActivity().finish();
             }
         });
 
@@ -290,7 +288,13 @@ public class DettaglioSchedaFragment extends Fragment {
         binding.fabNuovaSpesa.setOnClickListener(v -> {
             NuovaSpesaFragment fragment = NuovaSpesaFragment.newInstance(schedaId, valuta);
             getParentFragmentManager().beginTransaction()
-                    .replace(((ViewGroup) requireView().getParent()).getId(), fragment)
+                    .setCustomAnimations(
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out,
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out
+                    )
+                    .replace(R.id.dettaglio_container, fragment)
                     .addToBackStack(null)
                     .commit();
         });
@@ -333,8 +337,8 @@ public class DettaglioSchedaFragment extends Fragment {
                 .setMessage(getString(R.string.dialog_msg_elimina_scheda))
                 .setPositiveButton(getString(R.string.btn_elimina), (dialog, which) -> {
                     viewModel.eliminaScheda(schedaId);
-                    if (getParentFragmentManager() != null) {
-                        getParentFragmentManager().popBackStack();
+                    if (getActivity() != null) {
+                        getActivity().finish();
                     }
                 })
                 .setNegativeButton(getString(R.string.btn_annulla), null)
@@ -500,19 +504,9 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
-    private void impostaBottomNavPrincipaleVisibile(boolean visibile) {
-        if (getActivity() != null) {
-            View mainBottomNav = getActivity().findViewById(R.id.bottom_navigation);
-            if (mainBottomNav != null) {
-                mainBottomNav.setVisibility(visibile ? View.VISIBLE : View.GONE);
-            }
-        }
-    }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        impostaBottomNavPrincipaleVisibile(true);
         binding = null;
     }
     private void setupRecyclerMembri() {
