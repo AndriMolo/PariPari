@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Spesa;
+import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.data.repository.PariPariRepository;
@@ -22,6 +23,9 @@ import java.util.List;
  */
 public class DettaglioSchedaViewModel extends AndroidViewModel {
 
+    public LiveData<List<SpesaConDettagli>> getSpeseConDettagli(String schedaId) {
+        return repository.getSpeseConDettagli(schedaId);
+    }
     private final PariPariRepository repository;
 
     public DettaglioSchedaViewModel(@NonNull Application application) {
@@ -83,10 +87,12 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.insertSpesa(spesa, quote);
     }
     public void inserisciSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
-        repository.insertSpesa(spesa, quote);
+        repository.insertSpesaConQuote(spesa, quote);
     }
 
     public void aggiungiPartecipante(Partecipante partecipante) {
         repository.insertPartecipante(partecipante);
     }
+
+
 }

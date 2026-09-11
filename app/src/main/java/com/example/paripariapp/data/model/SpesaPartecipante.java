@@ -3,7 +3,6 @@ package com.example.paripariapp.data.model;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.ForeignKey;
 import androidx.room.Index;
 
 /**
@@ -12,20 +11,6 @@ import androidx.room.Index;
 @Entity(
         tableName = "spese_partecipanti",
         primaryKeys = {"spesa_id", "partecipante_id"},
-        foreignKeys = {
-                @ForeignKey(
-                        entity = Spesa.class,
-                        parentColumns = "id",
-                        childColumns = "spesa_id",
-                        onDelete = ForeignKey.CASCADE
-                ),
-                @ForeignKey(
-                        entity = Partecipante.class,
-                        parentColumns = "id",
-                        childColumns = "partecipante_id",
-                        onDelete = ForeignKey.CASCADE
-                )
-        },
         indices = {
                 @Index("spesa_id"),
                 @Index("partecipante_id")

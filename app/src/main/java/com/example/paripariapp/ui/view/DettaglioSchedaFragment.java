@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Spesa;
+import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.databinding.FragmentDettaglioSchedaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
 import com.example.paripariapp.util.EsportatoreDati;
@@ -130,13 +131,21 @@ public class DettaglioSchedaFragment extends Fragment {
     }
 
     private void setupObservers() {
-        viewModel.getSpese(schedaId).observe(getViewLifecycleOwner(), spese -> {
+        viewModel.getSpeseConDettagli(schedaId).observe(getViewLifecycleOwner(), (List<SpesaConDettagli> speseConDettagli) -> {
             if (binding == null) return;
-            this.speseCache = (spese != null) ? spese : new ArrayList<>();
+
+            this.speseCache.clear();
+            if (speseConDettagli != null) {
+                for (SpesaConDettagli item : speseConDettagli) {
+                    this.speseCache.add(item.getSpesa());
+                }
+            }
+
             boolean hasSpese = !this.speseCache.isEmpty();
             binding.layoutEmptySpese.getRoot().setVisibility(hasSpese ? View.GONE : View.VISIBLE);
             binding.recyclerSpese.setVisibility(hasSpese ? View.VISIBLE : View.GONE);
-            adapter.submitList(spese);
+
+            adapter.submitList(speseConDettagli);
         });
 
         viewModel.getTotaleSpese(schedaId).observe(getViewLifecycleOwner(), totale -> {
@@ -148,7 +157,6 @@ public class DettaglioSchedaFragment extends Fragment {
         viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), partecipanti -> {
             if (binding == null || partecipanti == null) return;
             this.partecipantiCache = partecipanti;
-            adapter.setPartecipanti(partecipanti);
 
             List<String> nomi = new ArrayList<>();
             for (Partecipante p : partecipanti) {

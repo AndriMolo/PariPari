@@ -1,7 +1,6 @@
 package com.example.paripariapp.ui.view;
 
 import android.content.Context;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -10,55 +9,43 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.paripariapp.R;
-import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Spesa;
+import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.databinding.ItemSpesaBinding;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
+
+import com.example.paripariapp.R;
 
 /**
  * Adapter per la lista delle spese in una scheda.
- * Utilizza ListAdapter con DiffUtil per prestazioni elevate a 60/120 fps.
+ * Utilizza ListAdapter con DiffUtil e SpesaConDettagli per visualizzare pagatore e split reale.
  */
-public class SpesaAdapter extends ListAdapter<Spesa, SpesaAdapter.SpesaViewHolder> {
-
-    private final Map<String, String> partecipantiMap = new HashMap<>();
-    private int numeroPartecipanti = 1;
+public class SpesaAdapter extends ListAdapter<SpesaConDettagli, SpesaAdapter.SpesaViewHolder> {
 
     public SpesaAdapter() {
         super(DIFF_CALLBACK);
     }
 
-    public void setPartecipanti(List<Partecipante> partecipanti) {
-        partecipantiMap.clear();
-        if (partecipanti != null) {
-            numeroPartecipanti = Math.max(1, partecipanti.size());
-            for (Partecipante p : partecipanti) {
-                partecipantiMap.put(p.getId(), p.getNome());
-            }
-        }
-        notifyDataSetChanged();
-    }
-
-    private static final DiffUtil.ItemCallback<Spesa> DIFF_CALLBACK = new DiffUtil.ItemCallback<Spesa>() {
+    private static final DiffUtil.ItemCallback<SpesaConDettagli> DIFF_CALLBACK = new DiffUtil.ItemCallback<SpesaConDettagli>() {
         @Override
-        public boolean areItemsTheSame(@NonNull Spesa oldItem, @NonNull Spesa newItem) {
-            return Objects.equals(oldItem.getId(), newItem.getId());
+        public boolean areItemsTheSame(@NonNull SpesaConDettagli oldItem, @NonNull SpesaConDettagli newItem) {
+            return Objects.equals(oldItem.getSpesa().getId(), newItem.getSpesa().getId());
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull Spesa oldItem, @NonNull Spesa newItem) {
-            return Objects.equals(oldItem.getTitolo(), newItem.getTitolo()) &&
-                    Double.compare(oldItem.getImporto(), newItem.getImporto()) == 0 &&
-                    Objects.equals(oldItem.getValuta(), newItem.getValuta()) &&
-                    Objects.equals(oldItem.getPagatoDaId(), newItem.getPagatoDaId()) &&
-                    oldItem.getDataSpesa() == newItem.getDataSpesa();
+        public boolean areContentsTheSame(@NonNull SpesaConDettagli oldItem, @NonNull SpesaConDettagli newItem) {
+            Spesa o = oldItem.getSpesa();
+            Spesa n = newItem.getSpesa();
+            return Objects.equals(o.getTitolo(), n.getTitolo()) &&
+                    Double.compare(o.getImporto(), n.getImporto()) == 0 &&
+                    Objects.equals(o.getValuta(), n.getValuta()) &&
+                    Objects.equals(oldItem.getNomePagatore(), newItem.getNomePagatore()) &&
+                    oldItem.getNumeroPartecipanti() == newItem.getNumeroPartecipanti() &&
+                    o.getDataSpesa() == n.getDataSpesa();
         }
     };
 
@@ -76,7 +63,7 @@ public class SpesaAdapter extends ListAdapter<Spesa, SpesaAdapter.SpesaViewHolde
         holder.bind(getItem(position));
     }
 
-    class SpesaViewHolder extends RecyclerView.ViewHolder {
+    static class SpesaViewHolder extends RecyclerView.ViewHolder {
 
         private final ItemSpesaBinding binding;
 
@@ -85,27 +72,30 @@ public class SpesaAdapter extends ListAdapter<Spesa, SpesaAdapter.SpesaViewHolde
             this.binding = binding;
         }
 
-        void bind(Spesa spesa) {
-            Context context = itemView.getContext();
+        public void bind(SpesaConDettagli item) {
+            Spesa spesa = item.getSpesa();
+            Context context = binding.getRoot().getContext();
 
+            // Titolo e Importo
             binding.tvTitoloSpesa.setText(spesa.getTitolo());
+            binding.tvImportoSpesa.setText(
+                    context.getString(R.string.spesa_formato_importo, spesa.getImporto(), spesa.getValuta())
+            );
 
-            // Nome pagatore
-            String nomePagatore = partecipantiMap.get(spesa.getPagatoDaId());
-            if (nomePagatore == null || nomePagatore.isEmpty()) {
-                nomePagatore = context.getString(R.string.partecipante_io);
-            }
+            // Pagatore e Data localizzata
+            String dataFmt = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date(spesa.getDataSpesa()));
+            binding.tvDettaglioPagatore.setText(
+                    context.getString(R.string.spesa_pagato_da, item.getNomePagatore(), dataFmt)
+            );
 
-            // Data formattata
-            String dataFormattata = DateFormat.getMediumDateFormat(context).format(new Date(spesa.getDataSpesa()));
-            String pagatoreTesto = context.getString(R.string.label_pagato_da, nomePagatore);
-            binding.tvDettaglioPagatore.setText(String.format("%s • %s", pagatoreTesto, dataFormattata));
-
-            // Importo formattato
-            binding.tvImportoSpesa.setText(String.format(Locale.getDefault(), "%.2f %s", spesa.getImporto(), spesa.getValuta()));
-
-            // Divisione equa
-            binding.tvInfoDivisione.setText(context.getString(R.string.label_divisione_equa, numeroPartecipanti));
+            // Conteggio partecipanti con plurali (gestisce singolare/plurale correttamente)
+            int persone = item.getNumeroPartecipanti();
+            String testoDivisione = context.getResources().getQuantityString(
+                    R.plurals.spesa_split_persone,
+                    persone,
+                    persone
+            );
+            binding.tvInfoDivisione.setText(testoDivisione);
         }
     }
 }

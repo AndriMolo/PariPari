@@ -13,6 +13,7 @@ import com.example.paripariapp.data.local.SpesaDao;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
+import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.util.NetworkConnectivityMonitor;
@@ -140,6 +141,9 @@ public class PariPariRepository {
     }
 
     public LiveData<List<Partecipante>> getPartecipanti(String schedaId) {
+        if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+            attachSubcollectionListeners(schedaId);
+        }
         return partecipanteDao.getPartecipantiBySchedaLive(schedaId);
     }
 
@@ -165,17 +169,31 @@ public class PariPariRepository {
     }
 
     public LiveData<List<Spesa>> getSpese(String schedaId) {
+        if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+            attachSubcollectionListeners(schedaId);
+        }
         return spesaDao.getSpeseBySchedaLive(schedaId);
     }
 
+    public LiveData<List<SpesaConDettagli>> getSpeseConDettagli(String schedaId) {
+        if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+            attachSubcollectionListeners(schedaId);
+        }
+        return spesaDao.getSpeseConDettagliBySchedaLive(schedaId);
+    }
+
     public void insertSpesa(Spesa spesa, @Nullable List<SpesaPartecipante> quote) {
+        insertSpesaConQuote(spesa, quote);
+    }
+
+    public void insertSpesaConQuote(Spesa spesa, @Nullable List<SpesaPartecipante> quote) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             spesaDao.insert(spesa);
             if (quote != null && !quote.isEmpty()) {
                 spesaDao.insertQuote(quote);
             }
             if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
-                uploadSpesa(spesa);
+                uploadSpesaConQuote(spesa, quote);
             }
         });
     }
@@ -185,6 +203,7 @@ public class PariPariRepository {
             if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) {
                 spesaDao.updateSyncStatus(spesaId, SyncStatus.PENDING_DELETE);
             } else {
+                spesaDao.deleteQuoteBySpesaId(spesaId);
                 spesaDao.deleteById(spesaId);
                 firestore.collection("groups").document(schedaId)
                         .collection("expenses").document(spesaId).delete()
@@ -236,9 +255,13 @@ public class PariPariRepository {
                 if (sp.getSyncStatus() == SyncStatus.PENDING_DELETE) {
                     firestore.collection("groups").document(sp.getSchedaId())
                             .collection("expenses").document(sp.getId()).delete()
-                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> spesaDao.deleteById(sp.getId())));
+                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> {
+                                spesaDao.deleteQuoteBySpesaId(sp.getId());
+                                spesaDao.deleteById(sp.getId());
+                            }));
                 } else {
-                    uploadSpesa(sp);
+                    List<SpesaPartecipante> quote = spesaDao.getQuoteBySpesaSync(sp.getId());
+                    uploadSpesaConQuote(sp, quote);
                 }
             }
         });
@@ -297,8 +320,12 @@ public class PariPariRepository {
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento partecipante fallito: " + e.getMessage()));
     }
 
-    private void uploadSpesa(Spesa spesa) {
+    private void uploadSpesaConQuote(Spesa spesa, @Nullable List<SpesaPartecipante> quote) {
         if (auth.getCurrentUser() == null) return;
+
+        WriteBatch batch = firestore.batch();
+        DocumentReference spesaRef = firestore.collection("groups").document(spesa.getSchedaId())
+                .collection("expenses").document(spesa.getId());
 
         Map<String, Object> data = new HashMap<>();
         data.put("titolo", spesa.getTitolo());
@@ -309,12 +336,22 @@ public class PariPariRepository {
         data.put("pagatoDaId", spesa.getPagatoDaId());
         data.put("scontrinoUrl", spesa.getScontrinoUrl());
 
-        firestore.collection("groups").document(spesa.getSchedaId())
-                .collection("expenses").document(spesa.getId())
-                .set(data)
+        batch.set(spesaRef, data);
+
+        if (quote != null) {
+            for (SpesaPartecipante q : quote) {
+                DocumentReference qRef = spesaRef.collection("shares").document(q.getPartecipanteId());
+                Map<String, Object> qData = new HashMap<>();
+                qData.put("partecipanteId", q.getPartecipanteId());
+                qData.put("quota", q.getQuota());
+                batch.set(qRef, qData);
+            }
+        }
+
+        batch.commit()
                 .addOnSuccessListener(aVoid -> AppDatabase.databaseWriteExecutor.execute(() ->
                         spesaDao.updateSyncStatus(spesa.getId(), SyncStatus.SYNCED)))
-                .addOnFailureListener(e -> Log.d(TAG, "Caricamento spesa fallito: " + e.getMessage()));
+                .addOnFailureListener(e -> Log.e(TAG, "Upload spesa fallito: " + e.getMessage()));
     }
 
     public synchronized void startRealtimeSync() {
@@ -425,8 +462,13 @@ public class PariPariRepository {
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
                             DocumentSnapshot doc = dc.getDocument();
                             String spesaId = doc.getId();
+
                             if (dc.getType() == DocumentChange.Type.REMOVED) {
-                                spesaDao.deleteById(spesaId);
+                                Spesa spesaLocale = spesaDao.getSpesaByIdSync(spesaId);
+                                if (spesaLocale != null && spesaLocale.getSyncStatus() == SyncStatus.SYNCED) {
+                                    spesaDao.deleteQuoteBySpesaId(spesaId);
+                                    spesaDao.deleteById(spesaId);
+                                }
                             } else {
                                 String titolo = doc.getString("titolo");
                                 Double importo = doc.getDouble("importo");

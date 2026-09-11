@@ -195,4 +195,21 @@
     <string name="dettaglio_rinomina_partecipante">Rinomina partecipante</string>
     <string name="dettaglio_elimina_partecipante">Elimina partecipante</string>
     <string name="dialog_titolo_rinomina">Rinomina membro</string>
+
+    <!-- Spese -->
+    <string name="spesa_formato_importo">%.2f %s</string>
+    <string name="spesa_pagato_da">Pagato da %1$s • %2$s</string>
+    <plurals name="spesa_split_persone">
+        <item quantity="one">Diviso tra 1 persona</item>
+        <item quantity="other">Diviso tra %d persone</item>
+    </plurals>
+
+
+    <string name="titolo_dialog_saldi">Saldi e Pareggio Conti</string>
+    <string name="saldi_tutti_in_pari">Tutti i conti sono in pari!</string>
+    <string name="saldi_formato_importo">%.2f %s</string>
+    <string name="saldi_descrizione_trasferimento">%1$s deve dare a %2$s</string>
+    <string name="btn_chiudi">Chiudi</string>
+
+
 </resources>
