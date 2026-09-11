@@ -107,6 +107,9 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             this.binding = binding;
         }
 
+        private static final java.time.format.DateTimeFormatter DATE_FORMATTER =
+                java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy");
+
         public void bind(SpesaConDettagli item) {
             Spesa spesa = item.getSpesa();
             Context context = binding.getRoot().getContext();
@@ -118,8 +121,11 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             );
 
             // Pagatore e Data
-            String dataFmt = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date(spesa.getDataSpesa()));
-            String pagatore = item.getNomePagatore() != null ? item.getNomePagatore() : "—";
+            String dataFmt = DATE_FORMATTER.format(
+                    java.time.Instant.ofEpochMilli(spesa.getDataSpesa())
+                            .atZone(java.time.ZoneId.systemDefault())
+            );
+            String pagatore = item.getNomePagatore() != null ? item.getNomePagatore() : context.getString(R.string.nome_sconosciuto);
             binding.tvDettaglioPagatore.setText(
                     context.getString(R.string.spesa_pagato_da, pagatore, dataFmt)
             );

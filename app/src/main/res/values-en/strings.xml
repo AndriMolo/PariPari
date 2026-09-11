@@ -73,6 +73,10 @@
     <string name="label_valute_frequenti">Most used</string>
     <string name="label_tutte_le_valute">All ECB currencies</string>
     <string name="empty_valute_ricerca">No currencies found</string>
+    <string name="chip_eur">🇪🇺 EUR</string>
+    <string name="chip_usd">🇺🇸 USD</string>
+    <string name="chip_gbp">🇬🇧 GBP</string>
+    <string name="chip_chf">🇨🇭 CHF</string>
 
     <!-- Account -->
     <string name="cd_avatar_utente">User avatar</string>
@@ -169,7 +173,7 @@
     <string name="pdf_th_categoria">CATEGORY</string>
     <string name="pdf_th_pagante">PAID BY</string>
     <string name="pdf_th_importo">AMOUNT</string>
-    <string name="pdf_formato_importo">%.2f %s</string>
+    <string name="pdf_formato_importo">%1$.2f %2$s</string>
 
     <!-- Tasti e Azioni Generiche -->
     <string name="btn_salva">Save</string>
@@ -189,7 +193,7 @@
     <string name="spesa_quote_esatte">Custom / percentage split</string>
     <string name="spesa_quota">Share / %</string>
     <string name="spesa_salva">Save expense</string>
-    <string name="spesa_errore_somma_quote">Total shares (%.2f) do not match total amount (%.2f)</string>
+    <string name="spesa_errore_somma_quote">Total shares (%1$.2f) do not match total amount (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Select at least one member for this expense</string>
 
     <!-- Gestione Membri -->
@@ -200,7 +204,7 @@
     <string name="hint_nome_partecipante">Name</string>
 
     <!-- Spese -->
-    <string name="spesa_formato_importo">%.2f %s</string>
+    <string name="spesa_formato_importo">%1$.2f %2$s</string>
     <string name="spesa_pagato_da">Paid by %1$s • %2$s</string>
     <plurals name="spesa_split_persone">
         <item quantity="one">Split among 1 person</item>
@@ -210,7 +214,7 @@
     <!-- Saldi -->
     <string name="titolo_dialog_saldi">Balances and Settlements</string>
     <string name="saldi_tutti_in_pari">All debts are settled!</string>
-    <string name="saldi_formato_importo">%.2f %s</string>
+    <string name="saldi_formato_importo">%1$.2f %2$s</string>
     <string name="saldi_descrizione_trasferimento">%1$s owes %2$s</string>
     <string name="btn_chiudi">Close</string>
     <string name="spesa_errore_somma_percentuali">Percentages must total 100%% (current: %.1f%%)</string>
@@ -256,5 +260,6 @@
     <string name="dettaglio_persone_lbl">People Breakdown</string>
     <string name="da_ricevere_lbl">◉ To receive</string>
     <string name="da_dare_lbl">◉ To pay</string>
+    <string name="nome_sconosciuto">Unknown</string>
 
 </resources>

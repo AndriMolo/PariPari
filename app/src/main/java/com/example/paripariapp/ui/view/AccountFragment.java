@@ -119,20 +119,14 @@ public class AccountFragment extends Fragment {
 
     private void showCurrencySelectionDialog() {
         String currentCode = viewModel.getDefaultCurrency();
-        int selectedIndex = UserPreferencesRepository.getIndexOfCurrencyCode(currentCode);
-        String[] items = UserPreferencesRepository.SUPPORTED_CURRENCIES.toArray(new String[0]);
-
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.label_valuta_predefinita)
-                .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
-                    String selected = items[which];
-                    String code = UserPreferencesRepository.extractCurrencyCode(selected);
-                    viewModel.setDefaultCurrency(code);
-                    Snackbar.make(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code), Snackbar.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                })
-                .setNegativeButton(R.string.btn_annulla, null)
-                .show();
+        String currentDisplay = UserPreferencesRepository.getDisplayItemForCode(currentCode);
+        SelettoreValutaBottomSheet sheet = SelettoreValutaBottomSheet.newInstance(currentDisplay);
+        sheet.setOnCurrencySelectedListener(currencyFull -> {
+            String code = UserPreferencesRepository.extractCurrencyCode(currencyFull);
+            viewModel.setDefaultCurrency(code);
+            Snackbar.make(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code), Snackbar.LENGTH_SHORT).show();
+        });
+        sheet.show(getParentFragmentManager(), "selettore_valuta_account");
     }
 
     private void setupLanguageSelector() {

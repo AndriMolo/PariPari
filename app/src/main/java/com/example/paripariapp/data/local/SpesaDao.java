@@ -19,6 +19,9 @@ public interface SpesaDao {
     @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     LiveData<List<Spesa>> getSpeseBySchedaLive(String schedaId);
 
+    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    List<Spesa> getSpeseBySchedaSync(String schedaId);
+
     @Query("SELECT * FROM spese_partecipanti WHERE spesa_id = :spesaId")
     LiveData<List<SpesaPartecipante>> getQuoteBySpesaLive(String spesaId);
 
@@ -53,7 +56,7 @@ public interface SpesaDao {
     Spesa getSpesaByIdSync(String id);
 
     @Query("SELECT s.*, " +
-            "COALESCE(p.nome, 'Sconosciuto') AS nomePagatore, " +
+            "COALESCE(p.nome, '') AS nomePagatore, " +
             "(SELECT COUNT(*) FROM spese_partecipanti sp WHERE sp.spesa_id = s.id AND sp.quota > 0) AS numeroPartecipanti " +
             "FROM spese s " +
             "LEFT JOIN partecipanti p ON s.pagato_da_id = p.id " +
@@ -63,4 +66,7 @@ public interface SpesaDao {
 
     @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
     LiveData<List<SpesaPartecipante>> getTutteQuoteBySchedaLive(String schedaId);
+
+    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
+    List<SpesaPartecipante> getTutteQuoteBySchedaSync(String schedaId);
 }

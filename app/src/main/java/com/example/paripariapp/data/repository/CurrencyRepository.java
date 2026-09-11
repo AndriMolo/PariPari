@@ -192,8 +192,8 @@ public class CurrencyRepository {
                 Log.e(TAG, "Errore durante il parsing della cache tassi", e);
             }
         }
-        // Se non c'è cache salvata, imposta la data di default
-        lastUpdatedDate.postValue("08/09/2026");
+        // Se non c'è cache salvata, imposta la data odierna
+        lastUpdatedDate.postValue(getTodayFormatted());
     }
 
     private void initDefaultFallbackRates() {
@@ -231,7 +231,7 @@ public class CurrencyRepository {
 
     private String formatDateForDisplay(String isoDate) {
         if (isoDate == null || isoDate.trim().isEmpty()) {
-            return "08/09/2026";
+            return getTodayFormatted();
         }
         try {
             String[] parts = isoDate.split("-");
@@ -241,5 +241,9 @@ public class CurrencyRepository {
         } catch (Exception ignored) {
         }
         return isoDate;
+    }
+
+    private String getTodayFormatted() {
+        return java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 }

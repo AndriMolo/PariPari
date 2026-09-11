@@ -66,7 +66,7 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private String queryFiltroTesto = "";
     private String categoriaSelezionata = "";
-    private final SimpleDateFormat dateFormatHeader = new SimpleDateFormat("d MMMM yyyy", Locale.ITALIAN);
+    private final SimpleDateFormat dateFormatHeader = new SimpleDateFormat("d MMMM yyyy", Locale.getDefault());
 
     public static DettaglioSchedaFragment newInstance(String schedaId, String titolo, String valuta) {
         DettaglioSchedaFragment fragment = new DettaglioSchedaFragment();

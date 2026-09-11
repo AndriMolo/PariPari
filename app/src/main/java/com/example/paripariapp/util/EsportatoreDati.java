@@ -38,22 +38,30 @@ public final class EsportatoreDati {
     private EsportatoreDati() {
     }
 
-    public static File generaCsv(Context context, String nomeScheda, String valutaScheda,
-                                 List<Spesa> spese, List<Partecipante> partecipanti) throws IOException {
+    private static File preparaFileExport(Context context, String nomeScheda, String estensione) {
         File cartella = new File(context.getCacheDir(), "export");
         if (!cartella.exists()) {
             cartella.mkdirs();
         }
         String titolo = (nomeScheda != null && !nomeScheda.isEmpty()) ? nomeScheda : context.getString(R.string.nome_gruppo_default);
         String nomeSicuro = titolo.replaceAll("[^a-zA-Z0-9_-]", "_");
-        File file = new File(cartella, "PariPari_" + nomeSicuro + ".csv");
+        return new File(cartella, "PariPari_" + nomeSicuro + "." + estensione);
+    }
 
+    private static Map<String, String> creaMappaNomi(List<Partecipante> partecipanti) {
         Map<String, String> mappaNomi = new HashMap<>();
         if (partecipanti != null) {
             for (Partecipante p : partecipanti) {
                 mappaNomi.put(p.getId(), p.getNome());
             }
         }
+        return mappaNomi;
+    }
+
+    public static File generaCsv(Context context, String nomeScheda, String valutaScheda,
+                                 List<Spesa> spese, List<Partecipante> partecipanti) throws IOException {
+        File file = preparaFileExport(context, nomeScheda, "csv");
+        Map<String, String> mappaNomi = creaMappaNomi(partecipanti);
 
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
@@ -89,21 +97,10 @@ public final class EsportatoreDati {
 
     public static File generaPdf(Context context, String nomeScheda, String valutaScheda,
                                  List<Spesa> spese, List<Partecipante> partecipanti) throws IOException {
-        File cartella = new File(context.getCacheDir(), "export");
-        if (!cartella.exists()) {
-            cartella.mkdirs();
-        }
-        String titolo = (nomeScheda != null && !nomeScheda.isEmpty()) ? nomeScheda : context.getString(R.string.nome_gruppo_default);
+        File file = preparaFileExport(context, nomeScheda, "pdf");
         String valutaDefault = valutaScheda != null ? valutaScheda : context.getString(R.string.valuta_default);
-        String nomeSicuro = titolo.replaceAll("[^a-zA-Z0-9_-]", "_");
-        File file = new File(cartella, "PariPari_" + nomeSicuro + ".pdf");
-
-        Map<String, String> mappaNomi = new HashMap<>();
-        if (partecipanti != null) {
-            for (Partecipante p : partecipanti) {
-                mappaNomi.put(p.getId(), p.getNome());
-            }
-        }
+        Map<String, String> mappaNomi = creaMappaNomi(partecipanti);
+        String titolo = (nomeScheda != null && !nomeScheda.trim().isEmpty()) ? nomeScheda.trim() : context.getString(R.string.app_name);
 
         PdfDocument document = new PdfDocument();
         int pageNumber = 1;

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.paripariapp.R;
@@ -44,10 +45,10 @@ public class BilancioPersonaAdapter extends RecyclerView.Adapter<BilancioPersona
         holder.binding.tvAvatar.setText(iniziale);
 
         if (item.isCredito()) {
-            holder.binding.tvImportoSaldo.setTextColor(Color.parseColor("#2E7D32"));
+            holder.binding.tvImportoSaldo.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.credit_green));
             holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "+%.2f %s", item.getImporto(), item.getValuta()));
         } else {
-            holder.binding.tvImportoSaldo.setTextColor(Color.parseColor("#C62828"));
+            holder.binding.tvImportoSaldo.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.debt_red));
             holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "-%.2f %s", Math.abs(item.getImporto()), item.getValuta()));
         }
     }

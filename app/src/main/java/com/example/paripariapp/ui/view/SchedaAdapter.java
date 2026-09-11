@@ -68,12 +68,13 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
         return localList;
     }
 
-    @SuppressLint("NotifyDataSetChanged")
+    public static final Object PAYLOAD_COUNT = new Object();
+
     public void aggiornaConteggioPartecipanti(Map<String, Integer> mappaConteggi) {
         if (mappaConteggi != null) {
             partecipantiCountMap.clear();
             partecipantiCountMap.putAll(mappaConteggi);
-            notifyDataSetChanged();
+            notifyItemRangeChanged(0, getItemCount(), PAYLOAD_COUNT);
         }
     }
 
@@ -108,6 +109,18 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
         holder.bind(scheda, count);
     }
 
+    @Override
+    public void onBindViewHolder(@NonNull SchedaViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (!payloads.isEmpty() && payloads.contains(PAYLOAD_COUNT)) {
+            Scheda scheda = getItem(position);
+            Integer countObj = partecipantiCountMap.get(scheda.getId());
+            int count = countObj != null ? countObj : 1;
+            holder.updateCountOnly(count);
+        } else {
+            super.onBindViewHolder(holder, position, payloads);
+        }
+    }
+
     public static class SchedaViewHolder extends RecyclerView.ViewHolder {
 
         private final ItemSchedaBinding binding;
@@ -125,18 +138,23 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
             binding.tvTitoloScheda.setText(scheda.getTitolo());
             binding.tvValutaBadge.setText(scheda.getValutaPredefinita());
 
-            String testoPartecipanti = context.getResources().getQuantityString(
-                    R.plurals.label_partecipanti_count,
-                    count,
-                    count
-            );
-            binding.tvPartecipantiCount.setText(testoPartecipanti);
+            updateCountOnly(count);
 
             binding.getRoot().setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onSchedaClick(scheda);
                 }
             });
+        }
+
+        public void updateCountOnly(int count) {
+            Context context = itemView.getContext();
+            String testoPartecipanti = context.getResources().getQuantityString(
+                    R.plurals.label_partecipanti_count,
+                    count,
+                    count
+            );
+            binding.tvPartecipantiCount.setText(testoPartecipanti);
         }
     }
 }

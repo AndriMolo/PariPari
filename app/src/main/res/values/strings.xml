@@ -73,6 +73,10 @@
     <string name="label_valute_frequenti">Più utilizzate</string>
     <string name="label_tutte_le_valute">Tutte le valute BCE</string>
     <string name="empty_valute_ricerca">Nessuna valuta trovata</string>
+    <string name="chip_eur">🇪🇺 EUR</string>
+    <string name="chip_usd">🇺🇸 USD</string>
+    <string name="chip_gbp">🇬🇧 GBP</string>
+    <string name="chip_chf">🇨🇭 CHF</string>
 
     <!-- Account -->
     <string name="cd_avatar_utente">Avatar utente</string>
@@ -169,7 +173,7 @@
     <string name="pdf_th_categoria">CATEGORIA</string>
     <string name="pdf_th_pagante">PAGANTE</string>
     <string name="pdf_th_importo">IMPORTO</string>
-    <string name="pdf_formato_importo">%.2f %s</string>
+    <string name="pdf_formato_importo">%1$.2f %2$s</string>
 
     <!-- Tasti e Azioni Generiche -->
     <string name="btn_salva">Salva</string>
@@ -189,7 +193,7 @@
     <string name="spesa_quote_esatte">Divisione personalizzata / percentuale</string>
     <string name="spesa_quota">Quota / %</string>
     <string name="spesa_salva">Salva spesa</string>
-    <string name="spesa_errore_somma_quote">La somma delle quote (%.2f) non corrisponde all\'importo totale (%.2f)</string>
+    <string name="spesa_errore_somma_quote">La somma delle quote (%1$.2f) non corrisponde all\'importo totale (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Seleziona almeno un partecipante per la spesa</string>
 
     <!-- Gestione Membri -->
@@ -200,7 +204,7 @@
     <string name="hint_nome_partecipante">Nome</string>
 
     <!-- Spese -->
-    <string name="spesa_formato_importo">%.2f %s</string>
+    <string name="spesa_formato_importo">%1$.2f %2$s</string>
     <string name="spesa_pagato_da">Pagato da %1$s • %2$s</string>
     <plurals name="spesa_split_persone">
         <item quantity="one">Diviso tra 1 persona</item>
@@ -210,7 +214,7 @@
     <!-- Saldi -->
     <string name="titolo_dialog_saldi">Saldi e Pareggio Conti</string>
     <string name="saldi_tutti_in_pari">Tutti i conti sono in pari!</string>
-    <string name="saldi_formato_importo">%.2f %s</string>
+    <string name="saldi_formato_importo">%1$.2f %2$s</string>
     <string name="saldi_descrizione_trasferimento">%1$s deve dare a %2$s</string>
     <string name="btn_chiudi">Chiudi</string>
     <string name="spesa_errore_somma_percentuali">La somma delle percentuali deve fare 100%% (attuale: %.1f%%)</string>
@@ -256,5 +260,6 @@
     <string name="dettaglio_persone_lbl">Dettaglio Persone</string>
     <string name="da_ricevere_lbl">◉ Da ricevere</string>
     <string name="da_dare_lbl">◉ Da dare</string>
+    <string name="nome_sconosciuto">Sconosciuto</string>
 
 </resources>

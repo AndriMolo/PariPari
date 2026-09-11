@@ -89,7 +89,7 @@ public class SpeseFragment extends Fragment {
     }
 
     private void setupItemTouchHelper() {
-        final ColorDrawable background = new ColorDrawable(Color.parseColor("#E53935"));
+        final ColorDrawable background = new ColorDrawable(ContextCompat.getColor(requireContext(), R.color.delete_red));
         final Drawable deleteIcon = ContextCompat.getDrawable(requireContext(), android.R.drawable.ic_menu_delete);
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(

@@ -15,7 +15,7 @@ public class SpesaConDettagli {
     }
 
     public String getNomePagatore() {
-        return nomePagatore != null ? nomePagatore : "Sconosciuto";
+        return (nomePagatore != null && !nomePagatore.trim().isEmpty()) ? nomePagatore.trim() : null;
     }
 
     public int getNumeroPartecipanti() {

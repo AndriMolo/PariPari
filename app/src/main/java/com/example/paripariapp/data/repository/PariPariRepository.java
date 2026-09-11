@@ -5,17 +5,22 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 
 import com.example.paripariapp.data.local.AppDatabase;
 import com.example.paripariapp.data.local.PartecipanteDao;
 import com.example.paripariapp.data.local.SchedaDao;
 import com.example.paripariapp.data.local.SpesaDao;
+import com.example.paripariapp.data.model.BilancioPersonaItem;
 import com.example.paripariapp.data.model.Partecipante;
+import com.example.paripariapp.data.model.RisultatoSaldi;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.SyncStatus;
+import com.example.paripariapp.data.model.TrasferimentoSaldo;
+import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.NetworkConnectivityMonitor;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -46,6 +51,9 @@ public class PariPariRepository {
 
     private final List<ListenerRegistration> activeListeners = new ArrayList<>();
     private final Map<String, ListenerRegistration> groupSubListeners = new ConcurrentHashMap<>();
+
+    private final MediatorLiveData<RisultatoSaldi> risultatoSaldiLiveData = new MediatorLiveData<>();
+    private boolean saldiSourcesInitialized = false;
 
     private PariPariRepository(Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
@@ -222,6 +230,71 @@ public class PariPariRepository {
 
     public LiveData<Double> getTotaleSpeseByScheda(String schedaId) {
         return spesaDao.getTotaleSpeseBySchedaLive(schedaId);
+    }
+
+    public LiveData<RisultatoSaldi> getRisultatoSaldi() {
+        if (!saldiSourcesInitialized) {
+            saldiSourcesInitialized = true;
+            risultatoSaldiLiveData.addSource(schedaDao.getAllSchedeLive(), schede -> ricalcolaSaldi(schede));
+            risultatoSaldiLiveData.addSource(spesaDao.getCountSpeseLive(), count -> ricalcolaSaldi(null));
+            risultatoSaldiLiveData.addSource(partecipanteDao.getCountPartecipantiLive(), count -> ricalcolaSaldi(null));
+        }
+        return risultatoSaldiLiveData;
+    }
+
+    private void ricalcolaSaldi(@Nullable List<Scheda> schedeCache) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            List<Scheda> schede = (schedeCache != null) ? schedeCache : schedaDao.getAllSchedeSync();
+            if (schede == null || schede.isEmpty()) {
+                risultatoSaldiLiveData.postValue(new RisultatoSaldi(0.0, 0.0, new ArrayList<>()));
+                return;
+            }
+
+            double totaleRicevere = 0.0;
+            double totaleDare = 0.0;
+            List<BilancioPersonaItem> bilanci = new ArrayList<>();
+
+            for (Scheda scheda : schede) {
+                String idScheda = scheda.getId();
+                String titoloScheda = scheda.getTitolo();
+                String valuta = scheda.getValutaPredefinita() != null ? scheda.getValutaPredefinita() : "EUR";
+
+                List<Partecipante> parti = partecipanteDao.getPartecipantiBySchedaSync(idScheda);
+                List<Spesa> spese = spesaDao.getSpeseBySchedaSync(idScheda);
+                List<SpesaPartecipante> quote = spesaDao.getTutteQuoteBySchedaSync(idScheda);
+
+                if (parti == null || parti.isEmpty() || spese == null || spese.isEmpty()) {
+                    continue;
+                }
+
+                List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta);
+
+                String mioId = null;
+                for (Partecipante p : parti) {
+                    if (p.getNome() != null) {
+                        String n = p.getNome().trim().toLowerCase();
+                        if (n.equals("io") || n.equals("me")) {
+                            mioId = p.getId();
+                            break;
+                        }
+                    }
+                }
+
+                if (mioId != null) {
+                    for (TrasferimentoSaldo t : trasferimenti) {
+                        if (t.getDaId().equals(mioId)) {
+                            totaleDare += t.getImporto();
+                            bilanci.add(new BilancioPersonaItem(t.getANome(), titoloScheda, -t.getImporto(), valuta));
+                        } else if (t.getAId().equals(mioId)) {
+                            totaleRicevere += t.getImporto();
+                            bilanci.add(new BilancioPersonaItem(t.getDaNome(), titoloScheda, t.getImporto(), valuta));
+                        }
+                    }
+                }
+            }
+
+            risultatoSaldiLiveData.postValue(new RisultatoSaldi(totaleRicevere, totaleDare, bilanci));
+        });
     }
 
     public void syncPendingData() {

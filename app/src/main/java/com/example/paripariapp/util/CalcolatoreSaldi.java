@@ -83,8 +83,8 @@ public class CalcolatoreSaldi {
             importoMinimo = Math.round(importoMinimo * 100.0) / 100.0;
 
             if (importoMinimo > 0.009) {
-                String nomeDa = nomiMap.getOrDefault(deb.getKey(), "Sconosciuto");
-                String nomeA = nomiMap.getOrDefault(cred.getKey(), "Sconosciuto");
+                String nomeDa = nomiMap.getOrDefault(deb.getKey(), "—");
+                String nomeA = nomiMap.getOrDefault(cred.getKey(), "—");
 
                 trasferimenti.add(new TrasferimentoSaldo(
                         deb.getKey(),

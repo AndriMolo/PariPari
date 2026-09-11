@@ -11,16 +11,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.BilancioPersonaItem;
-import com.example.paripariapp.data.model.Partecipante;
-import com.example.paripariapp.data.model.Scheda;
-import com.example.paripariapp.data.model.Spesa;
-import com.example.paripariapp.data.model.SpesaPartecipante;
-import com.example.paripariapp.data.model.TrasferimentoSaldo;
 import com.example.paripariapp.databinding.FragmentSaldiBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
-import com.example.paripariapp.util.CalcolatoreSaldi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,64 +56,23 @@ public class SaldiFragment extends Fragment {
             applicaFiltro();
         });
 
-        caricaSaldiDaTutteLeSchede();
+        osservaSaldi();
     }
 
-    private void caricaSaldiDaTutteLeSchede() {
-        viewModel.getTutteLeSchede().observe(getViewLifecycleOwner(), schede -> {
-            if (schede == null || schede.isEmpty()) {
-                aggiornaUi(0, 0, new ArrayList<>());
-                return;
-            }
-
+    private void osservaSaldi() {
+        viewModel.getRisultatoSaldi().observe(getViewLifecycleOwner(), risultato -> {
+            if (risultato == null) return;
             tuttiIBilanci.clear();
-            double[] totaleRicevere = {0.0};
-            double[] totaleDare = {0.0};
-
-            for (Scheda scheda : schede) {
-                String idScheda = scheda.getId();
-                String titoloScheda = scheda.getTitolo();
-                String valuta = scheda.getValutaPredefinita() != null ? scheda.getValutaPredefinita() : "EUR";
-
-                viewModel.getPartecipanti(idScheda).observe(getViewLifecycleOwner(), parti -> {
-                    viewModel.getSpese(idScheda).observe(getViewLifecycleOwner(), spese -> {
-                        viewModel.getQuoteDellaScheda(idScheda).observe(getViewLifecycleOwner(), quote -> {
-                            if (parti == null || spese == null || quote == null) return;
-
-                            List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta);
-
-                            String mioId = null;
-                            for (Partecipante p : parti) {
-                                String n = p.getNome().trim().toLowerCase();
-                                if (n.equals("io") || n.equals("me")) {
-                                    mioId = p.getId();
-                                    break;
-                                }
-                            }
-
-                            if (mioId != null) {
-                                for (TrasferimentoSaldo t : trasferimenti) {
-                                    if (t.getDaId().equals(mioId)) {
-                                        totaleDare[0] += t.getImporto();
-                                        tuttiIBilanci.add(new BilancioPersonaItem(t.getANome(), titoloScheda, -t.getImporto(), valuta));
-                                    } else if (t.getAId().equals(mioId)) {
-                                        totaleRicevere[0] += t.getImporto();
-                                        tuttiIBilanci.add(new BilancioPersonaItem(t.getDaNome(), titoloScheda, t.getImporto(), valuta));
-                                    }
-                                }
-                            }
-                            aggiornaUi(totaleRicevere[0], totaleDare[0], tuttiIBilanci);
-                        });
-                    });
-                });
-            }
+            tuttiIBilanci.addAll(risultato.getBilanci());
+            aggiornaUi(risultato.getTotaleRicevere(), risultato.getTotaleDare());
         });
     }
 
-    private void aggiornaUi(double ricevere, double dare, List<BilancioPersonaItem> lista) {
+    private void aggiornaUi(double ricevere, double dare) {
         if (binding == null) return;
-        binding.tvTotaleDaRicevere.setText(String.format(Locale.getDefault(), "%.2f €", ricevere));
-        binding.tvTotaleDaDare.setText(String.format(Locale.getDefault(), "%.2f €", dare));
+        String valuta = viewModel.getDefaultCurrency();
+        binding.tvTotaleDaRicevere.setText(String.format(Locale.getDefault(), "%.2f %s", ricevere, valuta));
+        binding.tvTotaleDaDare.setText(String.format(Locale.getDefault(), "%.2f %s", dare, valuta));
         applicaFiltro();
     }
 

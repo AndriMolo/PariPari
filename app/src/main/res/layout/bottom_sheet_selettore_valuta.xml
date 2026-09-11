@@ -90,7 +90,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🇪🇺 EUR"
+                    android:text="@string/chip_eur"
                     app:chipCornerRadius="16dp" />
 
                 <com.google.android.material.chip.Chip
@@ -98,7 +98,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🇺🇸 USD"
+                    android:text="@string/chip_usd"
                     app:chipCornerRadius="16dp" />
 
                 <com.google.android.material.chip.Chip
@@ -106,7 +106,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🇬🇧 GBP"
+                    android:text="@string/chip_gbp"
                     app:chipCornerRadius="16dp" />
 
                 <com.google.android.material.chip.Chip
@@ -114,7 +114,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🇨🇭 CHF"
+                    android:text="@string/chip_chf"
                     app:chipCornerRadius="16dp" />
 
             </com.google.android.material.chip.ChipGroup>
