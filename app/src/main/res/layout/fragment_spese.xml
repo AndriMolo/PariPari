@@ -47,7 +47,7 @@
 
         </LinearLayout>
 
-        <!-- Lista delle Schede -->
+        <!-- Lista delle Schede con barra di scorrimento permanente -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_schede"
             android:layout_width="match_parent"
@@ -55,7 +55,11 @@
             android:layout_weight="1"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
-            android:clipToPadding="false" />
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false"
+            android:scrollbarThumbVertical="?attr/colorPrimary"
+            android:scrollbarSize="4dp" />
 
     </LinearLayout>
 

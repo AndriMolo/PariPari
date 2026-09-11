@@ -13,9 +13,6 @@ import com.example.paripariapp.data.model.SyncStatus;
 
 import java.util.List;
 
-/**
- * Data Access Object per la gestione delle Schede Spese nel DB Room.
- */
 @Dao
 public interface SchedaDao {
 
@@ -54,4 +51,7 @@ public interface SchedaDao {
 
     @Query("SELECT COUNT(*) FROM schede WHERE sync_status != " + SyncStatus.PENDING_DELETE)
     LiveData<Integer> getCountSchedeLive();
+
+    @Query("UPDATE schede SET titolo = :nuovoTitolo, data_aggiornamento = :dataAggiornamento, sync_status = :syncStatus WHERE id = :schedaId")
+    void updateTitolo(String schedaId, String nuovoTitolo, long dataAggiornamento, int syncStatus);
 }

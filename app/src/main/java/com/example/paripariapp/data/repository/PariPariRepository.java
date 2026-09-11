@@ -31,18 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Repository centrale dell'applicazione PariPari (Single Source of Truth).
- * Coordina il database locale Room e la sincronizzazione bidirezionale con Cloud Firestore:
- * - Letture immediate e continue dal DB locale (Room) via LiveData
- * - Scritture locali istantanee con flag di sincronizzazione (Offline-First)
- * - Push asincrono dei dati pendenti verso Firestore quando connesso e autenticato
- * - Download in tempo reale dei dati remoti da Firestore verso Room via snapshot listeners
- */
 public class PariPariRepository {
 
     private static final String TAG = "PariPariRepository";
-
     private static volatile PariPariRepository INSTANCE;
 
     private final SchedaDao schedaDao;
@@ -63,7 +54,6 @@ public class PariPariRepository {
         firestore = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        // Monitor di rete: quando la connessione torna attiva, avvia il sync se autenticato
         networkMonitor = new NetworkConnectivityMonitor(application, new NetworkConnectivityMonitor.OnNetworkChangeListener() {
             @Override
             public void onNetworkAvailable() {
@@ -71,8 +61,6 @@ public class PariPariRepository {
                 if (auth.getCurrentUser() != null) {
                     syncPendingData();
                     startRealtimeSync();
-                } else {
-                    Log.d(TAG, "Rete attiva, ma nessun utente loggato su Firebase: operatività locale Room");
                 }
             }
 
@@ -84,17 +72,14 @@ public class PariPariRepository {
 
         networkMonitor.startMonitoring();
 
-        // Ascolta lo stato di autenticazione per agganciare/sganciare Firestore
         auth.addAuthStateListener(firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (user != null) {
-                Log.i(TAG, "Utente autenticato (" + user.getUid() + "): aggancio sincronizzazione Cloud Firestore");
                 if (networkMonitor.isConnected()) {
                     syncPendingData();
                     startRealtimeSync();
                 }
             } else {
-                Log.i(TAG, "Nessun utente autenticato: sincronizzazione cloud disattivata (solo Room locale)");
                 stopRealtimeSync();
             }
         });
@@ -111,10 +96,6 @@ public class PariPariRepository {
         return INSTANCE;
     }
 
-    // ====================================================================
-    // METODI ACCESSO DATI (LOCAL SINGLE SOURCE OF TRUTH)
-    // ====================================================================
-
     public LiveData<List<Scheda>> getAllSchede() {
         return schedaDao.getAllSchedeLive();
     }
@@ -129,21 +110,31 @@ public class PariPariRepository {
             if (partecipanti != null && !partecipanti.isEmpty()) {
                 partecipanteDao.insertAll(partecipanti);
             }
-            // Sincronizza su Firestore solo se connesso e autenticato
             if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
                 uploadScheda(scheda, partecipanti);
             }
         });
     }
 
+    public void updateTitoloScheda(String schedaId, String nuovoTitolo) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            long adesso = System.currentTimeMillis();
+            schedaDao.updateTitolo(schedaId, nuovoTitolo, adesso, SyncStatus.PENDING_UPDATE);
+
+            if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+                firestore.collection("groups").document(schedaId)
+                        .update("titolo", nuovoTitolo, "dataAggiornamento", adesso);
+            }
+        });
+    }
+
     public void deleteScheda(String schedaId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) {
-                schedaDao.updateSyncStatus(schedaId, SyncStatus.PENDING_DELETE);
-            } else {
-                schedaDao.deleteById(schedaId);
-                firestore.collection("groups").document(schedaId).delete()
-                        .addOnFailureListener(e -> Log.w(TAG, "Eliminazione remota fallita: " + e.getMessage()));
+            schedaDao.deleteById(schedaId);
+            detachSubcollectionListeners(schedaId);
+
+            if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+                firestore.collection("groups").document(schedaId).delete();
             }
         });
     }
@@ -152,13 +143,23 @@ public class PariPariRepository {
         return partecipanteDao.getPartecipantiBySchedaLive(schedaId);
     }
 
-
-
     public void insertPartecipante(Partecipante partecipante) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             partecipanteDao.insert(partecipante);
             if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
                 uploadPartecipante(partecipante);
+            }
+        });
+    }
+
+    public void deletePartecipante(String partecipanteId) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
+            partecipanteDao.deleteById(partecipanteId);
+
+            if (p != null && auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+                firestore.collection("groups").document(p.getSchedaId())
+                        .collection("participants").document(partecipanteId).delete();
             }
         });
     }
@@ -204,31 +205,21 @@ public class PariPariRepository {
         return spesaDao.getTotaleSpeseBySchedaLive(schedaId);
     }
 
-    // ====================================================================
-    // SINCRONIZZAZIONE OUTGOING (UPLOAD MODIFICHE LOCALI -> FIRESTORE)
-    // ====================================================================
-
     public void syncPendingData() {
-        if (auth.getCurrentUser() == null) {
-            Log.d(TAG, "Sync pendenti ignorata: nessun utente autenticato");
-            return;
-        }
+        if (auth.getCurrentUser() == null) return;
 
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            // 1. Schede
             List<Scheda> pendingSchede = schedaDao.getPendingSyncSchede();
             for (Scheda s : pendingSchede) {
                 if (s.getSyncStatus() == SyncStatus.PENDING_DELETE) {
                     firestore.collection("groups").document(s.getId()).delete()
-                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> schedaDao.deleteById(s.getId())))
-                            .addOnFailureListener(e -> Log.w(TAG, "Eliminazione remota differita fallita: " + e.getMessage()));
+                            .addOnSuccessListener(v -> AppDatabase.databaseWriteExecutor.execute(() -> schedaDao.deleteById(s.getId())));
                 } else {
                     List<Partecipante> parts = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
                     uploadScheda(s, parts);
                 }
             }
 
-            // 2. Partecipanti
             List<Partecipante> pendingParts = partecipanteDao.getPendingSyncPartecipanti();
             for (Partecipante p : pendingParts) {
                 if (p.getSyncStatus() == SyncStatus.PENDING_DELETE) {
@@ -240,7 +231,6 @@ public class PariPariRepository {
                 }
             }
 
-            // 3. Spese
             List<Spesa> pendingSpese = spesaDao.getPendingSyncSpese();
             for (Spesa sp : pendingSpese) {
                 if (sp.getSyncStatus() == SyncStatus.PENDING_DELETE) {
@@ -289,7 +279,7 @@ public class PariPariRepository {
                         }
                     }
                 }))
-                .addOnFailureListener(e -> Log.d(TAG, "Caricamento scheda fallito (riproverà): " + e.getMessage()));
+                .addOnFailureListener(e -> Log.d(TAG, "Caricamento scheda differito: " + e.getMessage()));
     }
 
     private void uploadPartecipante(Partecipante p) {
@@ -327,27 +317,16 @@ public class PariPariRepository {
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento spesa fallito: " + e.getMessage()));
     }
 
-    // ====================================================================
-    // SINCRONIZZAZIONE INCOMING (DOWNLOAD REAL-TIME DA FIRESTORE -> ROOM)
-    // ====================================================================
-
     public synchronized void startRealtimeSync() {
         FirebaseUser currentUser = auth.getCurrentUser();
-        if (currentUser == null) {
-            Log.d(TAG, "Realtime sync ignorata: utente non autenticato");
-            return;
-        }
+        if (currentUser == null) return;
 
         stopRealtimeSync();
 
         ListenerRegistration reg = firestore.collection("groups")
                 .whereEqualTo("creatoreId", currentUser.getUid())
                 .addSnapshotListener((snapshots, error) -> {
-                    if (error != null) {
-                        Log.w(TAG, "Errore snapshot gruppi Firestore: " + error.getMessage());
-                        return;
-                    }
-                    if (snapshots == null) return;
+                    if (error != null || snapshots == null) return;
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
@@ -356,23 +335,22 @@ public class PariPariRepository {
 
                             switch (dc.getType()) {
                                 case ADDED:
-                                case MODIFIED:
-                                    String titolo = doc.getString("titolo");
-                                    String descrizione = doc.getString("descrizione");
-                                    String valuta = doc.getString("valutaPredefinita");
+                                    String titoloAdd = doc.getString("titolo");
+                                    String descAdd = doc.getString("descrizione");
+                                    String valutaAdd = doc.getString("valutaPredefinita");
                                     String creatoreId = doc.getString("creatoreId");
                                     Long dataCreaz = doc.getLong("dataCreazione");
-                                    Long dataAgg = doc.getLong("dataAggiornamento");
+                                    Long dataAggAdd = doc.getLong("dataAggiornamento");
 
-                                    if (titolo != null) {
+                                    if (titoloAdd != null) {
                                         Scheda remoteScheda = new Scheda(
                                                 groupId,
-                                                titolo,
-                                                descrizione != null ? descrizione : "",
-                                                valuta != null ? valuta : "EUR",
+                                                titoloAdd,
+                                                descAdd != null ? descAdd : "",
+                                                valutaAdd != null ? valutaAdd : "EUR",
                                                 creatoreId != null ? creatoreId : "",
                                                 dataCreaz != null ? dataCreaz : System.currentTimeMillis(),
-                                                dataAgg != null ? dataAgg : System.currentTimeMillis(),
+                                                dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
                                                 SyncStatus.SYNCED
                                         );
                                         try {
@@ -381,6 +359,19 @@ public class PariPariRepository {
                                         } catch (Exception e) {
                                             Log.w(TAG, "Sync scheda fallito: " + e.getMessage());
                                         }
+                                    }
+                                    break;
+
+                                case MODIFIED:
+                                    String titoloMod = doc.getString("titolo");
+                                    Long dataAggMod = doc.getLong("dataAggiornamento");
+                                    if (titoloMod != null) {
+                                        schedaDao.updateTitolo(
+                                                groupId,
+                                                titoloMod,
+                                                dataAggMod != null ? dataAggMod : System.currentTimeMillis(),
+                                                SyncStatus.SYNCED
+                                        );
                                     }
                                     break;
 
@@ -461,7 +452,7 @@ public class PariPariRepository {
                                     try {
                                         spesaDao.insert(sp);
                                     } catch (Exception e) {
-                                        Log.w(TAG, "Sync spesa fallito (vincolo o partecipante non ancora presente): " + e.getMessage());
+                                        Log.w(TAG, "Sync spesa fallito: " + e.getMessage());
                                     }
                                 }
                             }

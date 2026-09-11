@@ -1,5 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PariPari</string>
+    <string name="app_name_brand">PariPari</string>
 
     <!-- Bottom Navigation Labels -->
     <string name="nav_spese">Spese</string>
@@ -26,6 +28,25 @@
     <string name="partecipante_io">Io</string>
     <string name="msg_scheda_creata">Scheda creata con successo!</string>
     <string name="valuta_eur">EUR</string>
+    <string name="valuta_default">EUR</string>
+    <string name="nome_gruppo_default">Gruppo</string>
+
+    <!-- Spese Fragment & Unisciti Gruppo -->
+    <string name="titolo_spese">I Tuoi Gruppi</string>
+    <string name="btn_entra_testo">Entra con codice</string>
+    <string name="dialog_entra">Entra in un Gruppo</string>
+    <string name="dialog_titolo">Inserisci il codice invito alfanumerico per sincronizzare le spese con i tuoi amici.</string>
+    <string name="sugg_code">Codice invito</string>
+    <string name="dialog_partecipate">Partecipa</string>
+    <string name="dialog_cancel">Annulla</string>
+    <string name="error_codice_non_valido">Codice non Valido</string>
+    <string name="msg_gruppo_eliminato">Gruppo Eliminato</string>
+
+    <!-- Gestione Plurali Partecipanti -->
+    <plurals name="label_partecipanti_count">
+        <item quantity="one">%d partecipante</item>
+        <item quantity="other">%d partecipanti</item>
+    </plurals>
 
     <!-- Saldi -->
     <string name="label_saldo_netto">Saldo netto</string>
@@ -45,6 +66,13 @@
     <string name="error_importo_valuta">Inserisci un importo valido (es. 10 oppure 12.50)</string>
     <string name="error_importo_zero">L\'importo deve essere maggiore di zero</string>
     <string name="error_formato_numerico">Formato numerico non valido</string>
+
+    <!-- Selettore Valuta Bottom Sheet -->
+    <string name="title_seleziona_valuta">Seleziona valuta</string>
+    <string name="hint_cerca_valuta">Cerca valuta o codice...</string>
+    <string name="label_valute_frequenti">Più utilizzate</string>
+    <string name="label_tutte_le_valute">Tutte le valute BCE</string>
+    <string name="empty_valute_ricerca">Nessuna valuta trovata</string>
 
     <!-- Account -->
     <string name="cd_avatar_utente">Avatar utente</string>
@@ -79,10 +107,30 @@
     <string name="hint_lingua_app_desc">Lingua e formato numeri</string>
     <string name="msg_lingua_aggiornata">Lingua impostata su %s</string>
     <string name="lingua_sistema">Predefinita di sistema</string>
-    <string name="btn_annulla">Annulla</string>
 
-    <!-- Dettaglio Scheda & Spese -->
+    <!-- Dettaglio Scheda & Toolbar -->
+    <string name="cd_torna_indietro">Torna indietro</string>
+    <string name="cd_modifica_nome_scheda">Modifica nome scheda</string>
+    <string name="cd_elimina_scheda">Elimina scheda</string>
+    <string name="dialog_titolo_modifica_scheda">Modifica nome gruppo</string>
+    <string name="dialog_hint_nome_scheda">Nome del gruppo</string>
+    <string name="dialog_titolo_elimina_scheda">Elimina o esci dal gruppo</string>
+    <string name="dialog_msg_elimina_scheda">Sei sicuro di voler eliminare questa scheda o uscire dal gruppo? Tutte le spese associate verranno rimosse.</string>
     <string name="label_totale_spese">Totale spese</string>
+    <string name="label_partecipanti_formato">Partecipanti: %s</string>
+
+    <!-- Azioni Scheda (Invita & Gestisci) -->
+    <string name="btn_invita">Invita</string>
+    <string name="btn_gestisci_gruppo">Gestisci</string>
+    <string name="msg_codice_invito_titolo">Unisciti al mio gruppo su PariPari!</string>
+    <string name="msg_codice_invito_body">Usa questo codice per unirti alla scheda \"%1$s\" su PariPari: %2$s</string>
+    <string name="condividi_con">Condividi codice invito tramite</string>
+    <string name="dialog_titolo_gestione_gruppo">Membri del gruppo</string>
+    <string name="msg_conferma_rimuovi_membro">Vuoi rimuovere %s dal gruppo?</string>
+    <string name="btn_rimuovi">Rimuovi</string>
+    <string name="msg_errore_rimozione_membro">Impossibile rimuovere il membro se ha spese o debiti attivi.</string>
+
+    <!-- Spese & Categorie -->
     <string name="empty_spese_titolo">Nessuna spesa registrata</string>
     <string name="empty_spese_desc">Tocca il pulsante + in basso per aggiungere la prima spesa.</string>
     <string name="btn_nuova_spesa">Nuova Spesa</string>
@@ -97,34 +145,54 @@
     <string name="error_nessun_pagatore">Seleziona chi ha pagato</string>
     <string name="label_pagato_da">Pagato da %s</string>
     <string name="label_divisione_equa">Diviso tra %d persone</string>
-    <string name="label_partecipanti_formato">Partecipanti: %s</string>
-    <string name="cd_torna_indietro">Torna indietro</string>
+    <string name="cat_cibo">Cibo</string>
+    <string name="cat_trasporti">Trasporti</string>
+    <string name="cat_alloggio">Alloggio</string>
+    <string name="cat_svago">Svago</string>
+    <string name="cat_altro">Altro</string>
 
-    <!-- Selettore Valuta Bottom Sheet -->
-    <string name="title_seleziona_valuta">Seleziona valuta</string>
-    <string name="hint_cerca_valuta">Cerca valuta o codice...</string>
-    <string name="label_valute_frequenti">Più utilizzate</string>
-    <string name="label_tutte_le_valute">Tutte le valute BCE</string>
-    <string name="empty_valute_ricerca">Nessuna valuta trovata</string>
+    <!-- Esportazione (CSV & PDF) -->
+    <string name="btn_esporta">Esporta</string>
+    <string name="titolo_dialog_esporta">Esporta report spese</string>
+    <string name="opzione_esporta_csv">File CSV</string>
+    <string name="opzione_esporta_pdf">Documento PDF</string>
+    <string name="msg_nessuna_spesa_export">Nessuna spesa presente da esportare</string>
+    <string name="msg_errore_esportazione">Errore durante la creazione del file di export</string>
+    <string name="csv_intestazione">Data;Tipo;Descrizione;Categoria;Importo;Valuta;Da;A</string>
+    <string name="csv_tipo_spesa">Spesa</string>
+    <string name="csv_tutti_quote">Tutti/Quote</string>
+    <string name="pdf_sottotitolo">Report Spese di Gruppo</string>
+    <string name="pdf_generato_il">Generato il %s</string>
+    <string name="pdf_sezione_spese">Elenco Spese (%d):</string>
+    <string name="pdf_th_data">DATA</string>
+    <string name="pdf_th_descrizione">DESCRIZIONE</string>
+    <string name="pdf_th_categoria">CATEGORIA</string>
+    <string name="pdf_th_pagante">PAGANTE</string>
+    <string name="pdf_th_importo">IMPORTO</string>
+    <string name="pdf_formato_importo">%.2f %s</string>
 
-
-    <!-- Spese Fragment -->
-    <string name="Titolo_spese">I Tuoi Gruppi</string>
-    <string name="sugg_code">Codice invito</string>
-    <string name="dialog_titolo">Inserisci il codice invito alfanumerico per sincronizzare le spese con i tuoi amici.</string>
-    <string name="dialog_entra">Entra in un Gruppo</string>
-    <string name="dialog_cancel">Annulla</string>
-    <string name="dialog_partecipate">Partecipa</string>
-    <string name="titolo_spese">I Tuoi Gruppi</string>
-    <string name="btn_entra_testo">Entra con codice</string>
-    <string name="msg_gruppo_eliminato">Gruppo Eliminato</string>
+    <!-- Tasti e Azioni Generiche -->
+    <string name="btn_salva">Salva</string>
+    <string name="btn_elimina">Elimina</string>
+    <string name="btn_annulla">Annulla</string>
     <string name="action_annulla">Annulla</string>
-    <string name="error_codice_non_valido"> Codice non Valido</string>
 
-    <!-- Gestione Plurali Partecipanti -->
-    <plurals name="label_partecipanti_count">
-        <item quantity="one">%d partecipante</item>
-        <item quantity="other">%d partecipanti</item>
-    </plurals>
+    <!-- Schermata Nuova Spesa & Divisione Quote -->
+    <string name="spesa_titolo">Nuova Spesa</string>
+    <string name="spesa_descrizione">Descrizione spesa</string>
+    <string name="spesa_importo">Importo</string>
+    <string name="spesa_valuta">Valuta</string>
+    <string name="spesa_pagante">Chi ha pagato?</string>
+    <string name="spesa_categoria">Categoria</string>
+    <string name="spesa_divisione">Come dividere la spesa?</string>
+    <string name="spesa_quote_esatte">Divisione personalizzata / percentuale</string>
+    <string name="spesa_quota">Quota / %</string>
+    <string name="spesa_salva">Salva spesa</string>
+    <string name="spesa_errore_somma_quote">La somma delle quote (%.2f) non corrisponde all\'importo totale (%.2f)</string>
+    <string name="spesa_errore_nessun_partecipante">Seleziona almeno un partecipante per la spesa</string>
 
+    <!-- Gestione Membri -->
+    <string name="dettaglio_rinomina_partecipante">Rinomina partecipante</string>
+    <string name="dettaglio_elimina_partecipante">Elimina partecipante</string>
+    <string name="dialog_titolo_rinomina">Rinomina membro</string>
 </resources>

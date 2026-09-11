@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Tasto solo immagine: Modifica nome -->
+    <item
+        android:id="@+id/action_modifica_titolo"
+        android:icon="@drawable/ic_edit"
+        android:title="@string/cd_modifica_nome_scheda"
+        app:showAsAction="ifRoom" />
+
+    <!-- Tasto solo immagine: Cestino rosso -->
+    <item
+        android:id="@+id/action_elimina_scheda"
+        android:icon="@drawable/ic_delete"
+        android:title="@string/cd_elimina_scheda"
+        app:iconTint="@android:color/holo_red_dark"
+        app:showAsAction="always" />
+
+</menu>

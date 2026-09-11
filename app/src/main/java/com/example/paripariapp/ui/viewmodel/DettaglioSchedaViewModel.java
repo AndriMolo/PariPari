@@ -41,6 +41,18 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         return repository.getPartecipanti(schedaId);
     }
 
+    public void aggiornaTitoloScheda(String schedaId, String nuovoTitolo) {
+        repository.updateTitoloScheda(schedaId, nuovoTitolo);
+    }
+
+    public void eliminaScheda(String schedaId) {
+        repository.deleteScheda(schedaId);
+    }
+
+    public void eliminaPartecipante(String partecipanteId) {
+        repository.deletePartecipante(partecipanteId);
+    }
+
     /**
      * Aggiunge una nuova spesa e suddivide equamente l'importo tra tutti i partecipanti della scheda.
      */
@@ -69,5 +81,12 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         }
 
         repository.insertSpesa(spesa, quote);
+    }
+    public void inserisciSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
+        repository.insertSpesa(spesa, quote);
+    }
+
+    public void aggiungiPartecipante(Partecipante partecipante) {
+        repository.insertPartecipante(partecipante);
     }
 }
