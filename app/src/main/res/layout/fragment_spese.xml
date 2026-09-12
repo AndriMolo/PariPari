@@ -32,18 +32,6 @@
                 android:textStyle="bold"
                 android:textColor="@android:color/black" />
 
-            <!-- Pulsante con icona a destra -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_entra_con_codice"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/btn_entra_testo"
-                android:textSize="12sp"
-                app:icon="@android:drawable/ic_menu_send"
-                app:iconGravity="textStart"
-                app:iconPadding="6dp"
-                app:cornerRadius="12dp" />
 
         </LinearLayout>
 
@@ -75,8 +63,8 @@
         android:id="@+id/fab_nuova_scheda"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="24dp"
         android:text="@string/btn_nuova_scheda"
         app:icon="@android:drawable/ic_input_add" />
 

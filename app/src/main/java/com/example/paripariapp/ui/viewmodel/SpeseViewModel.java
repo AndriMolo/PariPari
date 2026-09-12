@@ -1,8 +1,6 @@
 package com.example.paripariapp.ui.viewmodel;
 
 import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -109,11 +107,7 @@ public class SpeseViewModel extends AndroidViewModel {
     // --- PREFERENZE ---
 
     public String getDefaultCurrency() {
-        SharedPreferences prefs = getApplication().getSharedPreferences(
-                getApplication().getPackageName() + "_preferences",
-                Context.MODE_PRIVATE
-        );
-        return prefs.getString("valuta_predefinita", "EUR");
+        return com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(getApplication()).getDefaultCurrency();
     }
 
     public void eliminaScheda(Scheda scheda) {

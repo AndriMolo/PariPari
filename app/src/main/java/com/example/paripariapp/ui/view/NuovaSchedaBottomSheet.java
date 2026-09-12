@@ -20,15 +20,19 @@ import com.google.android.material.chip.Chip;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 /**
  * BottomSheet per la creazione rapida ed essenziale di una Scheda Spese.
- * Include automaticamente "Io" come primo partecipante e permette di aggiungere
+ * Include automaticamente il nome utente con "(io)" come primo partecipante e permette di aggiungere
  * gli amici al volo tramite Chip rimovibili.
  */
 public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
 
     private BottomSheetNuovaSchedaBinding binding;
     private SpeseViewModel viewModel;
+    private String selectedCurrencyCode;
 
     public static NuovaSchedaBottomSheet newInstance() {
         return new NuovaSchedaBottomSheet();
@@ -48,24 +52,59 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
         viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
+        selectedCurrencyCode = viewModel.getDefaultCurrency();
 
+        aggiornaValutaUI();
         setupInitialChip();
         setupListeners();
     }
 
+    private String getNomeCreatoreFormat() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String nome = null;
+        if (user != null && user.getDisplayName() != null && !user.getDisplayName().trim().isEmpty()) {
+            nome = user.getDisplayName().trim();
+        }
+        if (TextUtils.isEmpty(nome)) {
+            nome = getString(R.string.default_nome_utente);
+        }
+        return nome + " (io)";
+    }
+
     /**
-     * Inserisce il chip predefinito "Io", non rimovibile.
+     * Inserisce il chip predefinito "Nome Utente (io)", non rimovibile.
      */
     private void setupInitialChip() {
         Chip chipIo = new Chip(requireContext());
-        chipIo.setText(R.string.partecipante_io);
+        chipIo.setText(getNomeCreatoreFormat());
         chipIo.setCheckable(false);
         chipIo.setClickable(false);
         chipIo.setCloseIconVisible(false);
         binding.chipGroupPartecipanti.addView(chipIo);
     }
 
+    private void aggiornaValutaUI() {
+        if (binding == null || selectedCurrencyCode == null) return;
+        String flag = com.example.paripariapp.data.repository.UserPreferencesRepository.getCurrencyFlag(selectedCurrencyCode);
+        String displayItem = com.example.paripariapp.data.repository.UserPreferencesRepository.getDisplayItemForCode(selectedCurrencyCode);
+        binding.etValutaScheda.setText(flag + " " + displayItem);
+    }
+
+    private void mostraSelettoreValuta() {
+        String currentDisplay = com.example.paripariapp.data.repository.UserPreferencesRepository.getDisplayItemForCode(selectedCurrencyCode);
+        SelettoreValutaBottomSheet sheet = SelettoreValutaBottomSheet.newInstance(currentDisplay);
+        sheet.setOnCurrencySelectedListener(currencyFull -> {
+            selectedCurrencyCode = com.example.paripariapp.data.repository.UserPreferencesRepository.extractCurrencyCode(currencyFull);
+            aggiornaValutaUI();
+        });
+        sheet.show(getChildFragmentManager(), "selettore_valuta_nuova_scheda");
+    }
+
     private void setupListeners() {
+        View.OnClickListener listenerValuta = v -> mostraSelettoreValuta();
+        binding.etValutaScheda.setOnClickListener(listenerValuta);
+        binding.tilValutaScheda.setOnClickListener(listenerValuta);
+
         // Tasto "+" nell'input del nuovo partecipante
         binding.tilNuovoPartecipante.setEndIconOnClickListener(v -> aggiungiAmicoDaInput());
 
@@ -140,7 +179,8 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
             }
         }
 
-        viewModel.creaScheda(nomeScheda, viewModel.getDefaultCurrency(), nomiPartecipanti);
+        String valutaFinale = selectedCurrencyCode != null ? selectedCurrencyCode : viewModel.getDefaultCurrency();
+        viewModel.creaScheda(nomeScheda, valutaFinale, nomiPartecipanti);
         dismiss();
     }
 

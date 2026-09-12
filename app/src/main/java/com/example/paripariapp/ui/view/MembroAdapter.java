@@ -18,6 +18,7 @@ public class MembroAdapter extends RecyclerView.Adapter<MembroAdapter.MembroView
 
     private final List<Partecipante> items = new ArrayList<>();
     private OnEliminaClickListener onEliminaClickListener;
+    private boolean isCapogruppo = true;
 
     public interface OnEliminaClickListener {
         void onEliminaClick(Partecipante partecipante);
@@ -25,6 +26,11 @@ public class MembroAdapter extends RecyclerView.Adapter<MembroAdapter.MembroView
 
     public void setOnEliminaClickListener(OnEliminaClickListener listener) {
         this.onEliminaClickListener = listener;
+    }
+
+    public void setCapogruppo(boolean capogruppo) {
+        this.isCapogruppo = capogruppo;
+        notifyDataSetChanged();
     }
 
     public void submitList(List<Partecipante> newItems) {
@@ -48,6 +54,7 @@ public class MembroAdapter extends RecyclerView.Adapter<MembroAdapter.MembroView
         String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase() : "?";
         holder.tvIniziale.setText(iniziale);
 
+        holder.btnElimina.setVisibility(isCapogruppo ? View.VISIBLE : View.GONE);
         holder.btnElimina.setOnClickListener(v -> {
             if (onEliminaClickListener != null) {
                 onEliminaClickListener.onEliminaClick(p);

@@ -85,6 +85,8 @@ public class PariPariRepository {
 
         networkMonitor.startMonitoring();
 
+        AppDatabase.databaseWriteExecutor.execute(() -> partecipanteDao.deletePlaceholderPartecipanti());
+
         auth.addAuthStateListener(firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (user != null) {
@@ -219,6 +221,7 @@ public class PariPariRepository {
     public void deletePartecipante(String partecipanteId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
+            spesaDao.deleteQuoteByPartecipanteId(partecipanteId);
             partecipanteDao.deleteById(partecipanteId);
 
             if (p != null && auth.getCurrentUser() != null && networkMonitor.isConnected()) {
@@ -332,16 +335,7 @@ public class PariPariRepository {
 
                 List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta);
 
-                String mioId = null;
-                for (Partecipante p : parti) {
-                    if (p.getNome() != null) {
-                        String n = p.getNome().trim().toLowerCase();
-                        if (n.equals("io") || n.equals("me")) {
-                            mioId = p.getId();
-                            break;
-                        }
-                    }
-                }
+                String mioId = Partecipante.findCurrentUserId(parti, auth.getCurrentUser());
 
                 if (mioId != null) {
                     for (TrasferimentoSaldo t : trasferimenti) {
@@ -611,6 +605,8 @@ public class PariPariRepository {
                             String partId = doc.getId();
                             if (dc.getType() == DocumentChange.Type.REMOVED) {
                                 Log.w(TAG, "Partecipante rimosso da remoto: " + partId);
+                                spesaDao.deleteQuoteByPartecipanteId(partId);
+                                partecipanteDao.deleteById(partId);
                             } else {
                                 String nome = doc.getString("nome");
                                 String email = doc.getString("email");
@@ -651,18 +647,6 @@ public class PariPariRepository {
                                 String scontrinoUrl = doc.getString("scontrinoUrl");
 
                                 if (titolo != null && importo != null && pagatoDaId != null) {
-                                    Partecipante pagatoreEsistente = partecipanteDao.getPartecipanteById(pagatoDaId);
-                                    if (pagatoreEsistente == null) {
-                                        Partecipante placeholder = new Partecipante(
-                                                pagatoDaId,
-                                                groupId,
-                                                "Partecipante",
-                                                null,
-                                                SyncStatus.SYNCED
-                                        );
-                                        partecipanteDao.insert(placeholder);
-                                    }
-
                                     Spesa sp = new Spesa(
                                             spesaId,
                                             groupId,
@@ -688,10 +672,6 @@ public class PariPariRepository {
                                                     Double quotaPagataVal = sDoc.getDouble("quotaPagata");
                                                     double quotaPagata = quotaPagataVal != null ? quotaPagataVal : 0.0;
                                                     if (pId != null && quotaVal != null) {
-                                                        Partecipante deb = partecipanteDao.getPartecipanteById(pId);
-                                                        if (deb == null) {
-                                                            partecipanteDao.insert(new Partecipante(pId, groupId, "Partecipante", null, SyncStatus.SYNCED));
-                                                        }
                                                         quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, quotaPagata, SyncStatus.SYNCED));
                                                     }
                                                 }
@@ -926,10 +906,6 @@ public class PariPariRepository {
                 String scontrinoUrl = doc.getString("scontrinoUrl");
 
                 if (titolo != null && importo != null && pagatoDaId != null) {
-                    Partecipante pagatore = partecipanteDao.getPartecipanteById(pagatoDaId);
-                    if (pagatore == null) {
-                        partecipanteDao.insert(new Partecipante(pagatoDaId, groupId, "Partecipante", null, SyncStatus.SYNCED));
-                    }
                     Spesa sp = new Spesa(
                             spesaId, groupId, titolo, importo,
                             valuta != null ? valuta : "EUR",
@@ -948,10 +924,6 @@ public class PariPariRepository {
                                 Double quotaPagataVal = sDoc.getDouble("quotaPagata");
                                 double quotaPagata = quotaPagataVal != null ? quotaPagataVal : 0.0;
                                 if (pId != null && quotaVal != null) {
-                                    Partecipante deb = partecipanteDao.getPartecipanteById(pId);
-                                    if (deb == null) {
-                                        partecipanteDao.insert(new Partecipante(pId, groupId, "Partecipante", null, SyncStatus.SYNCED));
-                                    }
                                     quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, quotaPagata, SyncStatus.SYNCED));
                                 }
                             }

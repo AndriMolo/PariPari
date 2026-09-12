@@ -15,6 +15,31 @@
     <string name="title_valuta">Converti Valuta</string>
     <string name="title_account">Il mio Account</string>
 
+    <!-- Opzioni Scheda Home -->
+    <string name="dialog_opzioni_scheda_titolo">Scegli un\'opzione</string>
+    <string name="dialog_opzioni_nuova_scheda">➕ Avvia una nuova scheda</string>
+    <string name="dialog_opzioni_entra_scheda">🔑 Entra in una scheda con codice</string>
+
+    <!-- Empty States -->
+    <string name="empty_membri_titolo">Nessun partecipante nel gruppo</string>
+    <string name="empty_membri_desc">Invita i tuoi amici condividendo il codice gruppo per iniziare a dividere le spese insieme!</string>
+    <string name="empty_saldi_titolo">Tutto in pari! 👍</string>
+    <string name="empty_saldi_desc">Non ci sono saldi da saldare o rimborsi in sospeso.</string>
+
+    <!-- Header Valuta -->
+    <string name="valuta_header_titolo">Converti un Importo</string>
+    <string name="valuta_header_subtitolo">Inserisci la cifra da valutare in un\'altra valuta con i tassi di cambio BCE aggiornati.</string>
+
+    <!-- Preferenza Tema -->
+    <string name="label_tema_app">Tema dell\'applicazione</string>
+    <string name="hint_tema_app_desc">Chiaro, Scuro o Predefinito di sistema</string>
+    <string name="tema_sistema">Predefinita di sistema</string>
+    <string name="tema_chiaro">Chiaro</string>
+    <string name="tema_scuro">Scuro</string>
+    <string name="msg_tema_aggiornato">Tema aggiornato</string>
+    <string name="btn_condividi_codice">Condividi codice invito</string>
+    <string name="btn_aggiungi_partecipante_locale">Aggiungi partecipante locale</string>
+
     <!-- Schede Spese -->
     <string name="btn_nuova_scheda">Nuova Scheda</string>
     <string name="title_nuova_scheda">Nuova Scheda</string>
@@ -313,5 +338,11 @@
     <string name="error_password_vuota">Inserisci la tua password attuale</string>
     <string name="error_email_uguale">La nuova email è uguale a quella attuale</string>
     <string name="error_inserisci_email">Inserisci un indirizzo email valido</string>
+
+    <!-- Spesa non modificabile per membro assente -->
+    <string name="msg_spesa_non_modificabile_membro_assente">Questa spesa include un partecipante che non fa più parte del gruppo e non può essere modificata.</string>
+    <string name="banner_spesa_non_modificabile">⚠️ Spesa non modificabile: include partecipanti non più presenti nel gruppo.</string>
+    <string name="dialog_titolo_spesa_non_modificabile">Spesa non modificabile</string>
+    <string name="dialog_msg_spesa_membro_assente">Un membro che ha partecipato a questa spesa ha abbandonato il gruppo. La spesa non può più essere modificata.</string>
 
 </resources>

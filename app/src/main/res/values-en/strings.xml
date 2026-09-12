@@ -15,6 +15,31 @@
     <string name="title_valuta">Convert Currency</string>
     <string name="title_account">My Account</string>
 
+    <!-- Opzioni Scheda Home -->
+    <string name="dialog_opzioni_scheda_titolo">Choose an option</string>
+    <string name="dialog_opzioni_nuova_scheda">➕ Start a new group</string>
+    <string name="dialog_opzioni_entra_scheda">🔑 Join a group with code</string>
+
+    <!-- Empty States -->
+    <string name="empty_membri_titolo">No members in group</string>
+    <string name="empty_membri_desc">Invite your friends by sharing the group code to start splitting expenses together!</string>
+    <string name="empty_saldi_titolo">All settled up! 👍</string>
+    <string name="empty_saldi_desc">There are no pending balances or refunds.</string>
+
+    <!-- Header Valuta -->
+    <string name="valuta_header_titolo">Convert an Amount</string>
+    <string name="valuta_header_subtitolo">Enter the amount to evaluate in another currency with updated ECB exchange rates.</string>
+
+    <!-- Preferenza Tema -->
+    <string name="label_tema_app">Application theme</string>
+    <string name="hint_tema_app_desc">Light, Dark, or System default</string>
+    <string name="tema_sistema">System default</string>
+    <string name="tema_chiaro">Light</string>
+    <string name="tema_scuro">Dark</string>
+    <string name="msg_tema_aggiornato">Theme updated</string>
+    <string name="btn_condividi_codice">Share invite code</string>
+    <string name="btn_aggiungi_partecipante_locale">Add local member</string>
+
     <!-- Schede Spese -->
     <string name="btn_nuova_scheda">New Group</string>
     <string name="title_nuova_scheda">New Group</string>
@@ -313,5 +338,11 @@
     <string name="error_password_vuota">Please enter your current password</string>
     <string name="error_email_uguale">The new email is the same as the current one</string>
     <string name="error_inserisci_email">Please enter a valid email address</string>
+
+    <!-- Non-editable expense -->
+    <string name="msg_spesa_non_modificabile_membro_assente">This expense includes a member who is no longer in the group and cannot be edited.</string>
+    <string name="banner_spesa_non_modificabile">⚠️ Non-editable expense: includes members who are no longer in the group.</string>
+    <string name="dialog_titolo_spesa_non_modificabile">Non-editable expense</string>
+    <string name="dialog_msg_spesa_membro_assente">A member who participated in this expense has left the group. This expense can no longer be edited.</string>
 
 </resources>

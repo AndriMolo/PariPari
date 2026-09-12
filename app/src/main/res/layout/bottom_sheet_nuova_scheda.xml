@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_nome_scheda"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_nome_scheda"
@@ -38,6 +38,30 @@
             android:inputType="textCapSentences"
             android:maxLines="1"
             android:imeOptions="actionNext"
+            android:importantForAutofill="no" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Valuta della Scheda (Di default la preferita dell'utente) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_valuta_scheda"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/label_valuta_predefinita"
+        app:startIconDrawable="@drawable/ic_valuta"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_arrow_drop_down"
+        android:layout_marginBottom="20dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_valuta_scheda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:clickable="true"
+            android:cursorVisible="false"
+            android:inputType="none"
             android:importantForAutofill="no" />
 
     </com.google.android.material.textfield.TextInputLayout>

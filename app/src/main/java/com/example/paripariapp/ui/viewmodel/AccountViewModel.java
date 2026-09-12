@@ -173,6 +173,18 @@ public class AccountViewModel extends AndroidViewModel {
         }
     }
 
+    public LiveData<String> getAppThemeLive() {
+        return preferencesRepository.getAppThemeLive();
+    }
+
+    public String getAppTheme() {
+        return preferencesRepository.getAppTheme();
+    }
+
+    public void setAppTheme(String themeCode) {
+        preferencesRepository.setAppTheme(themeCode);
+    }
+
     // ====================================================================
     // AZIONI DI AUTENTICAZIONE
     // ====================================================================

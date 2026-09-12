@@ -164,6 +164,16 @@ public class DettaglioSchedaFragment extends Fragment {
                     valuta != null ? valuta : "EUR"
             );
             saldoAdapter.submitList(trasferimenti);
+
+            if (trasferimenti.isEmpty()) {
+                binding.layoutEmptySaldi.getRoot().setVisibility(View.VISIBLE);
+                binding.layoutEmptySaldi.tvEmptyTitle.setText(R.string.empty_saldi_titolo);
+                binding.layoutEmptySaldi.tvEmptyDesc.setText(R.string.empty_saldi_desc);
+                binding.recyclerSaldi.setVisibility(View.GONE);
+            } else {
+                binding.layoutEmptySaldi.getRoot().setVisibility(View.GONE);
+                binding.recyclerSaldi.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -199,9 +209,45 @@ public class DettaglioSchedaFragment extends Fragment {
     private void setupRecyclerView() {
         adapter = new SpesaAdapter();
         adapter.setOnSpesaClickListener(item -> {
-            if (item != null && item.getSpesa() != null) {
+            if (item == null || item.getSpesa() == null) return;
+            Spesa spesa = item.getSpesa();
+
+            // Costruisce il set degli ID dei partecipanti attualmente attivi nella scheda
+            java.util.Set<String> activeIds = new java.util.HashSet<>();
+            if (partecipantiCache != null) {
+                for (Partecipante p : partecipantiCache) {
+                    activeIds.add(p.getId());
+                }
+            }
+
+            boolean haMembroAssente = false;
+
+            // 1. Verifica il pagatore
+            if (spesa.getPagatoDaId() != null && !activeIds.contains(spesa.getPagatoDaId())) {
+                haMembroAssente = true;
+            }
+
+            // 2. Verifica i partecipanti presenti nelle quote di questa spesa
+            if (!haMembroAssente && quoteCache != null) {
+                for (SpesaPartecipante q : quoteCache) {
+                    if (q.getSpesaId().equals(spesa.getId())) {
+                        if (q.getPartecipanteId() != null && !activeIds.contains(q.getPartecipanteId())) {
+                            haMembroAssente = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (haMembroAssente) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.dialog_titolo_spesa_non_modificabile)
+                        .setMessage(R.string.dialog_msg_spesa_membro_assente)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            } else {
                 ModificaSpesaFragment fragment = ModificaSpesaFragment.newInstance(
-                        item.getSpesa().getId(),
+                        spesa.getId(),
                         schedaId,
                         valuta
                 );
@@ -305,6 +351,22 @@ public class DettaglioSchedaFragment extends Fragment {
             // Invia la lista aggiornata al RecyclerView della sezione Membri
             if (membroAdapter != null) {
                 membroAdapter.submitList(partecipanti);
+
+                boolean isCapogruppo = (schedaCorrente == null
+                        || schedaCorrente.getCreatoreId() == null
+                        || (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null
+                        && schedaCorrente.getCreatoreId().equals(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid())));
+                membroAdapter.setCapogruppo(isCapogruppo);
+            }
+
+            if (partecipanti.isEmpty()) {
+                binding.layoutEmptyMembri.getRoot().setVisibility(View.VISIBLE);
+                binding.layoutEmptyMembri.tvEmptyTitle.setText(R.string.empty_membri_titolo);
+                binding.layoutEmptyMembri.tvEmptyDesc.setText(R.string.empty_membri_desc);
+                binding.recyclerMembri.setVisibility(View.GONE);
+            } else {
+                binding.layoutEmptyMembri.getRoot().setVisibility(View.GONE);
+                binding.recyclerMembri.setVisibility(View.VISIBLE);
             }
 
             aggiornaSaldi();
@@ -352,6 +414,16 @@ public class DettaglioSchedaFragment extends Fragment {
         }
 
         adapter.submitList(itemsConHeader);
+
+        if (itemsConHeader.isEmpty()) {
+            binding.layoutEmptySpese.getRoot().setVisibility(View.VISIBLE);
+            binding.layoutEmptySpese.tvEmptyTitle.setText(R.string.empty_spese_titolo);
+            binding.layoutEmptySpese.tvEmptyDesc.setText(R.string.empty_spese_desc);
+            binding.recyclerSpese.setVisibility(View.GONE);
+        } else {
+            binding.layoutEmptySpese.getRoot().setVisibility(View.GONE);
+            binding.recyclerSpese.setVisibility(View.VISIBLE);
+        }
     }
 
     private void setupFab() {
@@ -410,16 +482,7 @@ public class DettaglioSchedaFragment extends Fragment {
                     quoteCache,
                     valuta != null ? valuta : "EUR"
             );
-            String mioId = null;
-            for (Partecipante p : partecipantiCache) {
-                if (p.getNome() != null) {
-                    String n = p.getNome().trim().toLowerCase();
-                    if (n.equals("io") || n.equals("me")) {
-                        mioId = p.getId();
-                        break;
-                    }
-                }
-            }
+            String mioId = Partecipante.findCurrentUserId(partecipantiCache, com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser());
             if (mioId != null) {
                 for (TrasferimentoSaldo t : trasferimenti) {
                     if (t.getDaId().equals(mioId) || t.getAId().equals(mioId)) {
@@ -482,6 +545,29 @@ public class DettaglioSchedaFragment extends Fragment {
         dialog.show();
     }
 
+    private boolean haSpeseODebiti(Partecipante p) {
+        if (p == null) return false;
+        // 1. Ha pagato qualche spesa?
+        if (speseCache != null) {
+            for (Spesa s : speseCache) {
+                if (p.getId().equals(s.getPagatoDaId())) {
+                    return true;
+                }
+            }
+        }
+        // 2. È debitore/ha una quota attiva (> 0.0) o ha già pagato una quota (> 0.0) in qualche spesa?
+        if (quoteCache != null) {
+            for (SpesaPartecipante q : quoteCache) {
+                if (p.getId().equals(q.getPartecipanteId())) {
+                    if (Math.abs(q.getQuota()) > 0.009 || Math.abs(q.getQuotaPagata()) > 0.009) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private void riempiListaMembri(LinearLayout contenitore) {
         contenitore.removeAllViews();
 
@@ -496,15 +582,7 @@ public class DettaglioSchedaFragment extends Fragment {
             tvIniziale.setText(!nome.isEmpty() ? String.valueOf(nome.charAt(0)).toUpperCase() : "?");
 
             btnCestino.setOnClickListener(v -> {
-                boolean haSpese = false;
-                for (Spesa s : speseCache) {
-                    if (p.getId().equals(s.getPagatoDaId())) {
-                        haSpese = true;
-                        break;
-                    }
-                }
-
-                if (haSpese) {
+                if (haSpeseODebiti(p)) {
                     new MaterialAlertDialogBuilder(requireContext())
                             .setTitle(R.string.dialog_titolo_gestione_gruppo)
                             .setMessage(getString(R.string.msg_errore_rimozione_membro))
@@ -570,15 +648,7 @@ public class DettaglioSchedaFragment extends Fragment {
         binding.recyclerMembri.setAdapter(membroAdapter);
 
         membroAdapter.setOnEliminaClickListener(p -> {
-            boolean haSpese = false;
-            for (Spesa s : speseCache) {
-                if (p.getId().equals(s.getPagatoDaId())) {
-                    haSpese = true;
-                    break;
-                }
-            }
-
-            if (haSpese) {
+            if (haSpeseODebiti(p)) {
                 new MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.dialog_titolo_gestione_gruppo)
                         .setMessage(getString(R.string.msg_errore_rimozione_membro))
@@ -596,7 +666,25 @@ public class DettaglioSchedaFragment extends Fragment {
             }
         });
 
-        binding.btnAggiungiMembroTab.setOnClickListener(v -> mostraDialogAggiungiSingoloMembro());
+        binding.btnAggiungiMembroTab.setOnClickListener(v -> mostraDialogOpzioniAggiungiMembro());
+    }
+
+    private void mostraDialogOpzioniAggiungiMembro() {
+        String[] opzioni = new String[]{
+                getString(R.string.btn_condividi_codice),
+                getString(R.string.btn_aggiungi_partecipante_locale)
+        };
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.titolo_aggiungi_membro)
+                .setItems(opzioni, (dialog, which) -> {
+                    if (which == 0) {
+                        mostraDialogCodiceGruppo();
+                    } else {
+                        mostraDialogAggiungiSingoloMembro();
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
     }
 
     private void mostraDialogAggiungiSingoloMembro() {

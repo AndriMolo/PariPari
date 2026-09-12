@@ -45,6 +45,7 @@ public class NuovaSpesaFragment extends Fragment {
 
     private final Map<String, CheckBox> checkMap = new HashMap<>();
     private final Map<String, EditText> quotaInputMap = new HashMap<>();
+    private final Map<String, View> quotaContainerMap = new HashMap<>();
 
     public static NuovaSpesaFragment newInstance(String schedaId, String valuta) {
         NuovaSpesaFragment fragment = new NuovaSpesaFragment();
@@ -77,6 +78,7 @@ public class NuovaSpesaFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(DettaglioSchedaViewModel.class);
 
+        binding.toolbarNuovaSpesa.setNavigationOnClickListener(v -> getParentFragmentManager().popBackStack());
         binding.campoValuta.setText(valuta != null ? valuta : getString(R.string.valuta_default));
 
         setupCategorieDropdown();
@@ -100,9 +102,10 @@ public class NuovaSpesaFragment extends Fragment {
 
     private void setupSwitchDivisione() {
         binding.interruttorePersonalizzata.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            for (Map.Entry<String, EditText> entry : quotaInputMap.entrySet()) {
-                View container = (View) entry.getValue().getParent().getParent();
-                container.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            for (View container : quotaContainerMap.values()) {
+                if (container != null) {
+                    container.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                }
             }
         });
     }
@@ -130,6 +133,7 @@ public class NuovaSpesaFragment extends Fragment {
         binding.layoutElencoQuote.removeAllViews();
         checkMap.clear();
         quotaInputMap.clear();
+        quotaContainerMap.clear();
 
         for (Partecipante p : lista) {
             View row = getLayoutInflater().inflate(R.layout.item_quota_partecipante, binding.layoutElencoQuote, false);
@@ -144,6 +148,7 @@ public class NuovaSpesaFragment extends Fragment {
 
             checkMap.put(p.getId(), cb);
             quotaInputMap.put(p.getId(), etQuota);
+            quotaContainerMap.put(p.getId(), quotaContainer);
 
             binding.layoutElencoQuote.addView(row);
         }
@@ -202,8 +207,11 @@ public class NuovaSpesaFragment extends Fragment {
                 }
 
                 double quotaSingola = importo / partecipantiInclusi.size();
-                for (Partecipante p : partecipantiInclusi) {
-                    quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaSingola, SyncStatus.PENDING_INSERT));
+                for (Partecipante p : partecipanti) {
+                    CheckBox cb = checkMap.get(p.getId());
+                    boolean isIncluso = (cb != null && cb.isChecked());
+                    double qVal = isIncluso ? quotaSingola : 0.0;
+                    quote.add(new SpesaPartecipante(spesaId, p.getId(), qVal, SyncStatus.PENDING_INSERT));
                 }
             } else {
                 // Divisione Personalizzata in Percentuale (%)
@@ -256,6 +264,14 @@ public class NuovaSpesaFragment extends Fragment {
                     }
 
                     quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaEuro, SyncStatus.PENDING_INSERT));
+                }
+
+                // Registra anche i partecipanti del gruppo esclusi con quota 0 per mantenere lo storico del gruppo
+                for (Partecipante p : partecipanti) {
+                    CheckBox cb = checkMap.get(p.getId());
+                    if (cb == null || !cb.isChecked()) {
+                        quote.add(new SpesaPartecipante(spesaId, p.getId(), 0.0, SyncStatus.PENDING_INSERT));
+                    }
                 }
             }
 

@@ -25,6 +25,11 @@ public class UserPreferencesRepository {
     private static final String KEY_APP_LANGUAGE = "pref_app_language";
     public static final String LANGUAGE_SYSTEM = "SYSTEM";
 
+    private static final String KEY_APP_THEME = "pref_app_theme";
+    public static final String THEME_SYSTEM = "SYSTEM";
+    public static final String THEME_LIGHT = "LIGHT";
+    public static final String THEME_DARK = "DARK";
+
     public static final List<String> SUPPORTED_CURRENCIES = Arrays.asList(
             "EUR - Euro",
             "USD - Dollaro USA",
@@ -72,6 +77,7 @@ public class UserPreferencesRepository {
     private final SharedPreferences preferences;
     private final MutableLiveData<String> defaultCurrencyLive = new MutableLiveData<>();
     private final MutableLiveData<String> appLanguageLive = new MutableLiveData<>();
+    private final MutableLiveData<String> appThemeLive = new MutableLiveData<>();
 
     private UserPreferencesRepository(Context context) {
         this.preferences = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -80,6 +86,9 @@ public class UserPreferencesRepository {
 
         String currentLanguage = preferences.getString(KEY_APP_LANGUAGE, LANGUAGE_SYSTEM);
         appLanguageLive.setValue(currentLanguage);
+
+        String currentTheme = preferences.getString(KEY_APP_THEME, THEME_SYSTEM);
+        appThemeLive.setValue(currentTheme);
     }
 
     public static UserPreferencesRepository getInstance(Context context) {
@@ -316,5 +325,41 @@ public class UserPreferencesRepository {
             return Locale.getDefault();
         }
         return Locale.forLanguageTag(lang);
+    }
+
+    // ====================================================================
+    // GESTIONE TEMA APP
+    // ====================================================================
+
+    public String getAppTheme() {
+        return preferences.getString(KEY_APP_THEME, THEME_SYSTEM);
+    }
+
+    public LiveData<String> getAppThemeLive() {
+        return appThemeLive;
+    }
+
+    public void setAppTheme(String themeCode) {
+        if (themeCode == null || themeCode.trim().isEmpty()) {
+            return;
+        }
+        String cleanCode = themeCode.trim().toUpperCase();
+        preferences.edit().putString(KEY_APP_THEME, cleanCode).apply();
+        appThemeLive.postValue(cleanCode);
+        applyTheme(cleanCode);
+    }
+
+    public void applyCurrentTheme() {
+        applyTheme(getAppTheme());
+    }
+
+    public static void applyTheme(String themeCode) {
+        if (THEME_LIGHT.equalsIgnoreCase(themeCode)) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else if (THEME_DARK.equalsIgnoreCase(themeCode)) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        }
     }
 }

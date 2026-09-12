@@ -58,6 +58,9 @@ public interface PartecipanteDao {
     @Query("DELETE FROM partecipanti WHERE id = :id")
     void deleteById(String id);
 
+    @Query("DELETE FROM partecipanti WHERE nome = 'Partecipante' OR nome = ''")
+    void deletePlaceholderPartecipanti();
+
     @Query("DELETE FROM partecipanti WHERE scheda_id = :schedaId")
     void deleteBySchedaId(String schedaId);
 

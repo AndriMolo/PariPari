@@ -34,7 +34,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/contenitore_quota"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="100dp"
+            android:layout_width="105dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:hint="%"
@@ -46,14 +46,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="end"
-                android:inputType="numberDecimal" />
+                android:inputType="numberDecimal"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Input importo già pagato -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/contenitore_quota_pagata"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="110dp"
+            android:layout_width="115dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
             android:hint="@string/spesa_quota_pagata">
@@ -63,7 +66,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="end"
-                android:inputType="numberDecimal" />
+                android:inputType="numberDecimal"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 

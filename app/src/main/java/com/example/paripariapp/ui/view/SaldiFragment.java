@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.BilancioPersonaItem;
 import com.example.paripariapp.databinding.FragmentSaldiBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
@@ -89,6 +90,9 @@ public class SaldiFragment extends Fragment {
         }
 
         boolean vuoto = filtrate.isEmpty();
+        if (vuoto) {
+            binding.tvVuoto.setText(R.string.empty_saldi_titolo);
+        }
         binding.tvVuoto.setVisibility(vuoto ? View.VISIBLE : View.GONE);
         binding.recyclerBilanci.setVisibility(vuoto ? View.GONE : View.VISIBLE);
         adapter.submitList(filtrate);

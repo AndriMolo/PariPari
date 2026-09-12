@@ -209,11 +209,27 @@ public class SpeseFragment extends Fragment {
     }
 
     private void setupListeners() {
-        binding.fabNuovaScheda.setOnClickListener(v ->
-                NuovaSchedaBottomSheet.newInstance().show(getChildFragmentManager(), "NuovaSchedaBottomSheet")
-        );
+        binding.fabNuovaScheda.setOnClickListener(v -> mostraDialogSceltaNuovaScheda());
 
-        binding.btnEntraConCodice.setOnClickListener(v -> mostraDialogCodiceAccesso());
+    }
+
+    private void mostraDialogSceltaNuovaScheda() {
+        String[] opzioni = new String[] {
+                getString(R.string.dialog_opzioni_nuova_scheda),
+                getString(R.string.dialog_opzioni_entra_scheda)
+        };
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.dialog_opzioni_scheda_titolo)
+                .setItems(opzioni, (dialog, which) -> {
+                    if (which == 0) {
+                        NuovaSchedaBottomSheet.newInstance().show(getChildFragmentManager(), "NuovaSchedaBottomSheet");
+                    } else if (which == 1) {
+                        mostraDialogCodiceAccesso();
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
     }
 
     private void mostraDialogCodiceAccesso() {

@@ -46,6 +46,9 @@ public interface SpesaDao {
     @Query("DELETE FROM spese_partecipanti WHERE spesa_id = :spesaId")
     void deleteQuoteBySpesaId(String spesaId);
 
+    @Query("DELETE FROM spese_partecipanti WHERE partecipante_id = :partecipanteId")
+    void deleteQuoteByPartecipanteId(String partecipanteId);
+
     @Query("DELETE FROM spese_partecipanti WHERE spesa_id IN (SELECT id FROM spese WHERE scheda_id = :schedaId)")
     void deleteQuoteBySchedaId(String schedaId);
 

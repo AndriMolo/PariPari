@@ -59,6 +59,7 @@ public class AccountFragment extends Fragment {
         setupEmailVerificationSelector();
         setupCurrencySelector();
         setupLanguageSelector();
+        setupThemeSelector();
         updateFormModeUI();
     }
 
@@ -136,6 +137,14 @@ public class AccountFragment extends Fragment {
             }
         });
 
+        // Osserva il tema dell'applicazione
+        viewModel.getAppThemeLive().observe(getViewLifecycleOwner(), themeCode -> {
+            if (binding != null && themeCode != null) {
+                String display = getDisplayThemeForCode(themeCode);
+                binding.tvTemaAppValore.setText(display);
+            }
+        });
+
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error)) {
@@ -204,6 +213,51 @@ public class AccountFragment extends Fragment {
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .show();
+    }
+
+    private void setupThemeSelector() {
+        binding.rowTemaApp.setOnClickListener(v -> showThemeSelectionDialog());
+    }
+
+    private void showThemeSelectionDialog() {
+        String[] items = new String[]{
+                getString(R.string.tema_sistema),
+                getString(R.string.tema_chiaro),
+                getString(R.string.tema_scuro)
+        };
+        String currentCode = viewModel.getAppTheme();
+        int selectedIndex = 0;
+        if (UserPreferencesRepository.THEME_LIGHT.equalsIgnoreCase(currentCode)) {
+            selectedIndex = 1;
+        } else if (UserPreferencesRepository.THEME_DARK.equalsIgnoreCase(currentCode)) {
+            selectedIndex = 2;
+        }
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.label_tema_app)
+                .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
+                    String code = UserPreferencesRepository.THEME_SYSTEM;
+                    if (which == 1) {
+                        code = UserPreferencesRepository.THEME_LIGHT;
+                    } else if (which == 2) {
+                        code = UserPreferencesRepository.THEME_DARK;
+                    }
+                    viewModel.setAppTheme(code);
+                    Snackbar.make(binding.getRoot(), R.string.msg_tema_aggiornato, Snackbar.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
+    }
+
+    private String getDisplayThemeForCode(String code) {
+        if (UserPreferencesRepository.THEME_LIGHT.equalsIgnoreCase(code)) {
+            return getString(R.string.tema_chiaro);
+        } else if (UserPreferencesRepository.THEME_DARK.equalsIgnoreCase(code)) {
+            return getString(R.string.tema_scuro);
+        } else {
+            return getString(R.string.tema_sistema);
+        }
     }
 
     private void setupListeners() {

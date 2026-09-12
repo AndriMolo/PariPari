@@ -101,4 +101,53 @@ public class Partecipante {
     public void setSyncStatus(int syncStatus) {
         this.syncStatus = syncStatus;
     }
+
+    /**
+     * Riconosce se un Partecipante corrisponde all'utente corrente autenticato.
+     */
+    public static boolean isCurrentUserParticipant(Partecipante p, @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+        if (p == null) return false;
+
+        // 1. Corrispondenza per Email
+        if (currentUser != null && currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
+            if (p.getEmail() != null && p.getEmail().trim().equalsIgnoreCase(currentUser.getEmail().trim())) {
+                return true;
+            }
+        }
+
+        // 2. Corrispondenza per Display Name
+        if (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
+            String displayName = currentUser.getDisplayName().trim().toLowerCase();
+            String pNome = p.getNome().trim().toLowerCase();
+            if (pNome.equalsIgnoreCase(displayName) || pNome.startsWith(displayName)) {
+                return true;
+            }
+        }
+
+        // 3. Corrispondenza per diciture "(io)", "(me)", "io", "me"
+        if (p.getNome() != null) {
+            String n = p.getNome().trim().toLowerCase();
+            if (n.contains("(io)") || n.contains("(me)") || n.equalsIgnoreCase("io") || n.equalsIgnoreCase("me") || n.startsWith("io ")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Trova l'ID del partecipante che rappresenta l'utente corrente in una lista di partecipanti.
+     */
+    public static String findCurrentUserId(java.util.List<Partecipante> partecipanti, @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+        if (partecipanti == null || partecipanti.isEmpty()) return null;
+
+        for (Partecipante p : partecipanti) {
+            if (isCurrentUserParticipant(p, currentUser)) {
+                return p.getId();
+            }
+        }
+
+        // Fallback: primo partecipante della scheda
+        return partecipanti.get(0).getId();
+    }
 }

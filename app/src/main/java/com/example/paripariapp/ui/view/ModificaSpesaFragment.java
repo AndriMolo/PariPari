@@ -56,8 +56,11 @@ public class ModificaSpesaFragment extends Fragment {
     private final Map<String, EditText> quotaInputMap = new HashMap<>();
     private final Map<String, EditText> quotaPagataInputMap = new HashMap<>();
     private final Map<String, TextView> statoSaldoMap = new HashMap<>();
+    private final Map<String, View> quotaContainerMap = new HashMap<>();
 
     private boolean isDataLoaded = false;
+    private boolean isQuoteLoaded = false;
+    private boolean isReadOnly = false;
 
     public static ModificaSpesaFragment newInstance(String spesaId, String schedaId, String valuta) {
         ModificaSpesaFragment fragment = new ModificaSpesaFragment();
@@ -92,6 +95,7 @@ public class ModificaSpesaFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(DettaglioSchedaViewModel.class);
 
+        binding.toolbarModificaSpesa.setNavigationOnClickListener(v -> getParentFragmentManager().popBackStack());
         binding.campoValuta.setText(valuta != null ? valuta : getString(R.string.valuta_default));
 
         setupCategorieDropdown();
@@ -115,9 +119,10 @@ public class ModificaSpesaFragment extends Fragment {
 
     private void setupSwitchDivisione() {
         binding.interruttorePersonalizzata.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            for (Map.Entry<String, EditText> entry : quotaInputMap.entrySet()) {
-                View container = (View) entry.getValue().getParent();
-                container.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            for (View container : quotaContainerMap.values()) {
+                if (container != null) {
+                    container.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                }
             }
             ricalcolaStatiSaldo();
         });
@@ -138,6 +143,10 @@ public class ModificaSpesaFragment extends Fragment {
 
     private void setupAzioneElimina() {
         binding.azioneElimina.setOnClickListener(v -> {
+            if (isReadOnly) {
+                Toast.makeText(requireContext(), R.string.msg_spesa_non_modificabile_membro_assente, Toast.LENGTH_SHORT).show();
+                return;
+            }
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.dialog_titolo_elimina_spesa)
                     .setMessage(R.string.dialog_msg_elimina_spesa)
@@ -177,12 +186,13 @@ public class ModificaSpesaFragment extends Fragment {
         viewModel.getQuoteBySpesa(spesaId).observe(getViewLifecycleOwner(), quote -> {
             if (quote == null) return;
             this.quoteEsistenti = quote;
+            this.isQuoteLoaded = true;
             caricaDatiFormSePronto();
         });
     }
 
     private synchronized void caricaDatiFormSePronto() {
-        if (isDataLoaded || spesaCorrente == null || partecipanti.isEmpty()) {
+        if (isDataLoaded || spesaCorrente == null || partecipanti.isEmpty() || !isQuoteLoaded) {
             return;
         }
         isDataLoaded = true;
@@ -191,13 +201,35 @@ public class ModificaSpesaFragment extends Fragment {
         binding.campoImporto.setText(String.format(Locale.US, "%.2f", spesaCorrente.getImporto()));
         binding.campoValuta.setText(spesaCorrente.getValuta() != null ? spesaCorrente.getValuta() : (valuta != null ? valuta : "EUR"));
 
-        // Seleziona pagante
+        // Verifica presenza di partecipanti assenti
+        java.util.Set<String> activeParticipantIds = new java.util.HashSet<>();
         for (Partecipante p : partecipanti) {
-            if (p.getId().equals(spesaCorrente.getPagatoDaId())) {
-                binding.menuPagante.setText(p.getNome(), false);
-                break;
+            activeParticipantIds.add(p.getId());
+        }
+
+        boolean haPartecipantiAssenti = false;
+        if (spesaCorrente.getPagatoDaId() != null && !activeParticipantIds.contains(spesaCorrente.getPagatoDaId())) {
+            haPartecipantiAssenti = true;
+            binding.menuPagante.setText(getString(R.string.nome_sconosciuto), false);
+        } else {
+            for (Partecipante p : partecipanti) {
+                if (p.getId().equals(spesaCorrente.getPagatoDaId())) {
+                    binding.menuPagante.setText(p.getNome(), false);
+                    break;
+                }
             }
         }
+
+        if (quoteEsistenti != null) {
+            for (SpesaPartecipante q : quoteEsistenti) {
+                if (q.getPartecipanteId() != null && !activeParticipantIds.contains(q.getPartecipanteId())) {
+                    haPartecipantiAssenti = true;
+                    break;
+                }
+            }
+        }
+
+        this.isReadOnly = haPartecipantiAssenti;
 
         // Categoria
         if (spesaCorrente.getCategoria() != null) {
@@ -205,6 +237,37 @@ public class ModificaSpesaFragment extends Fragment {
         }
 
         popolaRighePartecipanti();
+
+        if (isReadOnly) {
+            applicaModalitaSolaLettura();
+        }
+    }
+
+    private void applicaModalitaSolaLettura() {
+        if (binding == null) return;
+
+        binding.cardBannerReadonly.setVisibility(View.VISIBLE);
+        Toast.makeText(requireContext(), R.string.msg_spesa_non_modificabile_membro_assente, Toast.LENGTH_LONG).show();
+
+        binding.azioneSalva.setVisibility(View.GONE);
+        binding.azioneElimina.setVisibility(View.GONE);
+
+        binding.campoDescrizione.setEnabled(false);
+        binding.campoImporto.setEnabled(false);
+        binding.campoValuta.setEnabled(false);
+        binding.menuPagante.setEnabled(false);
+        binding.menuCategoria.setEnabled(false);
+        binding.interruttorePersonalizzata.setEnabled(false);
+
+        for (CheckBox cb : checkMap.values()) {
+            if (cb != null) cb.setEnabled(false);
+        }
+        for (EditText et : quotaInputMap.values()) {
+            if (et != null) et.setEnabled(false);
+        }
+        for (EditText et : quotaPagataInputMap.values()) {
+            if (et != null) et.setEnabled(false);
+        }
     }
 
     private void popolaRighePartecipanti() {
@@ -213,6 +276,7 @@ public class ModificaSpesaFragment extends Fragment {
         quotaInputMap.clear();
         quotaPagataInputMap.clear();
         statoSaldoMap.clear();
+        quotaContainerMap.clear();
 
         Map<String, SpesaPartecipante> quoteMap = new HashMap<>();
         for (SpesaPartecipante q : quoteEsistenti) {
@@ -265,6 +329,7 @@ public class ModificaSpesaFragment extends Fragment {
             quotaInputMap.put(p.getId(), etQuota);
             quotaPagataInputMap.put(p.getId(), etQuotaPagata);
             statoSaldoMap.put(p.getId(), tvSaldo);
+            quotaContainerMap.put(p.getId(), quotaContainer);
 
             cb.setOnCheckedChangeListener((buttonView, isChecked) -> ricalcolaStatiSaldo());
 
@@ -357,6 +422,10 @@ public class ModificaSpesaFragment extends Fragment {
 
     private void setupSalva() {
         binding.azioneSalva.setOnClickListener(v -> {
+            if (isReadOnly) {
+                Toast.makeText(requireContext(), R.string.msg_spesa_non_modificabile_membro_assente, Toast.LENGTH_SHORT).show();
+                return;
+            }
             String titolo = binding.campoDescrizione.getText() != null
                     ? binding.campoDescrizione.getText().toString().trim() : "";
             String importoStr = binding.campoImporto.getText() != null
@@ -407,7 +476,10 @@ public class ModificaSpesaFragment extends Fragment {
             if (!binding.interruttorePersonalizzata.isChecked()) {
                 // Divisione Equa
                 double quotaSingolaEuro = Math.round((importo / partecipantiInclusi.size()) * 100.0) / 100.0;
-                for (Partecipante p : partecipantiInclusi) {
+                for (Partecipante p : partecipanti) {
+                    CheckBox cb = checkMap.get(p.getId());
+                    boolean isIncluso = (cb != null && cb.isChecked());
+
                     double qPagata = 0.0;
                     EditText etQP = quotaPagataInputMap.get(p.getId());
                     try {
@@ -416,7 +488,8 @@ public class ModificaSpesaFragment extends Fragment {
                         }
                     } catch (Exception ignored) {}
 
-                    nuoveQuote.add(new SpesaPartecipante(spesaId, p.getId(), quotaSingolaEuro, qPagata, SyncStatus.PENDING_UPDATE));
+                    double qVal = isIncluso ? quotaSingolaEuro : 0.0;
+                    nuoveQuote.add(new SpesaPartecipante(spesaId, p.getId(), qVal, qPagata, SyncStatus.PENDING_UPDATE));
                 }
             } else {
                 // Divisione Personalizzata in Percentuale (%)
@@ -467,6 +540,22 @@ public class ModificaSpesaFragment extends Fragment {
                     } catch (Exception ignored) {}
 
                     nuoveQuote.add(new SpesaPartecipante(spesaId, p.getId(), quotaEuro, qPagata, SyncStatus.PENDING_UPDATE));
+                }
+
+                // Aggiungi anche gli eslcusi con quota 0 per mantenere la registrazione storica
+                for (Partecipante p : partecipanti) {
+                    CheckBox cb = checkMap.get(p.getId());
+                    if (cb == null || !cb.isChecked()) {
+                        double qPagata = 0.0;
+                        EditText etQP = quotaPagataInputMap.get(p.getId());
+                        try {
+                            if (etQP != null && etQP.getText() != null) {
+                                qPagata = Double.parseDouble(etQP.getText().toString().replace(",", "."));
+                            }
+                        } catch (Exception ignored) {}
+
+                        nuoveQuote.add(new SpesaPartecipante(spesaId, p.getId(), 0.0, qPagata, SyncStatus.PENDING_UPDATE));
+                    }
                 }
             }
 

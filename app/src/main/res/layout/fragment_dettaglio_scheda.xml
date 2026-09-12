@@ -136,6 +136,13 @@
                 android:clipToPadding="false"
                 android:paddingHorizontal="8dp"
                 android:paddingBottom="88dp" />
+
+            <include
+                android:id="@+id/layout_empty_spese"
+                layout="@layout/layout_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- 2. SEZIONE SALDI -->
@@ -157,9 +164,17 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_saldi"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:clipToPadding="false"
                 android:paddingBottom="72dp" />
+
+            <include
+                android:id="@+id/layout_empty_saldi"
+                layout="@layout/layout_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- 3. SEZIONE MEMBRI -->
@@ -197,9 +212,17 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_membri"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:clipToPadding="false"
                 android:paddingBottom="72dp" />
+
+            <include
+                android:id="@+id/layout_empty_membri"
+                layout="@layout/layout_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
         </LinearLayout>
 
     </FrameLayout>
