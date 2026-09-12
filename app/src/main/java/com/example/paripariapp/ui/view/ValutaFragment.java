@@ -44,7 +44,7 @@ public class ValutaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(ValutaViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(ValutaViewModel.class);
 
         setupCurrencySelectors();
         setupObservers();

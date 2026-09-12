@@ -597,6 +597,7 @@ public class PariPariRepository {
     }
 
     private void attachSubcollectionListeners(String groupId) {
+        if (groupId == null || groupId.trim().isEmpty()) return;
         if (groupSubListeners.containsKey(groupId + "_parts")) return;
 
         // 1. LISTENER PARTECIPANTI

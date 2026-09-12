@@ -193,11 +193,9 @@ public class SpeseFragment extends Fragment {
             if (schede == null || schede.isEmpty()) {
                 binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
                 binding.recyclerSchede.setVisibility(View.GONE);
-                binding.tvTitoloGruppi.setVisibility(View.GONE);
             } else {
                 binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
                 binding.recyclerSchede.setVisibility(View.VISIBLE);
-                binding.tvTitoloGruppi.setVisibility(View.VISIBLE);
                 adapter.submitList(schede);
             }
         });

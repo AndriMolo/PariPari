@@ -296,4 +296,22 @@
     <string name="msg_profilo_aggiornato">Profilo aggiornato!</string>
     <string name="msg_errore_invio_email">Errore durante l\'invio dell\'email</string>
 
+    <!-- Modifica Email e Recupero Password -->
+    <string name="btn_password_dimenticata">Password dimenticata?</string>
+    <string name="btn_reimposta_password">Reimposta password</string>
+    <string name="cd_modifica_email">Modifica indirizzo email</string>
+    <string name="dialog_titolo_modifica_email">Modifica email</string>
+    <string name="dialog_desc_modifica_email">Inserisci il nuovo indirizzo email e la tua password attuale per confermare.</string>
+    <string name="hint_nuova_email">Nuova email</string>
+    <string name="hint_password_attuale">Password attuale</string>
+    <string name="btn_conferma_modifica_email">Aggiorna email</string>
+    <string name="msg_email_modifica_inviata">Email di verifica inviata alla nuova casella! Controlla la posta e la cartella spam per confermare.</string>
+    <string name="msg_password_reset_inviata">Email per reimpostare la password inviata! Controlla la cartella spam.</string>
+    <string name="dialog_titolo_reset_password">Reimposta password</string>
+    <string name="dialog_msg_conferma_reset">Vuoi ricevere un\'email per reimpostare la password all\'indirizzo:\n\n%1$s?</string>
+    <string name="dialog_msg_inserisci_email_reset">Inserisci il tuo indirizzo email per ricevere il link di recupero password:</string>
+    <string name="error_password_vuota">Inserisci la tua password attuale</string>
+    <string name="error_email_uguale">La nuova email è uguale a quella attuale</string>
+    <string name="error_inserisci_email">Inserisci un indirizzo email valido</string>
+
 </resources>

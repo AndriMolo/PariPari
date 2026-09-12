@@ -21,6 +21,10 @@ import com.google.firebase.auth.FirebaseUser;
 
 import android.content.res.ColorStateList;
 import androidx.core.content.ContextCompat;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 /**
  * Fragment della schermata "Account".
@@ -48,7 +52,7 @@ public class AccountFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(AccountViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
 
         setupObservers();
         setupListeners();
@@ -81,6 +85,7 @@ public class AccountFragment extends Fragment {
             if (context == null) return;
             boolean isVerified = Boolean.TRUE.equals(verified);
             if (isVerified) {
+                viewModel.stopEmailVerificationPolling();
                 binding.cardBadgeEmail.setCardBackgroundColor(ContextCompat.getColor(context, R.color.credit_green_bg));
                 binding.ivBadgeEmailIcon.setImageResource(R.drawable.ic_check_circle);
                 binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.credit_green)));
@@ -94,6 +99,9 @@ public class AccountFragment extends Fragment {
                 binding.tvBadgeEmailTesto.setText(R.string.badge_non_verificata);
                 binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.warning_orange));
                 binding.tvDescVerificaEmail.setText(R.string.desc_email_non_verificata);
+                if (isResumed()) {
+                    viewModel.startEmailVerificationPolling();
+                }
             }
         });
 
@@ -132,6 +140,7 @@ public class AccountFragment extends Fragment {
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error)) {
                 Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_LONG).show();
+                viewModel.clearErrorMessage();
             }
         });
 
@@ -140,6 +149,7 @@ public class AccountFragment extends Fragment {
             if (!TextUtils.isEmpty(msg)) {
                 Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
                 pulisciCampi();
+                viewModel.clearSuccessMessage();
             }
         });
     }
@@ -220,15 +230,27 @@ public class AccountFragment extends Fragment {
 
         // Logout
         binding.btnLogout.setOnClickListener(v -> viewModel.logout());
+
+        // Password dimenticata (modalità login guest)
+        binding.tvPasswordDimenticata.setOnClickListener(v -> {
+            String email = getTesto(binding.etEmail);
+            showDialogRecuperoPassword(email);
+        });
+
+        // Modifica email utente al tocco del container email
+        binding.containerEmailUtente.setOnClickListener(v -> showDialogModificaEmail());
+
     }
 
     private void updateFormModeUI() {
         if (isRegisterMode) {
             binding.tilNome.setVisibility(View.VISIBLE);
+            binding.tvPasswordDimenticata.setVisibility(View.GONE);
             binding.btnSubmitAuth.setText(R.string.btn_crea_account);
             binding.btnSwitchAuthMode.setText(R.string.switch_to_login);
         } else {
             binding.tilNome.setVisibility(View.GONE);
+            binding.tvPasswordDimenticata.setVisibility(View.VISIBLE);
             binding.btnSubmitAuth.setText(R.string.btn_accedi);
             binding.btnSwitchAuthMode.setText(R.string.switch_to_register);
         }
@@ -279,17 +301,134 @@ public class AccountFragment extends Fragment {
         binding.tilPassword.setError(null);
     }
 
+    private void showDialogModificaEmail() {
+        FirebaseUser user = viewModel.getUserLiveData().getValue();
+        if (user == null || user.isAnonymous()) {
+            return;
+        }
+
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_email, null);
+        dialog.setContentView(dialogView);
+
+        TextInputLayout tilNuovaEmail = dialogView.findViewById(R.id.til_nuova_email);
+        TextInputEditText etNuovaEmail = dialogView.findViewById(R.id.et_nuova_email);
+        TextInputLayout tilPasswordAttuale = dialogView.findViewById(R.id.til_password_attuale);
+        TextInputEditText etPasswordAttuale = dialogView.findViewById(R.id.et_password_attuale);
+        View btnAnnulla = dialogView.findViewById(R.id.btn_dialog_annulla);
+        View btnConferma = dialogView.findViewById(R.id.btn_dialog_conferma);
+
+        if (btnAnnulla != null) {
+            btnAnnulla.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnConferma != null) {
+            btnConferma.setOnClickListener(v -> {
+                String nuovaEmail = etNuovaEmail != null && etNuovaEmail.getText() != null
+                        ? etNuovaEmail.getText().toString().trim() : "";
+                String password = etPasswordAttuale != null && etPasswordAttuale.getText() != null
+                        ? etPasswordAttuale.getText().toString().trim() : "";
+
+                boolean valid = true;
+                if (tilNuovaEmail != null) tilNuovaEmail.setError(null);
+                if (tilPasswordAttuale != null) tilPasswordAttuale.setError(null);
+
+                if (TextUtils.isEmpty(nuovaEmail) || !Patterns.EMAIL_ADDRESS.matcher(nuovaEmail).matches()) {
+                    if (tilNuovaEmail != null) tilNuovaEmail.setError(getString(R.string.error_email_valida));
+                    valid = false;
+                } else if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(nuovaEmail)) {
+                    if (tilNuovaEmail != null) tilNuovaEmail.setError(getString(R.string.error_email_uguale));
+                    valid = false;
+                }
+
+                if (TextUtils.isEmpty(password)) {
+                    if (tilPasswordAttuale != null) tilPasswordAttuale.setError(getString(R.string.error_password_vuota));
+                    valid = false;
+                }
+
+                if (valid) {
+                    viewModel.modificaEmail(nuovaEmail, password);
+                    dialog.dismiss();
+                }
+            });
+        }
+
+        dialog.show();
+    }
+
+
+    private void showDialogRecuperoPassword(String emailPrecompilata) {
+        if (!TextUtils.isEmpty(emailPrecompilata) && Patterns.EMAIL_ADDRESS.matcher(emailPrecompilata).matches()) {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.dialog_titolo_reset_password)
+                    .setMessage(getString(R.string.dialog_msg_conferma_reset, emailPrecompilata))
+                    .setPositiveButton(R.string.btn_reimposta_password, (dialog, which) -> {
+                        viewModel.inviaEmailRecuperoPassword(emailPrecompilata);
+                    })
+                    .setNegativeButton(R.string.btn_annulla, null)
+                    .show();
+        } else {
+            final TextInputLayout til = new TextInputLayout(requireContext(), null, com.google.android.material.R.style.Widget_MaterialComponents_TextInputLayout_OutlinedBox);
+            til.setHint(getString(R.string.hint_email));
+            android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            int margin = (int) (20 * getResources().getDisplayMetrics().density);
+            lp.setMargins(margin, margin / 2, margin, 0);
+            til.setLayoutParams(lp);
+
+            final TextInputEditText input = new TextInputEditText(til.getContext());
+            input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+            if (!TextUtils.isEmpty(emailPrecompilata)) {
+                input.setText(emailPrecompilata);
+            }
+            til.addView(input);
+
+            android.widget.FrameLayout container = new android.widget.FrameLayout(requireContext());
+            container.addView(til);
+
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.dialog_titolo_reset_password)
+                    .setMessage(R.string.dialog_msg_inserisci_email_reset)
+                    .setView(container)
+                    .setPositiveButton(R.string.btn_reimposta_password, (dialog, which) -> {
+                        String email = input.getText() != null ? input.getText().toString().trim() : "";
+                        if (!TextUtils.isEmpty(email) && Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                            viewModel.inviaEmailRecuperoPassword(email);
+                        } else {
+                            Snackbar.make(binding.getRoot(), R.string.error_email_valida, Snackbar.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton(R.string.btn_annulla, null)
+                    .show();
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         if (viewModel != null) {
             viewModel.reloadUser();
+            Boolean verified = viewModel.getIsEmailVerifiedLive().getValue();
+            if (!Boolean.TRUE.equals(verified)) {
+                viewModel.startEmailVerificationPolling();
+            }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (viewModel != null) {
+            viewModel.stopEmailVerificationPolling();
         }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (viewModel != null) {
+            viewModel.stopEmailVerificationPolling();
+        }
         binding = null;
     }
 }

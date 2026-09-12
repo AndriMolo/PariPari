@@ -1,6 +1,8 @@
 package com.example.paripariapp.ui.viewmodel;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -42,6 +44,10 @@ public class AccountViewModel extends AndroidViewModel {
 
     private final FirebaseAuth.AuthStateListener authListener;
 
+    private final Handler pollHandler = new Handler(Looper.getMainLooper());
+    private Runnable pollRunnable;
+    private boolean isPollingActive = false;
+
     public AccountViewModel(@NonNull Application application) {
         super(application);
         repository = PariPariRepository.getInstance(application);
@@ -49,7 +55,15 @@ public class AccountViewModel extends AndroidViewModel {
         auth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
 
-        // Listener reattivo sullo stato di autenticazione
+        // Inizializzazione sincrona immediata dello stato con l'utente corrente
+        FirebaseUser initialUser = auth.getCurrentUser();
+        userLiveData.setValue(initialUser);
+        boolean initialGuest = (initialUser == null || initialUser.isAnonymous());
+        isGuestMode.setValue(initialGuest);
+        boolean initialVerified = (initialUser != null && !initialUser.isAnonymous() && initialUser.isEmailVerified());
+        isEmailVerifiedLive.setValue(initialVerified);
+
+        // Listener reattivo sullo stato di autenticazione per aggiornamenti successivi
         authListener = firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             userLiveData.setValue(user);
@@ -103,6 +117,14 @@ public class AccountViewModel extends AndroidViewModel {
 
     public LiveData<String> getSuccessMessage() {
         return successMessage;
+    }
+
+    public void clearSuccessMessage() {
+        successMessage.setValue(null);
+    }
+
+    public void clearErrorMessage() {
+        errorMessage.setValue(null);
     }
 
     public LiveData<String> getDefaultCurrencyLive() {
@@ -281,7 +303,14 @@ public class AccountViewModel extends AndroidViewModel {
                     FirebaseUser reloaded = auth.getCurrentUser();
                     userLiveData.setValue(reloaded);
                     verified = (reloaded != null && reloaded.isEmailVerified());
+                    boolean wasUnverified = !Boolean.TRUE.equals(isEmailVerifiedLive.getValue());
                     isEmailVerifiedLive.setValue(verified);
+                    if (verified) {
+                        stopEmailVerificationPolling();
+                        if (wasUnverified) {
+                            successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_email_confermata_successo));
+                        }
+                    }
                 } else {
                     Log.w(TAG, "Ricarica utente fallita: " + task.getException());
                 }
@@ -291,6 +320,79 @@ public class AccountViewModel extends AndroidViewModel {
             });
         } else if (callback != null) {
             callback.onReloadComplete(false);
+        }
+    }
+
+    private static final int MAX_POLL_ATTEMPTS = 30; // ~75 secondi di tentativi massimi a schermo acceso
+    private int pollAttempts = 0;
+
+    /**
+     * Avvia il polling periodico (ogni 2.5s) per rilevare la verifica dell'email
+     * in tempo reale, ad esempio mentre l'utente clicca il link nella mail o torna nell'app.
+     * Si interrompe automaticamente dopo MAX_POLL_ATTEMPTS se l'utente non verifica l'email.
+     */
+    public void startEmailVerificationPolling() {
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null || user.isAnonymous() || user.isEmailVerified()) {
+            stopEmailVerificationPolling();
+            return;
+        }
+
+        if (isPollingActive) {
+            return;
+        }
+
+        isPollingActive = true;
+        pollAttempts = 0;
+        pollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isPollingActive) return;
+
+                pollAttempts++;
+                if (pollAttempts > MAX_POLL_ATTEMPTS) {
+                    // Timeout raggiunto: ferma il polling per non consumare batteria/rete
+                    stopEmailVerificationPolling();
+                    return;
+                }
+
+                FirebaseUser currentUser = auth.getCurrentUser();
+                if (currentUser == null || currentUser.isAnonymous()) {
+                    stopEmailVerificationPolling();
+                    return;
+                }
+
+                currentUser.reload().addOnCompleteListener(task -> {
+                    if (!isPollingActive) return;
+                    if (task.isSuccessful()) {
+                        FirebaseUser reloaded = auth.getCurrentUser();
+                        if (reloaded != null) {
+                            userLiveData.setValue(reloaded);
+                            if (reloaded.isEmailVerified()) {
+                                isEmailVerifiedLive.setValue(true);
+                                successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_email_confermata_successo));
+                                stopEmailVerificationPolling();
+                                return;
+                            }
+                        }
+                    }
+                    if (isPollingActive) {
+                        pollHandler.postDelayed(this, 2500);
+                    }
+                });
+            }
+        };
+        pollHandler.postDelayed(pollRunnable, 1000);
+    }
+
+    /**
+     * Interrompe il polling della verifica email.
+     */
+    public void stopEmailVerificationPolling() {
+        isPollingActive = false;
+        if (pollRunnable != null) {
+            pollHandler.removeCallbacks(pollRunnable);
+            pollRunnable = null;
         }
     }
 
@@ -317,6 +419,7 @@ public class AccountViewModel extends AndroidViewModel {
                     isLoading.setValue(false);
                     if (task.isSuccessful()) {
                         successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_email_verifica_inviata));
+                        startEmailVerificationPolling();
                     } else {
                         String err = task.getException() != null && task.getException().getLocalizedMessage() != null
                                 ? task.getException().getLocalizedMessage()
@@ -329,9 +432,87 @@ public class AccountViewModel extends AndroidViewModel {
     }
 
     /**
+     * Invia un'email per reimpostare la password.
+     */
+    public void inviaEmailRecuperoPassword(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            errorMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.error_inserisci_email));
+            return;
+        }
+        isLoading.setValue(true);
+        auth.sendPasswordResetEmail(email.trim())
+                .addOnCompleteListener(task -> {
+                    isLoading.setValue(false);
+                    if (task.isSuccessful()) {
+                        successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_password_reset_inviata));
+                    } else {
+                        String err = task.getException() != null && task.getException().getLocalizedMessage() != null
+                                ? task.getException().getLocalizedMessage()
+                                : getApplication().getString(com.example.paripariapp.R.string.msg_errore_invio_email);
+                        errorMessage.setValue(err);
+                    }
+                });
+    }
+
+    /**
+     * Aggiorna l'indirizzo email dell'utente.
+     * Richiede la password attuale per la riautenticazione di sicurezza.
+     */
+    public void modificaEmail(String nuovaEmail, String passwordAttuale) {
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null || user.isAnonymous()) {
+            return;
+        }
+        String currentEmail = user.getEmail();
+        if (currentEmail != null && currentEmail.equalsIgnoreCase(nuovaEmail.trim())) {
+            errorMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.error_email_uguale));
+            return;
+        }
+        if (passwordAttuale == null || passwordAttuale.trim().isEmpty()) {
+            errorMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.error_password_vuota));
+            return;
+        }
+
+        isLoading.setValue(true);
+        AuthCredential credential = EmailAuthProvider.getCredential(currentEmail != null ? currentEmail : "", passwordAttuale);
+        user.reauthenticate(credential).addOnCompleteListener(reauthTask -> {
+            if (!reauthTask.isSuccessful()) {
+                isLoading.setValue(false);
+                String err = reauthTask.getException() != null && reauthTask.getException().getLocalizedMessage() != null
+                        ? reauthTask.getException().getLocalizedMessage()
+                        : getApplication().getString(com.example.paripariapp.R.string.error_password_vuota);
+                errorMessage.setValue(err);
+                return;
+            }
+
+            // Invia verifica per aggiornamento email (Firebase 20.0.0+)
+            user.verifyBeforeUpdateEmail(nuovaEmail.trim()).addOnCompleteListener(updateTask -> {
+                isLoading.setValue(false);
+                if (updateTask.isSuccessful()) {
+                    // Aggiorna anche Firestore
+                    Map<String, Object> update = new HashMap<>();
+                    update.put("email", nuovaEmail.trim());
+                    update.put("updatedAt", FieldValue.serverTimestamp());
+                    firestore.collection("users").document(user.getUid())
+                            .update(update)
+                            .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento email su Firestore fallito: " + e.getMessage()));
+
+                    successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_email_modifica_inviata));
+                } else {
+                    String err = updateTask.getException() != null && updateTask.getException().getLocalizedMessage() != null
+                            ? updateTask.getException().getLocalizedMessage()
+                            : getApplication().getString(com.example.paripariapp.R.string.msg_errore_invio_email);
+                    errorMessage.setValue(err);
+                }
+            });
+        });
+    }
+
+    /**
      * Disconnessione: effettua il logout e ripristina una sessione anonima ospite.
      */
     public void logout() {
+        stopEmailVerificationPolling();
         auth.signOut();
         auth.signInAnonymously();
         successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_logout_ok));
@@ -340,6 +521,7 @@ public class AccountViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
+        stopEmailVerificationPolling();
         if (authListener != null) {
             auth.removeAuthStateListener(authListener);
         }
