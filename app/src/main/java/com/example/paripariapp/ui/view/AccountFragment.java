@@ -19,6 +19,9 @@ import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseUser;
 
+import android.content.res.ColorStateList;
+import androidx.core.content.ContextCompat;
+
 /**
  * Fragment della schermata "Account".
  * Gestisce sia lo stato di "Account ospite" (con form per Nome, Email e Password)
@@ -49,6 +52,7 @@ public class AccountFragment extends Fragment {
 
         setupObservers();
         setupListeners();
+        setupEmailVerificationSelector();
         setupCurrencySelector();
         setupLanguageSelector();
         updateFormModeUI();
@@ -60,9 +64,36 @@ public class AccountFragment extends Fragment {
             if (Boolean.TRUE.equals(isGuest)) {
                 binding.layoutGuest.setVisibility(View.VISIBLE);
                 binding.layoutLoggedIn.setVisibility(View.GONE);
+                binding.rowVerificaEmail.setVisibility(View.GONE);
+                binding.dividerVerificaEmail.setVisibility(View.GONE);
             } else {
                 binding.layoutGuest.setVisibility(View.GONE);
                 binding.layoutLoggedIn.setVisibility(View.VISIBLE);
+                binding.rowVerificaEmail.setVisibility(View.VISIBLE);
+                binding.dividerVerificaEmail.setVisibility(View.VISIBLE);
+            }
+        });
+
+        // Osserva lo stato di verifica dell'email
+        viewModel.getIsEmailVerifiedLive().observe(getViewLifecycleOwner(), verified -> {
+            if (binding == null) return;
+            android.content.Context context = getContext();
+            if (context == null) return;
+            boolean isVerified = Boolean.TRUE.equals(verified);
+            if (isVerified) {
+                binding.cardBadgeEmail.setCardBackgroundColor(ContextCompat.getColor(context, R.color.credit_green_bg));
+                binding.ivBadgeEmailIcon.setImageResource(R.drawable.ic_check_circle);
+                binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.credit_green)));
+                binding.tvBadgeEmailTesto.setText(R.string.badge_verificata);
+                binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.credit_green));
+                binding.tvDescVerificaEmail.setText(R.string.desc_email_verificata);
+            } else {
+                binding.cardBadgeEmail.setCardBackgroundColor(ContextCompat.getColor(context, R.color.warning_orange_bg));
+                binding.ivBadgeEmailIcon.setImageResource(R.drawable.ic_warning_amber);
+                binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.warning_orange)));
+                binding.tvBadgeEmailTesto.setText(R.string.badge_non_verificata);
+                binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.warning_orange));
+                binding.tvDescVerificaEmail.setText(R.string.desc_email_non_verificata);
             }
         });
 
@@ -110,6 +141,19 @@ public class AccountFragment extends Fragment {
                 Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
                 pulisciCampi();
             }
+        });
+    }
+
+    private void setupEmailVerificationSelector() {
+        binding.rowVerificaEmail.setOnClickListener(v -> {
+            Boolean verified = viewModel.getIsEmailVerifiedLive().getValue();
+            if (Boolean.TRUE.equals(verified)) {
+                Snackbar.make(binding.getRoot(), R.string.msg_email_gia_verificata, Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Reinvia direttamente l'email di verifica senza aprire dialog o pagine secondarie
+            viewModel.reinviaEmailVerifica();
         });
     }
 
@@ -233,6 +277,14 @@ public class AccountFragment extends Fragment {
         binding.tilNome.setError(null);
         binding.tilEmail.setError(null);
         binding.tilPassword.setError(null);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            viewModel.reloadUser();
+        }
     }
 
     @Override

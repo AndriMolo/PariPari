@@ -4,5 +4,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="delete_red">#E53935</color>
     <color name="credit_green">#2E7D32</color>
+    <color name="credit_green_bg">#E8F5E9</color>
     <color name="debt_red">#C62828</color>
+    <color name="warning_orange">#F57C00</color>
+    <color name="warning_orange_bg">#FFF3E0</color>
 </resources>

@@ -237,7 +237,7 @@
                 <!-- Pulsante Disconnetti -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_logout"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/btn_logout"
@@ -254,6 +254,97 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp" />
+
+            <!-- Riga Verifica Email (stile preferenze, visibile per utenti registrati) -->
+            <LinearLayout
+                android:id="@+id/row_verifica_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:baselineAligned="false"
+                android:paddingVertical="14dp"
+                android:paddingHorizontal="4dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_verifica_email"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary" />
+
+                    <TextView
+                        android:id="@+id/tv_desc_verifica_email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/desc_email_non_verificata"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
+
+                <!-- Pillola Badge stato email (arancione se non verificata, verde se verificata) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_badge_email"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    app:cardBackgroundColor="@color/warning_orange_bg"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="8dp">
+
+                        <ImageView
+                            android:id="@+id/iv_badge_email_icon"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_warning_amber"
+                            android:layout_marginEnd="6dp"
+                            app:tint="@color/warning_orange"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:id="@+id/tv_badge_email_testo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/badge_non_verificata"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                            android:textStyle="bold"
+                            android:textColor="@color/warning_orange" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_verifica_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/row_valuta_predefinita"

@@ -279,4 +279,21 @@
     <string name="msg_unione_successo">Ti sei unito a %1$s!</string>
     <string name="msg_ricerca_gruppo">Ricerca gruppo in corso…</string>
 
+    <!-- Verifica Email -->
+    <string name="label_verifica_email">Verifica email</string>
+    <string name="desc_email_non_verificata">Tocca per verificare o reinviare il link</string>
+    <string name="desc_email_verificata">Il tuo indirizzo email è confermato</string>
+    <string name="badge_non_verificata">Non verificata</string>
+    <string name="badge_verificata">Verificata</string>
+    <string name="dialog_titolo_verifica_email">Verifica il tuo indirizzo email</string>
+    <string name="dialog_msg_verifica_email">Ti abbiamo inviato un\'email di conferma all\'indirizzo:\n\n%1$s\n\nClicca sul link ricevuto nella tua casella di posta per verificare il tuo account.</string>
+    <string name="btn_reinvia_email">Reinvia email</string>
+    <string name="btn_controlla_stato">Controlla stato</string>
+    <string name="msg_email_verifica_inviata">Email reinviata! Controlla la cartella spam.</string>
+    <string name="msg_email_gia_verificata">Il tuo indirizzo email è già verificato!</string>
+    <string name="msg_email_non_ancora_verificata">L\'email non risulta ancora confermata. Controlla la posta o reinvia il link.</string>
+    <string name="msg_email_confermata_successo">Email confermata con successo!</string>
+    <string name="msg_profilo_aggiornato">Profilo aggiornato!</string>
+    <string name="msg_errore_invio_email">Errore durante l\'invio dell\'email</string>
+
 </resources>

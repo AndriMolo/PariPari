@@ -279,4 +279,21 @@
     <string name="msg_unione_successo">You joined %1$s!</string>
     <string name="msg_ricerca_gruppo">Searching group…</string>
 
+    <!-- Verifica Email -->
+    <string name="label_verifica_email">Email verification</string>
+    <string name="desc_email_non_verificata">Tap to verify or resend link</string>
+    <string name="desc_email_verificata">Your email address is verified</string>
+    <string name="badge_non_verificata">Not verified</string>
+    <string name="badge_verificata">Verified</string>
+    <string name="dialog_titolo_verifica_email">Verify your email address</string>
+    <string name="dialog_msg_verifica_email">We sent a confirmation email to:\n\n%1$s\n\nClick the link in your inbox to verify your account.</string>
+    <string name="btn_reinvia_email">Resend email</string>
+    <string name="btn_controlla_stato">Check status</string>
+    <string name="msg_email_verifica_inviata">Email resent! Check your spam folder.</string>
+    <string name="msg_email_gia_verificata">Your email is already verified!</string>
+    <string name="msg_email_non_ancora_verificata">Email is not verified yet. Check your inbox or resend link.</string>
+    <string name="msg_email_confermata_successo">Email successfully verified!</string>
+    <string name="msg_profilo_aggiornato">Profile updated!</string>
+    <string name="msg_errore_invio_email">Error sending verification email</string>
+
 </resources>

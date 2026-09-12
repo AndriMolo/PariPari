@@ -35,6 +35,7 @@ public class AccountViewModel extends AndroidViewModel {
 
     private final MutableLiveData<FirebaseUser> userLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isGuestMode = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isEmailVerifiedLive = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<String> successMessage = new MutableLiveData<>();
@@ -54,6 +55,8 @@ public class AccountViewModel extends AndroidViewModel {
             userLiveData.setValue(user);
             boolean guest = (user == null || user.isAnonymous());
             isGuestMode.setValue(guest);
+            boolean verified = (user != null && !user.isAnonymous() && user.isEmailVerified());
+            isEmailVerifiedLive.setValue(verified);
         };
         auth.addAuthStateListener(authListener);
 
@@ -84,6 +87,10 @@ public class AccountViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> getIsGuestMode() {
         return isGuestMode;
+    }
+
+    public LiveData<Boolean> getIsEmailVerifiedLive() {
+        return isEmailVerifiedLive;
     }
 
     public LiveData<Boolean> getIsLoading() {
@@ -214,9 +221,24 @@ public class AccountViewModel extends AndroidViewModel {
                         isLoading.setValue(false);
                         userLiveData.setValue(user);
                         isGuestMode.setValue(false);
-                        successMessage.setValue(isNewAccount ? "Account creato con successo!" : "Profilo aggiornato!");
+                        isEmailVerifiedLive.setValue(user.isEmailVerified());
+                        if (isNewAccount) {
+                            user.sendEmailVerification()
+                                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Email di verifica inviata con successo"))
+                                    .addOnFailureListener(e -> Log.w(TAG, "Invio email di verifica fallito: " + e.getMessage()));
+                        }
+                        successMessage.setValue(isNewAccount
+                                ? getApplication().getString(com.example.paripariapp.R.string.msg_registrazione_ok)
+                                : getApplication().getString(com.example.paripariapp.R.string.msg_profilo_aggiornato));
                     });
         });
+    }
+
+    /**
+     * Callback per notificare il completamento della ricarica dello stato utente.
+     */
+    public interface UserReloadCallback {
+        void onReloadComplete(boolean isVerified);
     }
 
     /**
@@ -231,7 +253,8 @@ public class AccountViewModel extends AndroidViewModel {
                         FirebaseUser user = task.getResult().getUser();
                         userLiveData.setValue(user);
                         isGuestMode.setValue(false);
-                        successMessage.setValue("Accesso effettuato con successo!");
+                        isEmailVerifiedLive.setValue(user != null && user.isEmailVerified());
+                        successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_login_ok));
                     } else {
                         String err = task.getException() != null ? task.getException().getLocalizedMessage() : "Credenziali non valide";
                         errorMessage.setValue(err);
@@ -240,12 +263,78 @@ public class AccountViewModel extends AndroidViewModel {
     }
 
     /**
+     * Ricarica lo stato dell'utente da Firebase Auth (versione silenziosa per onResume).
+     */
+    public void reloadUser() {
+        reloadUser(null);
+    }
+
+    /**
+     * Ricarica lo stato dell'utente da Firebase Auth e notifica l'esito al completamento.
+     */
+    public void reloadUser(UserReloadCallback callback) {
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && !user.isAnonymous()) {
+            user.reload().addOnCompleteListener(task -> {
+                boolean verified = false;
+                if (task.isSuccessful()) {
+                    FirebaseUser reloaded = auth.getCurrentUser();
+                    userLiveData.setValue(reloaded);
+                    verified = (reloaded != null && reloaded.isEmailVerified());
+                    isEmailVerifiedLive.setValue(verified);
+                } else {
+                    Log.w(TAG, "Ricarica utente fallita: " + task.getException());
+                }
+                if (callback != null) {
+                    callback.onReloadComplete(verified);
+                }
+            });
+        } else if (callback != null) {
+            callback.onReloadComplete(false);
+        }
+    }
+
+    /**
+     * Invia nuovamente l'email di verifica all'indirizzo dell'utente.
+     * Prima controlla se l'utente ha già confermato l'email tramite reload();
+     * se non è ancora confermata, invia l'email di verifica e notifica l'utente.
+     */
+    public void reinviaEmailVerifica() {
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && !user.isAnonymous()) {
+            isLoading.setValue(true);
+            user.reload().addOnCompleteListener(reloadTask -> {
+                FirebaseUser reloaded = auth.getCurrentUser();
+                if (reloaded != null && reloaded.isEmailVerified()) {
+                    isLoading.setValue(false);
+                    userLiveData.setValue(reloaded);
+                    isEmailVerifiedLive.setValue(true);
+                    successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_email_confermata_successo));
+                    return;
+                }
+
+                user.sendEmailVerification().addOnCompleteListener(task -> {
+                    isLoading.setValue(false);
+                    if (task.isSuccessful()) {
+                        successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_email_verifica_inviata));
+                    } else {
+                        String err = task.getException() != null && task.getException().getLocalizedMessage() != null
+                                ? task.getException().getLocalizedMessage()
+                                : getApplication().getString(com.example.paripariapp.R.string.msg_errore_invio_email);
+                        errorMessage.setValue(err);
+                    }
+                });
+            });
+        }
+    }
+
+    /**
      * Disconnessione: effettua il logout e ripristina una sessione anonima ospite.
      */
     public void logout() {
         auth.signOut();
         auth.signInAnonymously();
-        successMessage.setValue("Disconnesso. Sei ora in modalità Account ospite.");
+        successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_logout_ok));
     }
 
     @Override
