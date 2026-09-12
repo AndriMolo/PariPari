@@ -2,9 +2,8 @@ package com.example.paripariapp.ui.view;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -15,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -122,6 +122,18 @@ public class DettaglioSchedaFragment extends Fragment {
             binding.sezioneSaldi.setVisibility(id == R.id.nav_scheda_saldi ? View.VISIBLE : View.GONE);
             binding.sezioneMembri.setVisibility(id == R.id.nav_scheda_membri ? View.VISIBLE : View.GONE);
 
+            MenuItem searchItem = binding.toolbarDettaglio.getMenu().findItem(R.id.action_cerca);
+            if (searchItem != null) {
+                if (id == R.id.nav_scheda_spese) {
+                    searchItem.setVisible(true);
+                } else {
+                    if (searchItem.isActionViewExpanded()) {
+                        searchItem.collapseActionView();
+                    }
+                    searchItem.setVisible(false);
+                }
+            }
+
             if (id == R.id.nav_scheda_spese) {
                 binding.fabNuovaSpesa.show();
             } else {
@@ -164,9 +176,6 @@ public class DettaglioSchedaFragment extends Fragment {
             if (itemId == R.id.action_esporta) {
                 mostraSceltaEsportazione();
                 return true;
-            } else if (itemId == R.id.action_invita) {
-                condividiCodiceInvito();
-                return true;
             } else if (itemId == R.id.action_modifica_titolo) {
                 mostraDialogModificaNome();
                 return true;
@@ -204,19 +213,43 @@ public class DettaglioSchedaFragment extends Fragment {
     }
 
     private void setupRicercaEFiltri() {
-        binding.inputRicercaSpese.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        MenuItem searchItem = binding.toolbarDettaglio.getMenu().findItem(R.id.action_cerca);
+        if (searchItem != null) {
+            SearchView searchView = (SearchView) searchItem.getActionView();
+            if (searchView != null) {
+                searchView.setQueryHint(getString(R.string.hint_ricerca_spese));
+                searchView.setMaxWidth(Integer.MAX_VALUE);
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        queryFiltroTesto = query != null ? query.trim().toLowerCase() : "";
+                        applicaFiltriERaggruppa();
+                        return true;
+                    }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                queryFiltroTesto = s != null ? s.toString().trim().toLowerCase() : "";
-                applicaFiltriERaggruppa();
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        queryFiltroTesto = newText != null ? newText.trim().toLowerCase() : "";
+                        applicaFiltriERaggruppa();
+                        return true;
+                    }
+                });
+
+                searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        queryFiltroTesto = "";
+                        applicaFiltriERaggruppa();
+                        return true;
+                    }
+                });
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+        }
 
         // Listener compatibile sia con versioni Material vecchie che recenti
         binding.chipGroupCategorie.setOnCheckedChangeListener((group, checkedId) -> {
@@ -396,55 +429,6 @@ public class DettaglioSchedaFragment extends Fragment {
                 })
                 .setNegativeButton(getString(R.string.btn_annulla), null)
                 .show();
-    }
-
-    public void condividiCodiceInvito() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_invito_gruppo, null);
-        TextView tvCodice = dialogView.findViewById(R.id.tv_codice_gruppo);
-        View btnCopia = dialogView.findViewById(R.id.btn_copia_codice);
-        View btnWhatsApp = dialogView.findViewById(R.id.btn_invia_whatsapp);
-
-        tvCodice.setText(schedaId);
-
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.titolo_dialog_invito)
-                .setView(dialogView)
-                .setPositiveButton(R.string.btn_chiudi, null)
-                .create();
-
-        // 1. Azione Copia negli appunti
-        btnCopia.setOnClickListener(v -> {
-            android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
-                    requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-            android.content.ClipData clip = android.content.ClipData.newPlainText("Codice Gruppo", schedaId);
-            if (clipboard != null) {
-                clipboard.setPrimaryClip(clip);
-                Toast.makeText(requireContext(), R.string.msg_codice_copiato, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // 2. Azione WhatsApp mirata
-        btnWhatsApp.setOnClickListener(v -> {
-            String messaggio = getString(R.string.msg_invito_whatsapp, titolo, schedaId);
-            Intent sendIntent = new Intent(Intent.ACTION_SEND);
-            sendIntent.setType("text/plain");
-            sendIntent.putExtra(Intent.EXTRA_TEXT, messaggio);
-            sendIntent.setPackage("com.whatsapp");
-
-            try {
-                startActivity(sendIntent);
-            } catch (android.content.ActivityNotFoundException ex) {
-                // Fallback nel caso WhatsApp standard non sia installato (es. WhatsApp Business o browser)
-                try {
-                    sendIntent.setPackage(null);
-                    startActivity(Intent.createChooser(sendIntent, getString(R.string.condividi_con)));
-                } catch (Exception e) {
-                    Toast.makeText(requireContext(), R.string.msg_whatsapp_non_installato, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        dialog.show();
     }
 
     public void mostraDialogGestioneMembri() {

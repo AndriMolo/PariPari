@@ -41,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="12dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="12dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
 
@@ -67,29 +67,6 @@
                         tools:text="0,00 EUR" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <!-- Campo Ricerca Descrizione -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="4dp"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:startIconDrawable="@android:drawable/ic_menu_search"
-                app:endIconMode="clear_text">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/input_ricerca_spese"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/hint_ricerca_spese"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Filtro Categorie a scorrimento orizzontale -->
             <HorizontalScrollView

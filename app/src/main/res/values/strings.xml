@@ -247,21 +247,11 @@
     <string name="filtro_tutte">Tutte</string>
 
     <!-- Toolbar e azioni -->
-    <string name="action_invita">Invita</string>
     <string name="action_modifica_titolo">Modifica nome</string>
     <string name="action_elimina_scheda">Elimina scheda</string>
 
     <!-- Dettagli spesa nell'adapter -->
     <string name="spesa_formato_dettagli">Pagato da %1$s • Diviso tra %2$d</string>
-
-    <!-- Invito e condivisione codice -->
-    <string name="titolo_dialog_invito">Codice Gruppo</string>
-    <string name="desc_dialog_invito">Condividi questo codice con i tuoi amici per farli entrare nel gruppo:</string>
-    <string name="btn_copia_codice">Copia</string>
-    <string name="btn_condividi_whatsapp">Condividi su WhatsApp</string>
-    <string name="msg_codice_copiato">Codice copiato negli appunti!</string>
-    <string name="msg_whatsapp_non_installato">WhatsApp non è installato sul dispositivo.</string>
-    <string name="msg_invito_whatsapp">Unisciti al mio gruppo \"%1$s\" su PariPari! Usa questo codice: %2$s</string>
 
     <!-- Saldi Globale -->
     <string name="label_da_ricevere">Da ricevere</string>

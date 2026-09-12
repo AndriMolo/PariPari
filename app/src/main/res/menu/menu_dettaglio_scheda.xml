@@ -3,16 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_cerca"
+        android:icon="@drawable/ic_search"
+        android:title="@string/hint_ricerca_spese"
+        app:showAsAction="always|collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+    <item
         android:id="@+id/action_esporta"
         android:icon="@drawable/ic_file_download"
         android:title="@string/btn_esporta"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_invita"
-        android:icon="@drawable/ic_group"
-        android:title="@string/action_invita"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_modifica_titolo"
