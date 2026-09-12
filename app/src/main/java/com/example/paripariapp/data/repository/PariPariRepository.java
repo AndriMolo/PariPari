@@ -139,12 +139,57 @@ public class PariPariRepository {
 
     public void deleteScheda(String schedaId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            schedaDao.deleteById(schedaId);
             detachSubcollectionListeners(schedaId);
 
             if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
-                firestore.collection("groups").document(schedaId).delete();
+                FirebaseUser currentUser = auth.getCurrentUser();
+                firestore.collection("groups").document(schedaId)
+                        .collection("participants")
+                        .get()
+                        .addOnSuccessListener(AppDatabase.databaseWriteExecutor, snapshot -> {
+                            if (snapshot == null || snapshot.isEmpty() || snapshot.size() <= 1) {
+                                // Nessun altro partecipante: l'utente è l'unico, elimina l'intero gruppo da Firestore
+                                firestore.collection("groups").document(schedaId).delete()
+                                        .addOnFailureListener(e -> Log.w(TAG, "Errore eliminazione gruppo remoto: " + e.getMessage()));
+                            } else {
+                                // Il gruppo è condiviso: dissociati rimuovendo solo il proprio documento partecipante
+                                for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                                    String email = doc.getString("email");
+                                    String nome = doc.getString("nome");
+                                    boolean isCurrentUser = (currentUser.getEmail() != null && currentUser.getEmail().equalsIgnoreCase(email))
+                                            || (nome != null && (nome.trim().equalsIgnoreCase("io") || nome.trim().equalsIgnoreCase("me")));
+                                    if (isCurrentUser) {
+                                        doc.getReference().delete();
+                                        break;
+                                    }
+                                }
+
+                                // Se l'utente era registrato come creatoreId, riassegna per evitare che whereEqualTo lo risincronizzi
+                                firestore.collection("groups").document(schedaId).get()
+                                        .addOnSuccessListener(AppDatabase.databaseWriteExecutor, groupDoc -> {
+                                            if (groupDoc != null && groupDoc.exists()) {
+                                                String creatoreId = groupDoc.getString("creatoreId");
+                                                if (creatoreId != null && creatoreId.equals(currentUser.getUid())) {
+                                                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                                                        if (!doc.getId().equals(currentUser.getUid())) {
+                                                            firestore.collection("groups").document(schedaId)
+                                                                    .update("creatoreId", doc.getId());
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        });
+                            }
+                        })
+                        .addOnFailureListener(e -> Log.w(TAG, "Errore dissociazione gruppo: " + e.getMessage()));
             }
+
+            // Pulizia transazionale/a cascata nel database Room locale
+            spesaDao.deleteQuoteBySchedaId(schedaId);
+            spesaDao.deleteBySchedaId(schedaId);
+            partecipanteDao.deleteBySchedaId(schedaId);
+            schedaDao.deleteById(schedaId);
         });
     }
 

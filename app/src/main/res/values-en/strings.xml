@@ -118,8 +118,9 @@
     <string name="cd_elimina_scheda">Delete group</string>
     <string name="dialog_titolo_modifica_scheda">Edit group name</string>
     <string name="dialog_hint_nome_scheda">Group name</string>
-    <string name="dialog_titolo_elimina_scheda">Delete or leave group</string>
-    <string name="dialog_msg_elimina_scheda">Are you sure you want to delete this group or leave it? All associated expenses will be removed.</string>
+    <string name="dialog_titolo_elimina_scheda">Delete card</string>
+    <string name="dialog_msg_elimina_scheda">Are you sure you want to delete this card? All associated expenses will be removed from your device.</string>
+    <string name="dialog_msg_elimina_scheda_con_saldi">Warning: you still have open balances in this card. Deleting it, the card will be removed from your device and its balances will no longer be calculated in your total. Do you want to proceed?</string>
     <string name="label_totale_spese">Total expenses</string>
     <string name="label_partecipanti_formato">Members: %s</string>
 

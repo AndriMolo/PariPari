@@ -118,8 +118,9 @@
     <string name="cd_elimina_scheda">Elimina scheda</string>
     <string name="dialog_titolo_modifica_scheda">Modifica nome gruppo</string>
     <string name="dialog_hint_nome_scheda">Nome del gruppo</string>
-    <string name="dialog_titolo_elimina_scheda">Elimina o esci dal gruppo</string>
-    <string name="dialog_msg_elimina_scheda">Sei sicuro di voler eliminare questa scheda o uscire dal gruppo? Tutte le spese associate verranno rimosse.</string>
+    <string name="dialog_titolo_elimina_scheda">Elimina scheda</string>
+    <string name="dialog_msg_elimina_scheda">Sei sicuro di voler eliminare questa scheda? Tutte le spese associate verranno rimosse dal tuo dispositivo.</string>
+    <string name="dialog_msg_elimina_scheda_con_saldi">Attenzione: hai ancora dei saldi aperti in questa scheda. Eliminandola, la scheda verrà rimossa dal tuo dispositivo e i suoi debiti o crediti non saranno più conteggiati nei tuoi saldi totali. Vuoi procedere?</string>
     <string name="label_totale_spese">Totale spese</string>
     <string name="label_partecipanti_formato">Partecipanti: %s</string>
 

@@ -58,6 +58,9 @@ public interface PartecipanteDao {
     @Query("DELETE FROM partecipanti WHERE id = :id")
     void deleteById(String id);
 
+    @Query("DELETE FROM partecipanti WHERE scheda_id = :schedaId")
+    void deleteBySchedaId(String schedaId);
+
     @Query("UPDATE partecipanti SET sync_status = :status WHERE id = :id")
     void updateSyncStatus(String id, int status);
 }

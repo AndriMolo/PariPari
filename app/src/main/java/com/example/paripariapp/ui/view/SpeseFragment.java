@@ -24,6 +24,7 @@ import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.databinding.FragmentSpeseBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -105,10 +106,16 @@ public class SpeseFragment extends Fragment {
                 Scheda schedaSelezionata = adapter.getLocalList().get(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
-                    viewModel.eliminaScheda(schedaSelezionata);
-
-                    Snackbar.make(binding.recyclerSchede, R.string.msg_gruppo_eliminato, Snackbar.LENGTH_LONG)
-                            .setAction(R.string.action_annulla, v -> viewModel.ripristinaScheda(schedaSelezionata))
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.dialog_titolo_elimina_scheda)
+                            .setMessage(R.string.dialog_msg_elimina_scheda)
+                            .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
+                                viewModel.eliminaScheda(schedaSelezionata);
+                            })
+                            .setNegativeButton(R.string.btn_annulla, (dialog, which) -> {
+                                adapter.notifyItemChanged(position);
+                            })
+                            .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
                             .show();
                 }
             }

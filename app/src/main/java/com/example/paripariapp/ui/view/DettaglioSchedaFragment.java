@@ -332,9 +332,43 @@ public class DettaglioSchedaFragment extends Fragment {
     }
 
     private void mostraDialogEliminaScheda() {
+        boolean haSaldiAperti = false;
+        if (!partecipantiCache.isEmpty() && !speseCache.isEmpty()) {
+            List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
+                    partecipantiCache,
+                    speseCache,
+                    quoteCache,
+                    valuta != null ? valuta : "EUR"
+            );
+            String mioId = null;
+            for (Partecipante p : partecipantiCache) {
+                if (p.getNome() != null) {
+                    String n = p.getNome().trim().toLowerCase();
+                    if (n.equals("io") || n.equals("me")) {
+                        mioId = p.getId();
+                        break;
+                    }
+                }
+            }
+            if (mioId != null) {
+                for (TrasferimentoSaldo t : trasferimenti) {
+                    if (t.getDaId().equals(mioId) || t.getAId().equals(mioId)) {
+                        if (Math.abs(t.getImporto()) > 0.01) {
+                            haSaldiAperti = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        int messageRes = haSaldiAperti
+                ? R.string.dialog_msg_elimina_scheda_con_saldi
+                : R.string.dialog_msg_elimina_scheda;
+
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(getString(R.string.dialog_titolo_elimina_scheda))
-                .setMessage(getString(R.string.dialog_msg_elimina_scheda))
+                .setMessage(getString(messageRes))
                 .setPositiveButton(getString(R.string.btn_elimina), (dialog, which) -> {
                     viewModel.eliminaScheda(schedaId);
                     if (getActivity() != null) {
