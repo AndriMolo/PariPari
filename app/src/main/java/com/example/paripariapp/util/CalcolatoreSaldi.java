@@ -32,20 +32,31 @@ public class CalcolatoreSaldi {
             bilanci.put(p.getId(), 0.0);
         }
 
+        Map<String, Spesa> spesaMap = new HashMap<>();
+
         // 1. Aggiunge gli importi anticipati da ciascuno (+ credito)
         for (Spesa s : spese) {
+            spesaMap.put(s.getId(), s);
             String pagatoreId = s.getPagatoDaId();
             if (bilanci.containsKey(pagatoreId)) {
                 bilanci.put(pagatoreId, bilanci.get(pagatoreId) + s.getImporto());
             }
         }
 
-        // 2. Sottrae le quote dovute da ciascuno (- debito)
+        // 2. Sottrae le quote dovute da ciascuno (- debito) tenendo conto di quanto già pagato
         if (quote != null && !quote.isEmpty()) {
             for (SpesaPartecipante q : quote) {
                 String debitoreId = q.getPartecipanteId();
+                double quotaResidua = q.getQuota() - q.getQuotaPagata();
                 if (bilanci.containsKey(debitoreId)) {
-                    bilanci.put(debitoreId, bilanci.get(debitoreId) - q.getQuota());
+                    bilanci.put(debitoreId, bilanci.get(debitoreId) - quotaResidua);
+                }
+                Spesa s = spesaMap.get(q.getSpesaId());
+                if (s != null && q.getQuotaPagata() > 0) {
+                    String pagatoreId = s.getPagatoDaId();
+                    if (bilanci.containsKey(pagatoreId)) {
+                        bilanci.put(pagatoreId, bilanci.get(pagatoreId) - q.getQuotaPagata());
+                    }
                 }
             }
         } else {

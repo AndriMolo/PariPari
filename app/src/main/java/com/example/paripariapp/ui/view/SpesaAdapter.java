@@ -17,9 +17,6 @@ import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaListItem;
 import com.example.paripariapp.databinding.ItemSpesaBinding;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -27,6 +24,16 @@ import java.util.Objects;
  * Gestisce due ViewType: TYPE_HEADER (per la data) e TYPE_ITEM (per la spesa).
  */
 public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHolder> {
+
+    public interface OnSpesaClickListener {
+        void onSpesaClick(SpesaConDettagli item);
+    }
+
+    private OnSpesaClickListener onSpesaClickListener;
+
+    public void setOnSpesaClickListener(OnSpesaClickListener listener) {
+        this.onSpesaClickListener = listener;
+    }
 
     public SpesaAdapter() {
         super(DIFF_CALLBACK);
@@ -82,7 +89,7 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
         if (holder instanceof HeaderViewHolder) {
             ((HeaderViewHolder) holder).bind(item.getHeaderTitle());
         } else if (holder instanceof SpesaViewHolder) {
-            ((SpesaViewHolder) holder).bind(item.getSpesa());
+            ((SpesaViewHolder) holder).bind(item.getSpesa(), onSpesaClickListener);
         }
     }
 
@@ -110,9 +117,15 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
         private static final java.time.format.DateTimeFormatter DATE_FORMATTER =
                 java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
-        public void bind(SpesaConDettagli item) {
+        public void bind(SpesaConDettagli item, OnSpesaClickListener listener) {
             Spesa spesa = item.getSpesa();
             Context context = binding.getRoot().getContext();
+
+            binding.getRoot().setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onSpesaClick(item);
+                }
+            });
 
             // Titolo e Importo
             binding.tvTitoloSpesa.setText(spesa.getTitolo());

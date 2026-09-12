@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Checkbox per includere/escludere il partecipante -->
+        <CheckBox
+            android:id="@+id/spunta_partecipante"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Nome del Partecipante -->
+        <TextView
+            android:id="@+id/nome_partecipante"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
+            android:text="@string/lbl_nome_partecipante" />
+
+        <!-- Input quota / percentuale (%) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/contenitore_quota"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:hint="%"
+            app:suffixText="%"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/campo_quota"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Input importo già pagato -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/contenitore_quota_pagata"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:hint="@string/spesa_quota_pagata">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/campo_quota_pagata"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <!-- Indicatore dello stato saldo (es. Da integrare: €20 / Saldato / Da rimborsare: €20) -->
+    <TextView
+        android:id="@+id/tv_stato_saldo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="2dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorPrimary" />
+
+</LinearLayout>

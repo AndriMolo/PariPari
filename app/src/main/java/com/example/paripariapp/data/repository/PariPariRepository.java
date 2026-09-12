@@ -417,6 +417,7 @@ public class PariPariRepository {
                 Map<String, Object> qData = new HashMap<>();
                 qData.put("partecipanteId", q.getPartecipanteId());
                 qData.put("quota", q.getQuota());
+                qData.put("quotaPagata", q.getQuotaPagata());
                 batch.set(qRef, qData);
             }
         }
@@ -593,12 +594,14 @@ public class PariPariRepository {
                                                 for (DocumentSnapshot sDoc : shareSnaps.getDocuments()) {
                                                     String pId = sDoc.getString("partecipanteId");
                                                     Double quotaVal = sDoc.getDouble("quota");
+                                                    Double quotaPagataVal = sDoc.getDouble("quotaPagata");
+                                                    double quotaPagata = quotaPagataVal != null ? quotaPagataVal : 0.0;
                                                     if (pId != null && quotaVal != null) {
                                                         Partecipante deb = partecipanteDao.getPartecipanteById(pId);
                                                         if (deb == null) {
                                                             partecipanteDao.insert(new Partecipante(pId, groupId, "Partecipante", null, SyncStatus.SYNCED));
                                                         }
-                                                        quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, SyncStatus.SYNCED));
+                                                        quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, quotaPagata, SyncStatus.SYNCED));
                                                     }
                                                 }
                                                 spesaDao.insertQuote(quoteRemote);
@@ -638,5 +641,30 @@ public class PariPariRepository {
 
     public LiveData<List<SpesaPartecipante>> getQuoteDellaScheda(String schedaId) {
         return spesaDao.getTutteQuoteBySchedaLive(schedaId);
+    }
+
+    public LiveData<Spesa> getSpesaById(String spesaId) {
+        return spesaDao.getSpesaByIdLive(spesaId);
+    }
+
+    public LiveData<List<SpesaPartecipante>> getQuoteBySpesa(String spesaId) {
+        return spesaDao.getQuoteBySpesaLive(spesaId);
+    }
+
+    public void aggiornaSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            spesa.setSyncStatus(SyncStatus.PENDING_UPDATE);
+            spesaDao.insert(spesa);
+            spesaDao.deleteQuoteBySpesaId(spesa.getId());
+            if (quote != null && !quote.isEmpty()) {
+                for (SpesaPartecipante q : quote) {
+                    q.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                }
+                spesaDao.insertQuote(quote);
+            }
+            if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
+                uploadSpesaConQuote(spesa, quote);
+            }
+        });
     }
 }
