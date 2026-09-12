@@ -41,6 +41,9 @@ public class Scheda {
     @ColumnInfo(name = "sync_status")
     private int syncStatus;
 
+    @ColumnInfo(name = "codice_invito")
+    private String codiceInvito;
+
     public Scheda(@NonNull String id, @NonNull String titolo, String descrizione,
                   @NonNull String valutaPredefinita, String creatoreId,
                   long dataCreazione, long dataAggiornamento, int syncStatus) {
@@ -54,11 +57,11 @@ public class Scheda {
         this.syncStatus = syncStatus;
     }
 
-    /** Factory method per creare una nuova scheda con ID autogenerato */
+    /** Factory method per creare una nuova scheda con ID e codice invito autogenerati */
     public static Scheda createNew(@NonNull String titolo, String descrizione,
                                   @NonNull String valutaPredefinita, String creatoreId) {
         long now = System.currentTimeMillis();
-        return new Scheda(
+        Scheda s = new Scheda(
                 UUID.randomUUID().toString(),
                 titolo,
                 descrizione,
@@ -68,6 +71,8 @@ public class Scheda {
                 now,
                 SyncStatus.PENDING_INSERT
         );
+        s.setCodiceInvito(com.example.paripariapp.util.CodiceInvitoUtil.generaCodice());
+        return s;
     }
 
     @NonNull
@@ -135,5 +140,13 @@ public class Scheda {
 
     public void setSyncStatus(int syncStatus) {
         this.syncStatus = syncStatus;
+    }
+
+    public String getCodiceInvito() {
+        return codiceInvito;
+    }
+
+    public void setCodiceInvito(String codiceInvito) {
+        this.codiceInvito = codiceInvito;
     }
 }

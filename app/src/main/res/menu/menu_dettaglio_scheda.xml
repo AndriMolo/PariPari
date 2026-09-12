@@ -16,6 +16,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_codice_gruppo"
+        android:icon="@drawable/ic_group"
+        android:title="@string/action_codice_gruppo"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_modifica_titolo"
         android:icon="@android:drawable/ic_menu_edit"
         android:title="@string/action_modifica_titolo"

@@ -1,6 +1,8 @@
 package com.example.paripariapp.ui.view;
 
 import android.content.Intent;
+import android.widget.Toast;
+import com.example.paripariapp.data.repository.PariPariRepository;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -227,7 +229,24 @@ public class SpeseFragment extends Fragment {
             String codice = etCodice.getText() != null ? etCodice.getText().toString().trim() : "";
             if (!codice.isEmpty()) {
                 dialog.dismiss();
-                // TODO: unisciti al gruppo tramite codice
+                Toast.makeText(requireContext(), R.string.msg_ricerca_gruppo, Toast.LENGTH_SHORT).show();
+                viewModel.uniscitiAScheda(codice, new PariPariRepository.OnJoinSchedaCallback() {
+                    @Override
+                    public void onSuccess(String schedaId, String titolo) {
+                        if (getContext() == null) return;
+                        Toast.makeText(requireContext(), getString(R.string.msg_unione_successo, titolo), Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
+                        intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, schedaId);
+                        intent.putExtra(DettaglioSchedaActivity.EXTRA_TITOLO, titolo);
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(String errore) {
+                        if (getContext() == null) return;
+                        Toast.makeText(requireContext(), errore, Toast.LENGTH_LONG).show();
+                    }
+                });
             } else {
                 etCodice.setError(getString(R.string.error_codice_non_valido));
             }

@@ -155,4 +155,8 @@ public class SpeseViewModel extends AndroidViewModel {
         repository.insertSpesaConQuote(pagamento, quote);
     }
 
+    public void uniscitiAScheda(String codice, PariPariRepository.OnJoinSchedaCallback callback) {
+        repository.uniscitiASchedaTramiteCodice(codice, callback);
+    }
+
 }

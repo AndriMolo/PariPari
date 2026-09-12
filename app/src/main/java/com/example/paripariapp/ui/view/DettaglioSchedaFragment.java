@@ -1,5 +1,8 @@
 package com.example.paripariapp.ui.view;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
+import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaListItem;
@@ -32,6 +36,7 @@ import com.example.paripariapp.databinding.FragmentDettaglioSchedaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
 import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.EsportatoreDati;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -57,6 +62,7 @@ public class DettaglioSchedaFragment extends Fragment {
     private String schedaId;
     private String titolo;
     private String valuta;
+    private Scheda schedaCorrente;
 
     private List<Partecipante> partecipantiCache = new ArrayList<>();
     private List<SpesaPartecipante> quoteCache = new ArrayList<>();
@@ -175,6 +181,9 @@ public class DettaglioSchedaFragment extends Fragment {
             int itemId = item.getItemId();
             if (itemId == R.id.action_esporta) {
                 mostraSceltaEsportazione();
+                return true;
+            } else if (itemId == R.id.action_codice_gruppo) {
+                mostraDialogCodiceGruppo();
                 return true;
             } else if (itemId == R.id.action_modifica_titolo) {
                 mostraDialogModificaNome();
@@ -299,6 +308,15 @@ public class DettaglioSchedaFragment extends Fragment {
             }
 
             aggiornaSaldi();
+        });
+
+        viewModel.getSchedaById(schedaId).observe(getViewLifecycleOwner(), scheda -> {
+            if (scheda != null) {
+                this.schedaCorrente = scheda;
+                if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
+                    viewModel.assicuraCodiceInvito(scheda);
+                }
+            }
         });
     }
 
@@ -613,5 +631,45 @@ public class DettaglioSchedaFragment extends Fragment {
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .show();
+    }
+
+    private void mostraDialogCodiceGruppo() {
+        if (getContext() == null) return;
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_codice_gruppo, binding.getRoot(), false);
+        dialog.setContentView(sheetView);
+
+        TextView tvCodiceGruppo = sheetView.findViewById(R.id.tvCodiceGruppo);
+        String codice = (schedaCorrente != null && schedaCorrente.getCodiceInvito() != null && !schedaCorrente.getCodiceInvito().isEmpty())
+                ? schedaCorrente.getCodiceInvito() : "CARICO";
+
+        if ("CARICO".equals(codice) && schedaCorrente != null) {
+            viewModel.assicuraCodiceInvito(schedaCorrente);
+        }
+        tvCodiceGruppo.setText(codice);
+
+        sheetView.findViewById(R.id.btnCopiaCodice).setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("Codice gruppo", codice);
+            if (clipboard != null) {
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(requireContext(), R.string.msg_codice_copiato, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        sheetView.findViewById(R.id.btnCondividiLink).setOnClickListener(v -> {
+            String titoloGruppo = (titolo != null && !titolo.isEmpty()) ? titolo : (schedaCorrente != null ? schedaCorrente.getTitolo() : "Gruppo");
+            String messaggio = getString(R.string.msg_invito_condivisione, titoloGruppo, codice);
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, titoloGruppo);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, messaggio);
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.btn_condividi_link)));
+        });
+
+        sheetView.findViewById(R.id.btnChiudiDialogCodice).setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 }

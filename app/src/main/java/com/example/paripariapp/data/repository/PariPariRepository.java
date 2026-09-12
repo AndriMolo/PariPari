@@ -31,6 +31,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.WriteBatch;
 
+import android.os.Handler;
+import android.os.Looper;
+import com.example.paripariapp.util.CodiceInvitoUtil;
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -115,6 +119,9 @@ public class PariPariRepository {
 
     public void insertScheda(Scheda scheda, @Nullable List<Partecipante> partecipanti) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
+                scheda.setCodiceInvito(CodiceInvitoUtil.generaCodice());
+            }
             schedaDao.insert(scheda);
             if (partecipanti != null && !partecipanti.isEmpty()) {
                 partecipanteDao.insertAll(partecipanti);
@@ -389,6 +396,12 @@ public class PariPariRepository {
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) return;
 
+        if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
+            String nuovoCodice = CodiceInvitoUtil.generaCodice();
+            scheda.setCodiceInvito(nuovoCodice);
+            schedaDao.updateCodiceInvito(scheda.getId(), nuovoCodice);
+        }
+
         Map<String, Object> data = new HashMap<>();
         data.put("titolo", scheda.getTitolo());
         data.put("descrizione", scheda.getDescrizione());
@@ -396,6 +409,7 @@ public class PariPariRepository {
         data.put("creatoreId", user.getUid());
         data.put("dataCreazione", scheda.getDataCreazione());
         data.put("dataAggiornamento", scheda.getDataAggiornamento());
+        data.put("codiceInvito", scheda.getCodiceInvito());
 
         WriteBatch batch = firestore.batch();
         DocumentReference ref = firestore.collection("groups").document(scheda.getId());
@@ -497,6 +511,7 @@ public class PariPariRepository {
                                     String creatoreId = doc.getString("creatoreId");
                                     Long dataCreaz = doc.getLong("dataCreazione");
                                     Long dataAggAdd = doc.getLong("dataAggiornamento");
+                                    String codInvitoAdd = doc.getString("codiceInvito");
 
                                     if (titoloAdd != null) {
                                         // Verifica preventiva: se la scheda non esiste in locale, inseriscila per evitare chiavi esterne orfane
@@ -512,6 +527,7 @@ public class PariPariRepository {
                                                     dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
                                                     SyncStatus.SYNCED
                                             );
+                                            nuovaScheda.setCodiceInvito(codInvitoAdd);
                                             schedaDao.insert(nuovaScheda);
                                         } else {
                                             schedaDao.updateTitolo(
@@ -520,6 +536,9 @@ public class PariPariRepository {
                                                     dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
                                                     SyncStatus.SYNCED
                                             );
+                                            if (codInvitoAdd != null) {
+                                                schedaDao.updateCodiceInvito(groupId, codInvitoAdd);
+                                            }
                                         }
 
                                         // Aggancia sempre i listener
@@ -530,6 +549,7 @@ public class PariPariRepository {
                                 case MODIFIED:
                                     String titoloMod = doc.getString("titolo");
                                     Long dataAggMod = doc.getLong("dataAggiornamento");
+                                    String codInvitoMod = doc.getString("codiceInvito");
                                     if (titoloMod != null) {
                                         schedaDao.updateTitolo(
                                                 groupId,
@@ -537,6 +557,9 @@ public class PariPariRepository {
                                                 dataAggMod != null ? dataAggMod : System.currentTimeMillis(),
                                                 SyncStatus.SYNCED
                                         );
+                                    }
+                                    if (codInvitoMod != null) {
+                                        schedaDao.updateCodiceInvito(groupId, codInvitoMod);
                                     }
                                     break;
 
@@ -550,6 +573,16 @@ public class PariPariRepository {
                 });
 
         activeListeners.add(reg);
+
+        // Aggancia i listener delle schede già salvate in locale (anche quelle a cui ci si è uniti)
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            List<Scheda> schedeLocali = schedaDao.getAllSchedeSync();
+            if (schedeLocali != null) {
+                for (Scheda s : schedeLocali) {
+                    attachSubcollectionListeners(s.getId());
+                }
+            }
+        });
     }
 
     private void attachSubcollectionListeners(String groupId) {
@@ -709,6 +742,210 @@ public class PariPariRepository {
             }
             if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
                 uploadSpesaConQuote(spesa, quote);
+            }
+        });
+    }
+
+    public LiveData<Scheda> getSchedaById(String schedaId) {
+        return schedaDao.getSchedaByIdLive(schedaId);
+    }
+
+    public void assicuraCodiceInvito(Scheda scheda) {
+        if (scheda == null) return;
+        if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
+            AppDatabase.databaseWriteExecutor.execute(() -> {
+                String nuovoCodice = CodiceInvitoUtil.generaCodice();
+                scheda.setCodiceInvito(nuovoCodice);
+                schedaDao.updateCodiceInvito(scheda.getId(), nuovoCodice);
+                if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+                    firestore.collection("groups").document(scheda.getId())
+                            .update("codiceInvito", nuovoCodice);
+                }
+            });
+        }
+    }
+
+    public interface OnJoinSchedaCallback {
+        void onSuccess(String schedaId, String titolo);
+        void onError(String errore);
+    }
+
+    public void uniscitiASchedaTramiteCodice(String codice, OnJoinSchedaCallback callback) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        String cleanCode = CodiceInvitoUtil.normalizzaCodice(codice);
+        if (cleanCode.isEmpty()) {
+            mainHandler.post(() -> callback.onError("Inserisci un codice valido"));
+            return;
+        }
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            // 1. Controlla se la scheda è già presente in locale
+            Scheda local = schedaDao.getSchedaByCodiceInvito(cleanCode);
+            if (local == null) {
+                local = schedaDao.getSchedaById(cleanCode);
+            }
+            if (local != null) {
+                final Scheda foundLocal = local;
+                attachSubcollectionListeners(foundLocal.getId());
+                mainHandler.post(() -> callback.onSuccess(foundLocal.getId(), foundLocal.getTitolo()));
+                return;
+            }
+
+            // 2. Se non in locale, verifichiamo la connessione di rete
+            if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) {
+                mainHandler.post(() -> callback.onError("Connessione a internet necessaria per cercare il gruppo"));
+                return;
+            }
+
+            // 3. Cerca in Firestore per codiceInvito, poi document ID come fallback
+            firestore.collection("groups").whereEqualTo("codiceInvito", cleanCode).limit(1).get()
+                    .addOnSuccessListener(AppDatabase.databaseWriteExecutor, querySnapshot -> {
+                        if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                            elaboraJoinGruppo(querySnapshot.getDocuments().get(0), cleanCode, callback, mainHandler);
+                        } else {
+                            firestore.collection("groups").document(cleanCode).get()
+                                    .addOnSuccessListener(AppDatabase.databaseWriteExecutor, docSnapshot -> {
+                                        if (docSnapshot != null && docSnapshot.exists()) {
+                                            elaboraJoinGruppo(docSnapshot, cleanCode, callback, mainHandler);
+                                        } else {
+                                            mainHandler.post(() -> callback.onError("Nessun gruppo trovato con il codice inserito"));
+                                        }
+                                    })
+                                    .addOnFailureListener(e ->
+                                            mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                                    );
+                        }
+                    })
+                    .addOnFailureListener(e ->
+                            mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                    );
+        });
+    }
+
+    private void elaboraJoinGruppo(DocumentSnapshot groupDoc, String cleanCode, OnJoinSchedaCallback callback, Handler mainHandler) {
+        String groupId = groupDoc.getId();
+        String titolo = groupDoc.getString("titolo");
+        String desc = groupDoc.getString("descrizione");
+        String valuta = groupDoc.getString("valutaPredefinita");
+        String creatoreId = groupDoc.getString("creatoreId");
+        Long dataCreaz = groupDoc.getLong("dataCreazione");
+        Long dataAgg = groupDoc.getLong("dataAggiornamento");
+        String codInv = groupDoc.getString("codiceInvito");
+        if (codInv == null || codInv.isEmpty()) {
+            codInv = cleanCode;
+        }
+
+        Scheda scheda = new Scheda(
+                groupId,
+                titolo != null ? titolo : "Gruppo",
+                desc != null ? desc : "",
+                valuta != null ? valuta : "EUR",
+                creatoreId != null ? creatoreId : "",
+                dataCreaz != null ? dataCreaz : System.currentTimeMillis(),
+                dataAgg != null ? dataAgg : System.currentTimeMillis(),
+                SyncStatus.SYNCED
+        );
+        scheda.setCodiceInvito(codInv);
+        schedaDao.insert(scheda);
+
+        FirebaseUser currentUser = auth.getCurrentUser();
+        String currentEmail = currentUser != null ? currentUser.getEmail() : null;
+        String currentUid = currentUser != null ? currentUser.getUid() : null;
+        String currentNome = (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty())
+                ? currentUser.getDisplayName() : "Io";
+
+        groupDoc.getReference().collection("participants").get()
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
+                    boolean giaPresente = false;
+                    List<Partecipante> parts = new ArrayList<>();
+                    if (pSnaps != null) {
+                        for (DocumentSnapshot pDoc : pSnaps.getDocuments()) {
+                            String pId = pDoc.getId();
+                            String pNome = pDoc.getString("nome");
+                            String pEmail = pDoc.getString("email");
+                            if (pNome != null) {
+                                parts.add(new Partecipante(pId, groupId, pNome, pEmail, SyncStatus.SYNCED));
+                                if ((currentEmail != null && currentEmail.equalsIgnoreCase(pEmail)) ||
+                                    (currentUid != null && currentUid.equals(pId))) {
+                                    giaPresente = true;
+                                }
+                            }
+                        }
+                    }
+                    if (!parts.isEmpty()) {
+                        partecipanteDao.insertAll(parts);
+                    }
+
+                    if (!giaPresente && currentUser != null) {
+                        Partecipante me = new Partecipante(
+                                UUID.randomUUID().toString(),
+                                groupId,
+                                currentNome,
+                                currentEmail,
+                                SyncStatus.PENDING_INSERT
+                        );
+                        partecipanteDao.insert(me);
+                        uploadPartecipante(me);
+                    }
+
+                    scaricaSpeseGruppo(groupDoc.getReference(), groupId);
+                    attachSubcollectionListeners(groupId);
+
+                    mainHandler.post(() -> callback.onSuccess(groupId, titolo != null ? titolo : "Gruppo"));
+                })
+                .addOnFailureListener(e -> {
+                    attachSubcollectionListeners(groupId);
+                    mainHandler.post(() -> callback.onSuccess(groupId, titolo != null ? titolo : "Gruppo"));
+                });
+    }
+
+    private void scaricaSpeseGruppo(DocumentReference groupRef, String groupId) {
+        groupRef.collection("expenses").get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, expSnaps -> {
+            if (expSnaps == null || expSnaps.isEmpty()) return;
+            for (DocumentSnapshot doc : expSnaps.getDocuments()) {
+                String spesaId = doc.getId();
+                String titolo = doc.getString("titolo");
+                Double importo = doc.getDouble("importo");
+                String valuta = doc.getString("valuta");
+                Long dataSpesa = doc.getLong("dataSpesa");
+                String categoria = doc.getString("categoria");
+                String pagatoDaId = doc.getString("pagatoDaId");
+                String scontrinoUrl = doc.getString("scontrinoUrl");
+
+                if (titolo != null && importo != null && pagatoDaId != null) {
+                    Partecipante pagatore = partecipanteDao.getPartecipanteById(pagatoDaId);
+                    if (pagatore == null) {
+                        partecipanteDao.insert(new Partecipante(pagatoDaId, groupId, "Partecipante", null, SyncStatus.SYNCED));
+                    }
+                    Spesa sp = new Spesa(
+                            spesaId, groupId, titolo, importo,
+                            valuta != null ? valuta : "EUR",
+                            dataSpesa != null ? dataSpesa : System.currentTimeMillis(),
+                            categoria != null ? categoria : "Altro",
+                            pagatoDaId, scontrinoUrl, SyncStatus.SYNCED
+                    );
+                    spesaDao.insert(sp);
+
+                    doc.getReference().collection("shares").get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, shareSnaps -> {
+                        if (shareSnaps != null && !shareSnaps.isEmpty()) {
+                            List<SpesaPartecipante> quoteRemote = new ArrayList<>();
+                            for (DocumentSnapshot sDoc : shareSnaps.getDocuments()) {
+                                String pId = sDoc.getString("partecipanteId");
+                                Double quotaVal = sDoc.getDouble("quota");
+                                Double quotaPagataVal = sDoc.getDouble("quotaPagata");
+                                double quotaPagata = quotaPagataVal != null ? quotaPagataVal : 0.0;
+                                if (pId != null && quotaVal != null) {
+                                    Partecipante deb = partecipanteDao.getPartecipanteById(pId);
+                                    if (deb == null) {
+                                        partecipanteDao.insert(new Partecipante(pId, groupId, "Partecipante", null, SyncStatus.SYNCED));
+                                    }
+                                    quoteRemote.add(new SpesaPartecipante(spesaId, pId, quotaVal, quotaPagata, SyncStatus.SYNCED));
+                                }
+                            }
+                            spesaDao.insertQuote(quoteRemote);
+                        }
+                    });
+                }
             }
         });
     }

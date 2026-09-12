@@ -265,4 +265,18 @@
     <string name="da_dare_lbl">◉ Da dare</string>
     <string name="nome_sconosciuto">Sconosciuto</string>
 
+    <!-- Invito e Codice Gruppo -->
+    <string name="action_codice_gruppo">Codice gruppo</string>
+    <string name="dialog_titolo_codice_gruppo">Codice del gruppo</string>
+    <string name="dialog_desc_codice_gruppo">Condividi questo codice o il link diretto per far entrare altre persone nel gruppo:</string>
+    <string name="btn_condividi_link">Condividi invito</string>
+    <string name="btn_copia_codice">Copia codice</string>
+    <string name="msg_codice_copiato">Codice copiato negli appunti</string>
+    <string name="msg_invito_condivisione">Unisciti al mio gruppo \"%1$s\" su PariPari!\n\n🔗 Tocca il link per entrare direttamente:\nparipari://join?code=%2$s\n\nOppure apri l\'app e inserisci il codice: %2$s</string>
+    <string name="dialog_titolo_conferma_unione">Unisciti al gruppo</string>
+    <string name="dialog_msg_conferma_unione">Vuoi unirti al gruppo con codice %1$s?</string>
+    <string name="btn_unisciti">Unisciti</string>
+    <string name="msg_unione_successo">Ti sei unito a %1$s!</string>
+    <string name="msg_ricerca_gruppo">Ricerca gruppo in corso…</string>
+
 </resources>

@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.example.paripariapp.data.model.Partecipante;
+import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaPartecipante;
@@ -114,5 +115,13 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
 
     public LiveData<List<SpesaPartecipante>> getQuoteDellaScheda(String schedaId) {
         return repository.getQuoteDellaScheda(schedaId);
+    }
+
+    public LiveData<Scheda> getSchedaById(String schedaId) {
+        return repository.getSchedaById(schedaId);
+    }
+
+    public void assicuraCodiceInvito(Scheda scheda) {
+        repository.assicuraCodiceInvito(scheda);
     }
 }
