@@ -265,9 +265,20 @@ public class PariPariRepository {
             spesaDao.deleteById(spesaId);
 
             if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
-                firestore.collection("groups").document(schedaId)
-                        .collection("expenses").document(spesaId).delete()
-                        .addOnFailureListener(e -> Log.w(TAG, "Eliminazione spesa remota differita: " + e.getMessage()));
+                DocumentReference spesaRef = firestore.collection("groups").document(schedaId)
+                        .collection("expenses").document(spesaId);
+                spesaRef.collection("shares").get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, shareSnaps -> {
+                    WriteBatch batch = firestore.batch();
+                    if (shareSnaps != null) {
+                        for (DocumentSnapshot sDoc : shareSnaps.getDocuments()) {
+                            batch.delete(sDoc.getReference());
+                        }
+                    }
+                    batch.delete(spesaRef);
+                    batch.commit().addOnFailureListener(e -> Log.w(TAG, "Eliminazione spesa remota fallita: " + e.getMessage()));
+                }).addOnFailureListener(e -> {
+                    spesaRef.delete().addOnFailureListener(err -> Log.w(TAG, "Eliminazione spesa remota fallita: " + err.getMessage()));
+                });
             }
         });
     }
@@ -627,7 +638,8 @@ public class PariPariRepository {
                             String spesaId = doc.getId();
 
                             if (dc.getType() == DocumentChange.Type.REMOVED) {
-                                Log.w(TAG, "Spesa rimossa da remoto ignorata per sicurezza locale: " + spesaId);
+                                spesaDao.deleteQuoteBySpesaId(spesaId);
+                                spesaDao.deleteById(spesaId);
                             } else {
                                 String titolo = doc.getString("titolo");
                                 Double importo = doc.getDouble("importo");
