@@ -3,6 +3,7 @@ package com.example.paripariapp.data.model;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.Index;
 
 /**
@@ -29,15 +30,25 @@ public class SpesaPartecipante {
     @ColumnInfo(name = "quota")
     private double quota;
 
+    @ColumnInfo(name = "quota_pagata")
+    private double quotaPagata;
+
     @ColumnInfo(name = "sync_status")
     private int syncStatus;
 
     public SpesaPartecipante(@NonNull String spesaId, @NonNull String partecipanteId,
-                             double quota, int syncStatus) {
+                             double quota, double quotaPagata, int syncStatus) {
         this.spesaId = spesaId;
         this.partecipanteId = partecipanteId;
         this.quota = quota;
+        this.quotaPagata = quotaPagata;
         this.syncStatus = syncStatus;
+    }
+
+    @Ignore
+    public SpesaPartecipante(@NonNull String spesaId, @NonNull String partecipanteId,
+                             double quota, int syncStatus) {
+        this(spesaId, partecipanteId, quota, 0.0, syncStatus);
     }
 
     @NonNull
@@ -64,6 +75,14 @@ public class SpesaPartecipante {
 
     public void setQuota(double quota) {
         this.quota = quota;
+    }
+
+    public double getQuotaPagata() {
+        return quotaPagata;
+    }
+
+    public void setQuotaPagata(double quotaPagata) {
+        this.quotaPagata = quotaPagata;
     }
 
     public int getSyncStatus() {

@@ -61,6 +61,9 @@ public interface SpesaDao {
     @Query("SELECT * FROM spese WHERE id = :id LIMIT 1")
     Spesa getSpesaByIdSync(String id);
 
+    @Query("SELECT * FROM spese WHERE id = :id LIMIT 1")
+    LiveData<Spesa> getSpesaByIdLive(String id);
+
     @Query("SELECT s.*, " +
             "COALESCE(p.nome, '') AS nomePagatore, " +
             "(SELECT COUNT(*) FROM spese_partecipanti sp WHERE sp.spesa_id = s.id AND sp.quota > 0) AS numeroPartecipanti " +

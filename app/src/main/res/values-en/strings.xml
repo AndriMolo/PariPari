@@ -263,4 +263,16 @@
     <string name="da_dare_lbl">◉ To pay</string>
     <string name="nome_sconosciuto">Unknown</string>
 
+    <!-- Modifica Spesa & Stato Pagamenti -->
+    <string name="spesa_modifica_titolo">Edit Expense</string>
+    <string name="spesa_quota_pagata">Already paid</string>
+    <string name="spesa_saldo_da_pagare">Remaining: %1$.2f %2$s</string>
+    <string name="spesa_saldo_rimborso">To refund: %1$.2f %2$s</string>
+    <string name="spesa_saldo_saldato">Settled</string>
+    <string name="btn_elimina_spesa">Delete expense</string>
+    <string name="msg_spesa_aggiornata">Expense updated successfully!</string>
+    <string name="msg_spesa_eliminata">Expense deleted successfully!</string>
+    <string name="dialog_titolo_elimina_spesa">Delete expense</string>
+    <string name="dialog_msg_elimina_spesa">Are you sure you want to delete this expense? This action cannot be undone.</string>
+
 </resources>

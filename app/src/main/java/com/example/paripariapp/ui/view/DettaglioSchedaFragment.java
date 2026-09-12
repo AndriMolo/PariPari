@@ -180,6 +180,25 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new SpesaAdapter();
+        adapter.setOnSpesaClickListener(item -> {
+            if (item != null && item.getSpesa() != null) {
+                ModificaSpesaFragment fragment = ModificaSpesaFragment.newInstance(
+                        item.getSpesa().getId(),
+                        schedaId,
+                        valuta
+                );
+                getParentFragmentManager().beginTransaction()
+                        .setCustomAnimations(
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out,
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out
+                        )
+                        .replace(R.id.dettaglio_container, fragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
         binding.recyclerSpese.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSpese.setAdapter(adapter);
     }

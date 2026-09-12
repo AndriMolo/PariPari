@@ -197,6 +197,18 @@
     <string name="spesa_errore_somma_quote">La somma delle quote (%1$.2f) non corrisponde all\'importo totale (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Seleziona almeno un partecipante per la spesa</string>
 
+    <!-- Modifica Spesa & Stato Pagamenti -->
+    <string name="spesa_modifica_titolo">Modifica Spesa</string>
+    <string name="spesa_quota_pagata">Già pagato</string>
+    <string name="spesa_saldo_da_pagare">Da integrare: %1$.2f %2$s</string>
+    <string name="spesa_saldo_rimborso">Da rimborsare: %1$.2f %2$s</string>
+    <string name="spesa_saldo_saldato">Saldato</string>
+    <string name="btn_elimina_spesa">Elimina spesa</string>
+    <string name="msg_spesa_aggiornata">Spesa aggiornata con successo!</string>
+    <string name="msg_spesa_eliminata">Spesa eliminata con successo!</string>
+    <string name="dialog_titolo_elimina_spesa">Elimina spesa</string>
+    <string name="dialog_msg_elimina_spesa">Sei sicuro di voler eliminare questa spesa? L\'operazione non può essere annullata.</string>
+
     <!-- Gestione Membri -->
     <string name="dettaglio_rinomina_partecipante">Rinomina partecipante</string>
     <string name="dettaglio_elimina_partecipante">Elimina partecipante</string>

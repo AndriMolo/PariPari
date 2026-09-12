@@ -19,18 +19,19 @@ import java.util.List;
 /**
  * ViewModel per il dettaglio di una singola scheda spese.
  * Gestisce la lista delle spese, il totale aggregato, i partecipanti
- * e l'aggiunta di nuove spese divise tra i membri del gruppo.
+ * e l'aggiunta/modifica di spese divise tra i membri del gruppo.
  */
 public class DettaglioSchedaViewModel extends AndroidViewModel {
 
-    public LiveData<List<SpesaConDettagli>> getSpeseConDettagli(String schedaId) {
-        return repository.getSpeseConDettagli(schedaId);
-    }
     private final PariPariRepository repository;
 
     public DettaglioSchedaViewModel(@NonNull Application application) {
         super(application);
         this.repository = PariPariRepository.getInstance(application);
+    }
+
+    public LiveData<List<SpesaConDettagli>> getSpeseConDettagli(String schedaId) {
+        return repository.getSpeseConDettagli(schedaId);
     }
 
     public LiveData<List<Spesa>> getSpese(String schedaId) {
@@ -43,6 +44,14 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
 
     public LiveData<List<Partecipante>> getPartecipanti(String schedaId) {
         return repository.getPartecipanti(schedaId);
+    }
+
+    public LiveData<Spesa> getSpesaById(String spesaId) {
+        return repository.getSpesaById(spesaId);
+    }
+
+    public LiveData<List<SpesaPartecipante>> getQuoteBySpesa(String spesaId) {
+        return repository.getQuoteBySpesa(spesaId);
     }
 
     public void aggiornaTitoloScheda(String schedaId, String nuovoTitolo) {
@@ -86,8 +95,17 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
 
         repository.insertSpesa(spesa, quote);
     }
+
     public void inserisciSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
         repository.insertSpesaConQuote(spesa, quote);
+    }
+
+    public void aggiornaSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
+        repository.aggiornaSpesaConQuote(spesa, quote);
+    }
+
+    public void eliminaSpesa(String spesaId, String schedaId) {
+        repository.deleteSpesa(spesaId, schedaId);
     }
 
     public void aggiungiPartecipante(Partecipante partecipante) {
@@ -97,6 +115,4 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
     public LiveData<List<SpesaPartecipante>> getQuoteDellaScheda(String schedaId) {
         return repository.getQuoteDellaScheda(schedaId);
     }
-
-
 }
