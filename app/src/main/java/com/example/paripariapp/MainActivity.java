@@ -94,7 +94,11 @@ public class MainActivity extends AppCompatActivity {
     private void gestisciDeepLink(Intent intent) {
         if (intent == null || intent.getData() == null) return;
         Uri uri = intent.getData();
-        if ("paripari".equalsIgnoreCase(uri.getScheme()) && "join".equalsIgnoreCase(uri.getHost())) {
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+
+        if (("paripari".equalsIgnoreCase(scheme) && "join".equalsIgnoreCase(host)) ||
+            ("https".equalsIgnoreCase(scheme) && "paripari.app".equalsIgnoreCase(host))) {
             String code = uri.getQueryParameter("code");
             if (code != null && !code.trim().isEmpty()) {
                 mostraDialogConfermaJoin(code.trim().toUpperCase());
@@ -103,13 +107,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void mostraDialogConfermaJoin(String code) {
+        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        String defaultName = (currentUser != null && currentUser.getDisplayName() != null && !android.text.TextUtils.isEmpty(currentUser.getDisplayName()))
+                ? currentUser.getDisplayName().trim() : "Io";
+
+        android.widget.EditText input = new android.widget.EditText(this);
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        input.setHint(R.string.label_tuo_nome_nel_gruppo);
+        input.setText(defaultName);
+        if (!defaultName.isEmpty()) {
+            input.setSelection(defaultName.length());
+        }
+
+        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        container.setPadding(padding, padding / 2, padding, 0);
+        container.addView(input);
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_titolo_conferma_unione)
                 .setMessage(getString(R.string.dialog_msg_conferma_unione, code))
+                .setView(container)
                 .setPositiveButton(R.string.btn_unisciti, (dialog, which) -> {
+                    String nomeScelto = input.getText().toString().trim();
+                    if (nomeScelto.isEmpty()) nomeScelto = defaultName;
+
                     Toast.makeText(this, R.string.msg_ricerca_gruppo, Toast.LENGTH_SHORT).show();
                     SpeseViewModel viewModel = new ViewModelProvider(this).get(SpeseViewModel.class);
-                    viewModel.uniscitiAScheda(code, new PariPariRepository.OnJoinSchedaCallback() {
+                    viewModel.uniscitiASchedaConNome(code, nomeScelto, new PariPariRepository.OnJoinSchedaCallback() {
                         @Override
                         public void onSuccess(String schedaId, String titolo) {
                             Toast.makeText(MainActivity.this, getString(R.string.msg_unione_successo, titolo), Toast.LENGTH_SHORT).show();
@@ -139,5 +164,9 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
         return true;
+    }
+
+    public void navigaVersoAccount() {
+        binding.bottomNavigation.setSelectedItemId(R.id.nav_account);
     }
 }

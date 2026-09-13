@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
                 Spesa.class,
                 SpesaPartecipante.class
         },
-        version = 6,
+        version = 7,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -54,6 +54,14 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE partecipanti ADD COLUMN paypal_handle TEXT");
+            database.execSQL("ALTER TABLE partecipanti ADD COLUMN revolut_handle TEXT");
+        }
+    };
+
     public abstract SchedaDao schedaDao();
     public abstract PartecipanteDao partecipanteDao();
     public abstract SpesaDao spesaDao();
@@ -70,7 +78,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     DATABASE_NAME
                             )
-                            .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
+                            .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                             .fallbackToDestructiveMigration()
                             .build();
                 }

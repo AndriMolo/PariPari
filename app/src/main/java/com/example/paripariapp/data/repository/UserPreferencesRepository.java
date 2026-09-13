@@ -30,6 +30,9 @@ public class UserPreferencesRepository {
     public static final String THEME_LIGHT = "LIGHT";
     public static final String THEME_DARK = "DARK";
 
+    private static final String KEY_PAYPAL_HANDLE = "pref_paypal_handle";
+    private static final String KEY_REVOLUT_HANDLE = "pref_revolut_handle";
+
     public static final List<String> SUPPORTED_CURRENCIES = Arrays.asList(
             "EUR - Euro",
             "USD - Dollaro USA",
@@ -78,6 +81,8 @@ public class UserPreferencesRepository {
     private final MutableLiveData<String> defaultCurrencyLive = new MutableLiveData<>();
     private final MutableLiveData<String> appLanguageLive = new MutableLiveData<>();
     private final MutableLiveData<String> appThemeLive = new MutableLiveData<>();
+    private final MutableLiveData<String> paypalHandleLive = new MutableLiveData<>();
+    private final MutableLiveData<String> revolutHandleLive = new MutableLiveData<>();
 
     private UserPreferencesRepository(Context context) {
         this.preferences = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -89,6 +94,12 @@ public class UserPreferencesRepository {
 
         String currentTheme = preferences.getString(KEY_APP_THEME, THEME_SYSTEM);
         appThemeLive.setValue(currentTheme);
+
+        String currentPaypal = preferences.getString(KEY_PAYPAL_HANDLE, "");
+        paypalHandleLive.setValue(currentPaypal);
+
+        String currentRevolut = preferences.getString(KEY_REVOLUT_HANDLE, "");
+        revolutHandleLive.setValue(currentRevolut);
     }
 
     public static UserPreferencesRepository getInstance(Context context) {
@@ -361,5 +372,102 @@ public class UserPreferencesRepository {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
+    }
+
+    // ====================================================================
+    // GESTIONE ACCOUNT PAGAMENTO (PAYPAL & REVOLUT)
+    // ====================================================================
+
+    public String getPaypalHandle() {
+        return preferences.getString(KEY_PAYPAL_HANDLE, "");
+    }
+
+    public LiveData<String> getPaypalHandleLive() {
+        return paypalHandleLive;
+    }
+
+    public void setPaypalHandle(String inputHandle) {
+        String clean = cleanPaypalHandle(inputHandle);
+        preferences.edit().putString(KEY_PAYPAL_HANDLE, clean).apply();
+        paypalHandleLive.postValue(clean);
+    }
+
+    public String getRevolutHandle() {
+        return preferences.getString(KEY_REVOLUT_HANDLE, "");
+    }
+
+    public LiveData<String> getRevolutHandleLive() {
+        return revolutHandleLive;
+    }
+
+    public void setRevolutHandle(String inputHandle) {
+        String clean = cleanRevolutHandle(inputHandle);
+        preferences.edit().putString(KEY_REVOLUT_HANDLE, clean).apply();
+        revolutHandleLive.postValue(clean);
+    }
+
+    public static String cleanPaypalHandle(String input) {
+        if (input == null) return "";
+        String clean = input.trim();
+        if (clean.toLowerCase().startsWith("https://paypal.me/")) {
+            clean = clean.substring("https://paypal.me/".length());
+        } else if (clean.toLowerCase().startsWith("http://paypal.me/")) {
+            clean = clean.substring("http://paypal.me/".length());
+        } else if (clean.toLowerCase().startsWith("paypal.me/")) {
+            clean = clean.substring("paypal.me/".length());
+        }
+        if (clean.startsWith("@")) {
+            clean = clean.substring(1);
+        }
+        int slashIdx = clean.indexOf('/');
+        if (slashIdx > 0) {
+            clean = clean.substring(0, slashIdx);
+        }
+        int queryIdx = clean.indexOf('?');
+        if (queryIdx > 0) {
+            clean = clean.substring(0, queryIdx);
+        }
+        return clean.trim();
+    }
+
+    public static String cleanRevolutHandle(String input) {
+        if (input == null) return "";
+        String clean = input.trim();
+        if (clean.toLowerCase().startsWith("https://revolut.me/")) {
+            clean = clean.substring("https://revolut.me/".length());
+        } else if (clean.toLowerCase().startsWith("http://revolut.me/")) {
+            clean = clean.substring("http://revolut.me/".length());
+        } else if (clean.toLowerCase().startsWith("revolut.me/")) {
+            clean = clean.substring("revolut.me/".length());
+        }
+        if (clean.startsWith("@")) {
+            clean = clean.substring(1);
+        }
+        int slashIdx = clean.indexOf('/');
+        if (slashIdx > 0) {
+            clean = clean.substring(0, slashIdx);
+        }
+        int queryIdx = clean.indexOf('?');
+        if (queryIdx > 0) {
+            clean = clean.substring(0, queryIdx);
+        }
+        return clean.trim();
+    }
+
+    public static String generatePaypalLink(String handle, double importo, String valuta) {
+        String clean = cleanPaypalHandle(handle);
+        if (clean.isEmpty()) return "";
+        if (importo <= 0) {
+            return "https://paypal.me/" + clean;
+        }
+        String formattedAmount = String.format(Locale.US, "%.2f", importo);
+        String code = (valuta != null && !valuta.trim().isEmpty()) ? valuta.trim().toUpperCase() : "EUR";
+        return "https://paypal.me/" + clean + "/" + formattedAmount + code;
+    }
+
+    public static String generateRevolutLink(String handle, double importo, String valuta) {
+        String clean = cleanRevolutHandle(handle);
+        if (clean.isEmpty()) return "";
+        return "https://revolut.me/" + clean;
     }
 }

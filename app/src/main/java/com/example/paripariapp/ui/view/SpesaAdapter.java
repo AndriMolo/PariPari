@@ -127,6 +127,11 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
                 }
             });
 
+            // Emoji dinamico per Categoria
+            binding.tvEmojiCategoria.setText(
+                    com.example.paripariapp.util.CategoriaUtil.getEmojiForCategoria(spesa.getCategoria(), spesa.getTitolo())
+            );
+
             // Titolo e Importo
             binding.tvTitoloSpesa.setText(spesa.getTitolo());
             binding.tvImportoSpesa.setText(

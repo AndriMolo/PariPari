@@ -3,7 +3,7 @@ package com.example.paripariapp.data.model;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -39,6 +39,13 @@ public class Partecipante {
     @ColumnInfo(name = "sync_status")
     private int syncStatus;
 
+    @ColumnInfo(name = "paypal_handle")
+    private String paypalHandle;
+
+    @ColumnInfo(name = "revolut_handle")
+    private String revolutHandle;
+
+    @Ignore
     public Partecipante(@NonNull String id, @NonNull String schedaId, @NonNull String nome,
                         String email, int syncStatus) {
         this.id = id;
@@ -46,6 +53,17 @@ public class Partecipante {
         this.nome = nome;
         this.email = email;
         this.syncStatus = syncStatus;
+    }
+
+    public Partecipante(@NonNull String id, @NonNull String schedaId, @NonNull String nome,
+                        String email, int syncStatus, String paypalHandle, String revolutHandle) {
+        this.id = id;
+        this.schedaId = schedaId;
+        this.nome = nome;
+        this.email = email;
+        this.syncStatus = syncStatus;
+        this.paypalHandle = paypalHandle;
+        this.revolutHandle = revolutHandle;
     }
 
     /** Factory method per creare un nuovo partecipante */
@@ -102,6 +120,22 @@ public class Partecipante {
         this.syncStatus = syncStatus;
     }
 
+    public String getPaypalHandle() {
+        return paypalHandle;
+    }
+
+    public void setPaypalHandle(String paypalHandle) {
+        this.paypalHandle = paypalHandle;
+    }
+
+    public String getRevolutHandle() {
+        return revolutHandle;
+    }
+
+    public void setRevolutHandle(String revolutHandle) {
+        this.revolutHandle = revolutHandle;
+    }
+
     /**
      * Riconosce se un Partecipante corrisponde all'utente corrente autenticato.
      */
@@ -115,7 +149,12 @@ public class Partecipante {
             }
         }
 
-        // 2. Corrispondenza per Display Name
+        // 2. Corrispondenza per ID / UID
+        if (currentUser != null && p.getId().equals(currentUser.getUid())) {
+            return true;
+        }
+
+        // 3. Corrispondenza per Display Name
         if (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
             String displayName = currentUser.getDisplayName().trim().toLowerCase();
             String pNome = p.getNome().trim().toLowerCase();
@@ -124,12 +163,10 @@ public class Partecipante {
             }
         }
 
-        // 3. Corrispondenza per diciture "(io)", "(me)", "io", "me"
-        if (p.getNome() != null) {
-            String n = p.getNome().trim().toLowerCase();
-            if (n.contains("(io)") || n.contains("(me)") || n.equalsIgnoreCase("io") || n.equalsIgnoreCase("me") || n.startsWith("io ")) {
-                return true;
-            }
+        // 4. Corrispondenza per diciture "(io)", "(me)", "io", "me" (fallback)
+        String n = p.getNome().trim().toLowerCase();
+        if (n.contains("(io)") || n.contains("(me)") || n.equalsIgnoreCase("io") || n.equalsIgnoreCase("me") || n.startsWith("io ")) {
+            return true;
         }
 
         return false;
@@ -138,6 +175,7 @@ public class Partecipante {
     /**
      * Trova l'ID del partecipante che rappresenta l'utente corrente in una lista di partecipanti.
      */
+
     public static String findCurrentUserId(java.util.List<Partecipante> partecipanti, @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
         if (partecipanti == null || partecipanti.isEmpty()) return null;
 

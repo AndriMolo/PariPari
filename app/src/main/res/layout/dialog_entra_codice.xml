@@ -12,17 +12,18 @@
         android:text="@string/dialog_entra"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/black" />
+        android:textColor="?attr/colorOnSurface" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/dialog_titolo"
         android:textSize="14sp"
-        android:textColor="#757575"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="20dp" />
 
+    <!-- Campo Codice Gruppo -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilCodice"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -43,6 +44,28 @@
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Campo Nome del Partecipante -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilNomeMembro"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/label_tuo_nome_nel_gruppo"
+        android:layout_marginTop="12dp"
+        app:boxCornerRadiusBottomEnd="14dp"
+        app:boxCornerRadiusBottomStart="14dp"
+        app:boxCornerRadiusTopEnd="14dp"
+        app:boxCornerRadiusTopStart="14dp"
+        app:startIconDrawable="@drawable/ic_account">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNomeMembro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName|textCapWords"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -55,8 +78,7 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dialog_cancel"
-            android:textColor="#757575" />
+            android:text="@string/dialog_cancel" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnConfermaPartecipa"

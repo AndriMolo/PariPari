@@ -58,7 +58,7 @@ public interface SpesaDao {
     @Query("SELECT COUNT(*) FROM spese WHERE sync_status != " + SyncStatus.PENDING_DELETE)
     LiveData<Integer> getCountSpeseLive();
 
-    @Query("SELECT SUM(importo) FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE)
+    @Query("SELECT SUM(importo) FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " AND (categoria IS NULL OR LOWER(categoria) NOT IN ('saldi', 'saldo'))")
     LiveData<Double> getTotaleSpeseBySchedaLive(String schedaId);
 
     @Query("SELECT * FROM spese WHERE id = :id LIMIT 1")
@@ -81,4 +81,10 @@ public interface SpesaDao {
 
     @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
     List<SpesaPartecipante> getTutteQuoteBySchedaSync(String schedaId);
+
+    @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    List<Spesa> getTuttiSaldiSync();
+
+    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    List<Spesa> getSaldiBySchedaSync(String schedaId);
 }

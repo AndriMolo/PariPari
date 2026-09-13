@@ -185,6 +185,56 @@ public class AccountViewModel extends AndroidViewModel {
         preferencesRepository.setAppTheme(themeCode);
     }
 
+    public LiveData<String> getPaypalHandleLive() {
+        return preferencesRepository.getPaypalHandleLive();
+    }
+
+    public String getPaypalHandle() {
+        return preferencesRepository.getPaypalHandle();
+    }
+
+    public void setPaypalHandle(String handle) {
+        String cleaned = UserPreferencesRepository.cleanPaypalHandle(handle);
+        preferencesRepository.setPaypalHandle(cleaned);
+
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && !user.isAnonymous()) {
+            Map<String, Object> update = new HashMap<>();
+            update.put("paypalHandle", cleaned);
+            update.put("updatedAt", FieldValue.serverTimestamp());
+            firestore.collection("users").document(user.getUid())
+                    .update(update)
+                    .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento PayPal su Firestore fallito: " + e.getMessage()));
+        }
+
+        repository.aggiornaPaymentHandlesInTuttiIGruppi(cleaned, preferencesRepository.getRevolutHandle());
+    }
+
+    public LiveData<String> getRevolutHandleLive() {
+        return preferencesRepository.getRevolutHandleLive();
+    }
+
+    public String getRevolutHandle() {
+        return preferencesRepository.getRevolutHandle();
+    }
+
+    public void setRevolutHandle(String handle) {
+        String cleaned = UserPreferencesRepository.cleanRevolutHandle(handle);
+        preferencesRepository.setRevolutHandle(cleaned);
+
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && !user.isAnonymous()) {
+            Map<String, Object> update = new HashMap<>();
+            update.put("revolutHandle", cleaned);
+            update.put("updatedAt", FieldValue.serverTimestamp());
+            firestore.collection("users").document(user.getUid())
+                    .update(update)
+                    .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento Revolut su Firestore fallito: " + e.getMessage()));
+        }
+
+        repository.aggiornaPaymentHandlesInTuttiIGruppi(preferencesRepository.getPaypalHandle(), cleaned);
+    }
+
     // ====================================================================
     // AZIONI DI AUTENTICAZIONE
     // ====================================================================
@@ -227,6 +277,38 @@ public class AccountViewModel extends AndroidViewModel {
                         errorMessage.setValue(err);
                     }
                 });
+    }
+
+    public void aggiornaNomeProfilo(String nuovoNome) {
+        if (nuovoNome == null || nuovoNome.trim().isEmpty()) return;
+        final String nomePulito = nuovoNome.trim();
+
+        isLoading.setValue(true);
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) {
+            isLoading.setValue(false);
+            return;
+        }
+
+        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                .setDisplayName(nomePulito)
+                .build();
+
+        user.updateProfile(profileUpdates).addOnCompleteListener(profileTask -> {
+            isLoading.setValue(false);
+            userLiveData.setValue(user);
+            if (!user.isAnonymous()) {
+                Map<String, Object> update = new HashMap<>();
+                update.put("nome", nomePulito);
+                update.put("updatedAt", FieldValue.serverTimestamp());
+                firestore.collection("users").document(user.getUid())
+                        .update(update)
+                        .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento nome su Firestore fallito: " + e.getMessage()));
+            }
+
+            repository.aggiornaNomeUtenteInTuttiIGruppi(nomePulito);
+            successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_nome_aggiornato_successo));
+        });
     }
 
     private void aggiornaProfiloEDb(FirebaseUser user, String nome, String email, boolean isNewAccount) {

@@ -81,6 +81,8 @@ public class NuovaSpesaFragment extends Fragment {
         binding.toolbarNuovaSpesa.setNavigationOnClickListener(v -> getParentFragmentManager().popBackStack());
         binding.campoValuta.setText(valuta != null ? valuta : getString(R.string.valuta_default));
 
+        binding.campoImporto.setFilters(new android.text.InputFilter[]{new com.example.paripariapp.util.DecimalDigitsInputFilter(2)});
+
         setupCategorieDropdown();
         setupSwitchDivisione();
         setupObserverPartecipanti();
@@ -88,16 +90,40 @@ public class NuovaSpesaFragment extends Fragment {
     }
 
     private void setupCategorieDropdown() {
-        String[] categorie = new String[]{
+        final String[] categorie = new String[]{
                 getString(R.string.cat_cibo),
+                getString(R.string.cat_spesa),
                 getString(R.string.cat_trasporti),
                 getString(R.string.cat_alloggio),
                 getString(R.string.cat_svago),
+                getString(R.string.cat_shopping),
+                getString(R.string.cat_bar),
+                getString(R.string.cat_salute),
                 getString(R.string.cat_altro)
         };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, categorie);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, categorie) {
+            @NonNull
+            @Override
+            public android.widget.Filter getFilter() {
+                return new android.widget.Filter() {
+                    @Override
+                    protected FilterResults performFiltering(CharSequence constraint) {
+                        FilterResults results = new FilterResults();
+                        results.values = categorie;
+                        results.count = categorie.length;
+                        return results;
+                    }
+
+                    @Override
+                    protected void publishResults(CharSequence constraint, FilterResults results) {
+                        notifyDataSetChanged();
+                    }
+                };
+            }
+        };
         binding.menuCategoria.setAdapter(adapter);
         binding.menuCategoria.setText(categorie[0], false);
+        binding.menuCategoria.setOnClickListener(v -> binding.menuCategoria.showDropDown());
     }
 
     private void setupSwitchDivisione() {
@@ -115,15 +141,35 @@ public class NuovaSpesaFragment extends Fragment {
             if (lista == null) return;
             this.partecipanti = lista;
 
-            List<String> nomi = new ArrayList<>();
+            final List<String> nomi = new ArrayList<>();
             for (Partecipante p : lista) {
                 nomi.add(p.getNome());
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, nomi);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, nomi) {
+                @NonNull
+                @Override
+                public android.widget.Filter getFilter() {
+                    return new android.widget.Filter() {
+                        @Override
+                        protected FilterResults performFiltering(CharSequence constraint) {
+                            FilterResults results = new FilterResults();
+                            results.values = nomi;
+                            results.count = nomi.size();
+                            return results;
+                        }
+
+                        @Override
+                        protected void publishResults(CharSequence constraint, FilterResults results) {
+                            notifyDataSetChanged();
+                        }
+                    };
+                }
+            };
             binding.menuPagante.setAdapter(adapter);
             if (!nomi.isEmpty()) {
                 binding.menuPagante.setText(nomi.get(0), false);
             }
+            binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
 
             popolaRighePartecipanti(lista);
         });
@@ -144,6 +190,7 @@ public class NuovaSpesaFragment extends Fragment {
 
             tvNome.setText(p.getNome());
             cb.setChecked(true);
+            etQuota.setFilters(new android.text.InputFilter[]{new com.example.paripariapp.util.DecimalDigitsInputFilter(2)});
             quotaContainer.setVisibility(binding.interruttorePersonalizzata.isChecked() ? View.VISIBLE : View.GONE);
 
             checkMap.put(p.getId(), cb);
@@ -206,12 +253,23 @@ public class NuovaSpesaFragment extends Fragment {
                     return;
                 }
 
-                double quotaSingola = importo / partecipantiInclusi.size();
+                double totaleAssegnato = 0.0;
+                for (int i = 0; i < partecipantiInclusi.size(); i++) {
+                    Partecipante p = partecipantiInclusi.get(i);
+                    double qVal;
+                    if (i == partecipantiInclusi.size() - 1) {
+                        qVal = Math.round((importo - totaleAssegnato) * 100.0) / 100.0;
+                    } else {
+                        qVal = Math.round((importo / partecipantiInclusi.size()) * 100.0) / 100.0;
+                        totaleAssegnato += qVal;
+                    }
+                    quote.add(new SpesaPartecipante(spesaId, p.getId(), qVal, SyncStatus.PENDING_INSERT));
+                }
                 for (Partecipante p : partecipanti) {
                     CheckBox cb = checkMap.get(p.getId());
-                    boolean isIncluso = (cb != null && cb.isChecked());
-                    double qVal = isIncluso ? quotaSingola : 0.0;
-                    quote.add(new SpesaPartecipante(spesaId, p.getId(), qVal, SyncStatus.PENDING_INSERT));
+                    if (cb == null || !cb.isChecked()) {
+                        quote.add(new SpesaPartecipante(spesaId, p.getId(), 0.0, SyncStatus.PENDING_INSERT));
+                    }
                 }
             } else {
                 // Divisione Personalizzata in Percentuale (%)

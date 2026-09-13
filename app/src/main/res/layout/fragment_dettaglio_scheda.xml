@@ -16,6 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="?attr/colorOnSurface"
             app:menu="@menu/menu_dettaglio_scheda"
             tools:title="Vacanza Madrid" />
 
@@ -99,6 +100,13 @@
                         android:text="@string/cat_cibo" />
 
                     <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cat_spesa"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cat_spesa" />
+
+                    <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_trasporti"
                         style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
@@ -118,6 +126,27 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_svago" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cat_shopping"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cat_shopping" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cat_bar"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cat_bar" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_cat_salute"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cat_salute" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_altro"
@@ -146,36 +175,91 @@
         </LinearLayout>
 
         <!-- 2. SEZIONE SALDI -->
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/sezione_saldi"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             android:visibility="gone"
-            android:padding="16dp">
+            android:fillViewport="true">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/titolo_sezione_saldi"
-                android:textAppearance="?attr/textAppearanceHeadline6"
-                android:layout_marginBottom="12dp" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_saldi"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:clipToPadding="false"
-                android:paddingBottom="72dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
 
-            <include
-                android:id="@+id/layout_empty_saldi"
-                layout="@layout/layout_empty_state"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
-        </LinearLayout>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/titolo_sezione_saldi"
+                        android:textAppearance="?attr/textAppearanceHeadline6" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_storico_saldi_scheda"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_storico_saldi"
+                        app:icon="@drawable/ic_receipt"
+                        android:textAllCaps="false"
+                        app:cornerRadius="20dp" />
+
+                </LinearLayout>
+
+                <!-- 1. Bilancio dei Membri -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/titolo_bilancio_membri"
+                    android:textAppearance="?attr/textAppearanceSubtitle1"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_bilanci_membri"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    android:nestedScrollingEnabled="false"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- 2. Pagamenti Consigliati per Pareggiare -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/titolo_pagamenti_pareggio"
+                    android:textAppearance="?attr/textAppearanceSubtitle1"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_saldi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    android:paddingBottom="72dp" />
+
+                <include
+                    android:id="@+id/layout_empty_saldi"
+                    layout="@layout/layout_empty_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
         <!-- 3. SEZIONE MEMBRI -->
         <LinearLayout
@@ -233,7 +317,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="?android:attr/colorBackground"
+        android:background="?attr/colorSurfaceContainerLow"
+        app:itemIconTint="?attr/colorPrimary"
+        app:itemRippleColor="?attr/colorPrimary"
+        app:itemTextColor="?attr/colorOnSurface"
         app:elevation="8dp"
         app:menu="@menu/menu_bottom_scheda" />
 

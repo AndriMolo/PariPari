@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- Header con Titolo (stesso stile di Spese / Your Groups) -->
+    <!-- Header con Titolo e Bottone Storico -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,12 +20,23 @@
 
         <TextView
             android:id="@+id/tv_titolo_saldi"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/title_saldi"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black" />
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_storico_saldi"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_storico_saldi"
+            app:icon="@drawable/ic_receipt"
+            android:textAllCaps="false"
+            app:cornerRadius="20dp" />
 
     </LinearLayout>
 
@@ -47,8 +58,8 @@
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
             app:strokeWidth="1.5dp"
-            app:strokeColor="#81C784"
-            app:cardBackgroundColor="#1A81C784">
+            app:strokeColor="@color/credit_green_stroke"
+            app:cardBackgroundColor="@color/credit_green_bg">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -61,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/da_ricevere_lbl"
                     android:textStyle="bold"
-                    android:textColor="#2E7D32"
+                    android:textColor="@color/credit_green"
                     android:textAppearance="?attr/textAppearanceBodyMedium" />
 
                 <TextView
@@ -70,7 +81,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:textStyle="bold"
-                    android:textColor="#2E7D32"
+                    android:textColor="@color/credit_green"
                     android:textAppearance="?attr/textAppearanceHeadline5"
                     tools:text="66,67 €" />
             </LinearLayout>
@@ -86,8 +97,8 @@
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
             app:strokeWidth="1.5dp"
-            app:strokeColor="#E57373"
-            app:cardBackgroundColor="#1AE57373">
+            app:strokeColor="@color/debt_red_stroke"
+            app:cardBackgroundColor="@color/debt_red_bg">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -100,7 +111,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/da_dare_lbl"
                     android:textStyle="bold"
-                    android:textColor="#C62828"
+                    android:textColor="@color/debt_red"
                     android:textAppearance="?attr/textAppearanceBodyMedium" />
 
                 <TextView
@@ -109,7 +120,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:textStyle="bold"
-                    android:textColor="#C62828"
+                    android:textColor="@color/debt_red"
                     android:textAppearance="?attr/textAppearanceHeadline5"
                     tools:text="0,00 €" />
             </LinearLayout>

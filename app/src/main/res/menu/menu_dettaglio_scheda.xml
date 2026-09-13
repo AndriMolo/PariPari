@@ -28,8 +28,8 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_elimina_scheda"
-        android:icon="@android:drawable/ic_menu_delete"
-        android:title="@string/action_elimina_scheda"
+        android:id="@+id/action_lascia_scheda"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:title="@string/action_lascia_scheda"
         app:showAsAction="never" />
 </menu>

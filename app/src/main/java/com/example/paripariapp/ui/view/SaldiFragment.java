@@ -45,6 +45,23 @@ public class SaldiFragment extends Fragment {
         binding.recyclerBilanci.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerBilanci.setAdapter(adapter);
 
+        binding.btnStoricoSaldi.setOnClickListener(v -> {
+            StoricoSaldiBottomSheet sheet = StoricoSaldiBottomSheet.newInstance(null);
+            sheet.show(getChildFragmentManager(), "storico_saldi_global");
+        });
+
+        adapter.setOnItemClickListener(item -> {
+            if (item != null && item.getTrasferimentoSaldo() != null) {
+                InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                        item.getTrasferimentoSaldo(),
+                        item.getSchedaId(),
+                        "",
+                        ""
+                );
+                sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+            }
+        });
+
         // Click Card Verde: mostra solo chi ti deve soldi
         binding.cardDaRicevere.setOnClickListener(v -> {
             filtroCorrente = (filtroCorrente == 1) ? 0 : 1;

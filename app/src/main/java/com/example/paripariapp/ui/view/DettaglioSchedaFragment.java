@@ -58,6 +58,7 @@ public class DettaglioSchedaFragment extends Fragment {
     private DettaglioSchedaViewModel viewModel;
     private SpesaAdapter adapter;
     private SaldoAdapter saldoAdapter;
+    private BilancioMembroAdapter bilancioMembroAdapter;
 
     private String schedaId;
     private String titolo;
@@ -153,6 +154,45 @@ public class DettaglioSchedaFragment extends Fragment {
         saldoAdapter = new SaldoAdapter();
         binding.recyclerSaldi.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSaldi.setAdapter(saldoAdapter);
+
+        bilancioMembroAdapter = new BilancioMembroAdapter();
+        binding.recyclerBilanciMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerBilanciMembri.setAdapter(bilancioMembroAdapter);
+
+        binding.btnStoricoSaldiScheda.setOnClickListener(v -> {
+            StoricoSaldiBottomSheet sheet = StoricoSaldiBottomSheet.newInstance(schedaId);
+            sheet.show(getChildFragmentManager(), "storico_saldi_scheda");
+        });
+
+        saldoAdapter.setOnItemClickListener(item -> {
+            if (item == null) return;
+            String creditorePaypal = "";
+            String creditoreRevolut = "";
+            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            String myPartId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+
+            if (partecipantiCache != null) {
+                com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext().getApplicationContext());
+                for (Partecipante p : partecipantiCache) {
+                    if (p.getId().equals(item.getAPartecipanteId())) {
+                        boolean isCreditoreMe = p.getId().equals(myPartId) || Partecipante.isCurrentUserParticipant(p, currentUser);
+
+                        creditorePaypal = (p.getPaypalHandle() != null && !p.getPaypalHandle().trim().isEmpty())
+                                ? p.getPaypalHandle().trim()
+                                : (isCreditoreMe ? prefs.getPaypalHandle() : "");
+
+                        creditoreRevolut = (p.getRevolutHandle() != null && !p.getRevolutHandle().trim().isEmpty())
+                                ? p.getRevolutHandle().trim()
+                                : (isCreditoreMe ? prefs.getRevolutHandle() : "");
+                        break;
+                    }
+                }
+            }
+            InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                    item, schedaId, creditorePaypal, creditoreRevolut, myPartId
+            );
+            sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+        });
     }
 
     private void aggiornaSaldi() {
@@ -163,16 +203,44 @@ public class DettaglioSchedaFragment extends Fragment {
                     quoteCache,
                     valuta != null ? valuta : "EUR"
             );
-            saldoAdapter.submitList(trasferimenti);
 
-            if (trasferimenti.isEmpty()) {
+            // Filtra i trasferimenti per mostrare solo quelli in cui l'utente corrente deve pagare o ricevere
+            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+            List<TrasferimentoSaldo> mieiTrasferimenti = new ArrayList<>();
+
+            if (myId != null && trasferimenti != null) {
+                for (TrasferimentoSaldo t : trasferimenti) {
+                    if (t.getDaPartecipanteId().equals(myId) || t.getAPartecipanteId().equals(myId)) {
+                        mieiTrasferimenti.add(t);
+                    }
+                }
+            } else if (trasferimenti != null) {
+                mieiTrasferimenti.addAll(trasferimenti);
+            }
+
+            saldoAdapter.submitList(mieiTrasferimenti);
+
+            List<CalcolatoreSaldi.BilancioMembro> bilanciMembri = CalcolatoreSaldi.calcolaListaBilanciMembri(
+                    partecipantiCache,
+                    speseCache,
+                    quoteCache,
+                    valuta != null ? valuta : "EUR"
+            );
+            if (bilancioMembroAdapter != null) {
+                bilancioMembroAdapter.submitList(bilanciMembri);
+            }
+
+            if (partecipantiCache.isEmpty()) {
                 binding.layoutEmptySaldi.getRoot().setVisibility(View.VISIBLE);
                 binding.layoutEmptySaldi.tvEmptyTitle.setText(R.string.empty_saldi_titolo);
                 binding.layoutEmptySaldi.tvEmptyDesc.setText(R.string.empty_saldi_desc);
                 binding.recyclerSaldi.setVisibility(View.GONE);
+                binding.recyclerBilanciMembri.setVisibility(View.GONE);
             } else {
                 binding.layoutEmptySaldi.getRoot().setVisibility(View.GONE);
                 binding.recyclerSaldi.setVisibility(View.VISIBLE);
+                binding.recyclerBilanciMembri.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -198,8 +266,8 @@ public class DettaglioSchedaFragment extends Fragment {
             } else if (itemId == R.id.action_modifica_titolo) {
                 mostraDialogModificaNome();
                 return true;
-            } else if (itemId == R.id.action_elimina_scheda) {
-                mostraDialogEliminaScheda();
+            } else if (itemId == R.id.action_lascia_scheda) {
+                mostraDialogLasciaScheda();
                 return true;
             }
             return false;
@@ -211,6 +279,15 @@ public class DettaglioSchedaFragment extends Fragment {
         adapter.setOnSpesaClickListener(item -> {
             if (item == null || item.getSpesa() == null) return;
             Spesa spesa = item.getSpesa();
+
+            if (com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesa.getCategoria())) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.badge_saldato_effettuato)
+                        .setMessage(R.string.msg_spesa_saldo_non_modificabile)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                return;
+            }
 
             // Costruisce il set degli ID dei partecipanti attualmente attivi nella scheda
             java.util.Set<String> activeIds = new java.util.HashSet<>();
@@ -351,11 +428,7 @@ public class DettaglioSchedaFragment extends Fragment {
             // Invia la lista aggiornata al RecyclerView della sezione Membri
             if (membroAdapter != null) {
                 membroAdapter.submitList(partecipanti);
-
-                boolean isCapogruppo = (schedaCorrente == null
-                        || schedaCorrente.getCreatoreId() == null
-                        || (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null
-                        && schedaCorrente.getCreatoreId().equals(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid())));
+                boolean isCapogruppo = calcolaIsCapogruppo(schedaCorrente, partecipanti);
                 membroAdapter.setCapogruppo(isCapogruppo);
             }
 
@@ -378,8 +451,56 @@ public class DettaglioSchedaFragment extends Fragment {
                 if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
                     viewModel.assicuraCodiceInvito(scheda);
                 }
+                if (membroAdapter != null && partecipantiCache != null) {
+                    membroAdapter.setCapogruppo(calcolaIsCapogruppo(schedaCorrente, partecipantiCache));
+                }
+            } else {
+                if (getActivity() != null && !getActivity().isFinishing() && isAdded()) {
+                    Toast.makeText(requireContext(), R.string.msg_sei_stato_rimosso_dal_gruppo, Toast.LENGTH_SHORT).show();
+                    getActivity().finish();
+                }
             }
         });
+    }
+
+    private boolean calcolaIsCapogruppo(Scheda scheda, List<Partecipante> partecipanti) {
+        if (scheda == null || partecipanti == null || partecipanti.isEmpty()) return false;
+        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return false;
+
+        String creatoreId = scheda.getCreatoreId();
+
+        // 1. Se il creatore della scheda corrisponde all'UID dell'utente corrente
+        if (creatoreId != null && !creatoreId.trim().isEmpty()) {
+            if (creatoreId.equals(currentUser.getUid())) {
+                return true;
+            }
+            // Se creatoreId corrisponde all'ID partecipante dell'utente corrente
+            String myPartId = Partecipante.findCurrentUserId(partecipanti, currentUser);
+            if (myPartId != null && myPartId.equals(creatoreId)) {
+                return true;
+            }
+        }
+
+        // 2. Controlla se il creatore originale è ancora presente nella lista dei partecipanti
+        boolean creatoreAncoraInGruppo = false;
+        if (creatoreId != null && !creatoreId.trim().isEmpty()) {
+            for (Partecipante p : partecipanti) {
+                if (p.getId().equals(creatoreId) || Partecipante.isCurrentUserParticipant(p, currentUser)) {
+                    creatoreAncoraInGruppo = true;
+                    break;
+                }
+            }
+        }
+
+        // 3. Se il creatore originale è ancora nel gruppo e non sono io -> non sono capogruppo
+        if (creatoreAncoraInGruppo) {
+            return false;
+        }
+
+        // 4. Se il creatore originale è uscito dal gruppo, il primo partecipante in carica eredita la proprietà
+        Partecipante primo = partecipanti.get(0);
+        return isMe(primo);
     }
 
     private void applicaFiltriERaggruppa() {
@@ -388,6 +509,10 @@ public class DettaglioSchedaFragment extends Fragment {
 
         for (SpesaConDettagli scd : tutteSpeseRaw) {
             Spesa s = scd.getSpesa();
+            if (com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(s.getCategoria())) {
+                continue; // I pareggi saldi sono esclusi dall'elenco spese del gruppo
+            }
+
             boolean matchTesto = queryFiltroTesto.isEmpty() ||
                     s.getTitolo().toLowerCase().contains(queryFiltroTesto);
 
@@ -473,37 +598,19 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
-    private void mostraDialogEliminaScheda() {
-        boolean haSaldiAperti = false;
-        if (!partecipantiCache.isEmpty() && !speseCache.isEmpty()) {
-            List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
-                    partecipantiCache,
-                    speseCache,
-                    quoteCache,
-                    valuta != null ? valuta : "EUR"
-            );
-            String mioId = Partecipante.findCurrentUserId(partecipantiCache, com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser());
-            if (mioId != null) {
-                for (TrasferimentoSaldo t : trasferimenti) {
-                    if (t.getDaId().equals(mioId) || t.getAId().equals(mioId)) {
-                        if (Math.abs(t.getImporto()) > 0.01) {
-                            haSaldiAperti = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        int messageRes = haSaldiAperti
-                ? R.string.dialog_msg_elimina_scheda_con_saldi
-                : R.string.dialog_msg_elimina_scheda;
+    private void mostraDialogLasciaScheda() {
+        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        String mioId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
 
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(getString(R.string.dialog_titolo_elimina_scheda))
-                .setMessage(getString(messageRes))
-                .setPositiveButton(getString(R.string.btn_elimina), (dialog, which) -> {
-                    viewModel.eliminaScheda(schedaId);
+                .setTitle(getString(R.string.dialog_titolo_lascia_scheda))
+                .setMessage(getString(R.string.dialog_msg_lascia_scheda))
+                .setPositiveButton(getString(R.string.btn_lascia), (dialog, which) -> {
+                    if (mioId != null) {
+                        viewModel.esciDalGruppo(schedaId, mioId);
+                    } else {
+                        viewModel.eliminaSchedaLocale(schedaId);
+                    }
                     if (getActivity() != null) {
                         getActivity().finish();
                     }
@@ -523,7 +630,7 @@ public class DettaglioSchedaFragment extends Fragment {
                 .setPositiveButton(R.string.btn_salva, null)
                 .create();
 
-        riempiListaMembri(contenitoreMembri);
+        riempiListaMembri(contenitoreMembri, dialog);
 
         btnAggiungi.setOnClickListener(v -> {
             String nome = inputNuovo.getText() != null ? inputNuovo.getText().toString().trim() : "";
@@ -538,7 +645,7 @@ public class DettaglioSchedaFragment extends Fragment {
                 viewModel.aggiungiPartecipante(nuovoP);
                 inputNuovo.setText("");
                 partecipantiCache.add(nuovoP);
-                riempiListaMembri(contenitoreMembri);
+                riempiListaMembri(contenitoreMembri, dialog);
             }
         });
 
@@ -547,59 +654,142 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private boolean haSpeseODebiti(Partecipante p) {
         if (p == null) return false;
-        // 1. Ha pagato qualche spesa?
-        if (speseCache != null) {
-            for (Spesa s : speseCache) {
-                if (p.getId().equals(s.getPagatoDaId())) {
-                    return true;
-                }
+        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
+                partecipantiCache,
+                speseCache,
+                quoteCache,
+                valuta != null ? valuta : "EUR"
+        );
+        for (TrasferimentoSaldo t : trasferimenti) {
+            if ((t.getDaPartecipanteId().equals(p.getId()) || t.getAPartecipanteId().equals(p.getId()))
+                    && t.getImporto() > 0.01) {
+                return true; // Ha debiti o crediti netti aperti non ancora saldati
             }
         }
-        // 2. È debitore/ha una quota attiva (> 0.0) o ha già pagato una quota (> 0.0) in qualche spesa?
-        if (quoteCache != null) {
-            for (SpesaPartecipante q : quoteCache) {
-                if (p.getId().equals(q.getPartecipanteId())) {
-                    if (Math.abs(q.getQuota()) > 0.009 || Math.abs(q.getQuotaPagata()) > 0.009) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return false; // Saldo netto = € 0,00, rimozione consentita
     }
 
-    private void riempiListaMembri(LinearLayout contenitore) {
+    private boolean isMe(Partecipante p) {
+        if (p == null) return false;
+        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        if (Partecipante.isCurrentUserParticipant(p, currentUser)) {
+            return true;
+        }
+        String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+        return myId != null && myId.equals(p.getId());
+    }
+
+    private void gestisciRimozioneMembro(Partecipante p, @Nullable androidx.appcompat.app.AlertDialog dialogToDismiss, @Nullable Runnable onMemberRemovedLocally) {
+        if (p == null) return;
+        boolean isMe = isMe(p);
+
+        if (haSpeseODebiti(p)) {
+            int msgRes = isMe ? R.string.msg_errore_uscita_debiti : R.string.msg_errore_rimozione_membro;
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.dialog_titolo_gestione_gruppo)
+                    .setMessage(getString(msgRes))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
+
+        int titleRes = isMe ? R.string.titolo_esci_gruppo : R.string.btn_rimuovi;
+        String message = isMe ? getString(R.string.msg_conferma_esci_gruppo)
+                : getString(R.string.msg_conferma_rimuovi_membro, p.getNome());
+        int btnPositiveRes = isMe ? R.string.btn_esci : R.string.btn_rimuovi;
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(titleRes)
+                .setMessage(message)
+                .setPositiveButton(btnPositiveRes, (d, which) -> {
+                    if (isMe) {
+                        viewModel.esciDalGruppo(schedaId, p.getId());
+                        if (dialogToDismiss != null && dialogToDismiss.isShowing()) {
+                            dialogToDismiss.dismiss();
+                        }
+                        Toast.makeText(requireContext(), R.string.msg_sei_uscito_dal_gruppo, Toast.LENGTH_SHORT).show();
+                        if (getActivity() != null && !getActivity().isFinishing()) {
+                            getActivity().finish();
+                        }
+                    } else {
+                        viewModel.eliminaPartecipante(p.getId());
+                        Toast.makeText(requireContext(), getString(R.string.msg_membro_rimosso, p.getNome()), Toast.LENGTH_SHORT).show();
+                        if (onMemberRemovedLocally != null) {
+                            onMemberRemovedLocally.run();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
+    }
+
+    private void mostraDialogRinominaPartecipante(Partecipante p) {
+        if (p == null) return;
+        boolean isMe = isMe(p);
+
+        if (!isMe) {
+            Toast.makeText(requireContext(), R.string.msg_permesso_negato_modifica_nome_altri, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        EditText input = new EditText(requireContext());
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        input.setHint(R.string.hint_nome_partecipante);
+        input.setText(p.getNome());
+        if (p.getNome() != null) {
+            input.setSelection(p.getNome().length());
+        }
+
+        FrameLayout container = new FrameLayout(requireContext());
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        container.setPadding(padding, padding / 2, padding, 0);
+        container.addView(input);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.dialog_titolo_rinomina)
+                .setView(container)
+                .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
+                    String nuovoNome = input.getText().toString().trim();
+                    if (!nuovoNome.isEmpty() && !nuovoNome.equals(p.getNome())) {
+                        viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
+                        Toast.makeText(requireContext(), R.string.msg_nome_aggiornato_successo, Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
+    }
+
+    private void riempiListaMembri(LinearLayout contenitore, @Nullable androidx.appcompat.app.AlertDialog dialog) {
         contenitore.removeAllViews();
+
+        boolean isCapogruppo = calcolaIsCapogruppo(schedaCorrente, partecipantiCache);
 
         for (Partecipante p : partecipantiCache) {
             View row = getLayoutInflater().inflate(R.layout.item_membro_gestione, contenitore, false);
             TextView tvIniziale = row.findViewById(R.id.avatar_iniziale);
             TextView tvNome = row.findViewById(R.id.nome_partecipante);
+            View btnMatita = row.findViewById(R.id.bottone_modifica);
             View btnCestino = row.findViewById(R.id.bottone_elimina);
 
+            boolean isMe = isMe(p);
             String nome = p.getNome();
-            tvNome.setText(nome);
+            String nomeDisplay = nome;
+            if (isMe && !nomeDisplay.toLowerCase().endsWith("(io)") && !nomeDisplay.toLowerCase().endsWith("(me)")) {
+                nomeDisplay = nomeDisplay + " (io)";
+            }
+            tvNome.setText(nomeDisplay);
             tvIniziale.setText(!nome.isEmpty() ? String.valueOf(nome.charAt(0)).toUpperCase() : "?");
 
+            btnMatita.setVisibility(isMe ? View.VISIBLE : View.GONE);
+            btnCestino.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
+
+            btnMatita.setOnClickListener(v -> mostraDialogRinominaPartecipante(p));
+
             btnCestino.setOnClickListener(v -> {
-                if (haSpeseODebiti(p)) {
-                    new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle(R.string.dialog_titolo_gestione_gruppo)
-                            .setMessage(getString(R.string.msg_errore_rimozione_membro))
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show();
-                } else {
-                    new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle(R.string.btn_rimuovi)
-                            .setMessage(getString(R.string.msg_conferma_rimuovi_membro, p.getNome()))
-                            .setPositiveButton(R.string.btn_rimuovi, (d, which) -> {
-                                viewModel.eliminaPartecipante(p.getId());
-                                partecipantiCache.remove(p);
-                                riempiListaMembri(contenitore);
-                            })
-                            .setNegativeButton(R.string.btn_annulla, null)
-                            .show();
-                }
+                gestisciRimozioneMembro(p, dialog, () -> {
+                    partecipantiCache.remove(p);
+                    riempiListaMembri(contenitore, dialog);
+                });
             });
 
             contenitore.addView(row);
@@ -642,28 +832,18 @@ public class DettaglioSchedaFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
     private void setupRecyclerMembri() {
         membroAdapter = new MembroAdapter();
         binding.recyclerMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerMembri.setAdapter(membroAdapter);
 
+        membroAdapter.setOnModificaClickListener(p -> {
+            mostraDialogRinominaPartecipante(p);
+        });
+
         membroAdapter.setOnEliminaClickListener(p -> {
-            if (haSpeseODebiti(p)) {
-                new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(R.string.dialog_titolo_gestione_gruppo)
-                        .setMessage(getString(R.string.msg_errore_rimozione_membro))
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-            } else {
-                new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(R.string.btn_rimuovi)
-                        .setMessage(getString(R.string.msg_conferma_rimuovi_membro, p.getNome()))
-                        .setPositiveButton(R.string.btn_rimuovi, (d, which) -> {
-                            viewModel.eliminaPartecipante(p.getId());
-                        })
-                        .setNegativeButton(R.string.btn_annulla, null)
-                        .show();
-            }
+            gestisciRimozioneMembro(p, null, null);
         });
 
         binding.btnAggiungiMembroTab.setOnClickListener(v -> mostraDialogOpzioniAggiungiMembro());

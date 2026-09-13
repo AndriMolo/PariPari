@@ -1,6 +1,6 @@
 package com.example.paripariapp.ui.view;
 
-import android.graphics.Color;
+
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -24,6 +24,16 @@ public class BilancioPersonaAdapter extends RecyclerView.Adapter<BilancioPersona
         items.clear();
         if (newItems != null) items.addAll(newItems);
         notifyDataSetChanged();
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(BilancioPersonaItem item);
+    }
+
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -51,6 +61,10 @@ public class BilancioPersonaAdapter extends RecyclerView.Adapter<BilancioPersona
             holder.binding.tvImportoSaldo.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.debt_red));
             holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "-%.2f %s", Math.abs(item.getImporto()), item.getValuta()));
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onItemClick(item);
+        });
     }
 
     @Override

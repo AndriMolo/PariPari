@@ -63,8 +63,20 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.deleteScheda(schedaId);
     }
 
+    public void eliminaSchedaLocale(String schedaId) {
+        repository.deleteSchedaLocale(schedaId);
+    }
+
+    public void esciDalGruppo(String schedaId, String partecipanteId) {
+        repository.esciDalGruppo(schedaId, partecipanteId);
+    }
+
     public void eliminaPartecipante(String partecipanteId) {
         repository.deletePartecipante(partecipanteId);
+    }
+
+    public void aggiornaNomePartecipante(String partecipanteId, String nuovoNome) {
+        repository.aggiornaNomePartecipante(partecipanteId, nuovoNome);
     }
 
     /**

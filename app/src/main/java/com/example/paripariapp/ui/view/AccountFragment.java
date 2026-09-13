@@ -1,11 +1,14 @@
 package com.example.paripariapp.ui.view;
 
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,6 +63,7 @@ public class AccountFragment extends Fragment {
         setupCurrencySelector();
         setupLanguageSelector();
         setupThemeSelector();
+        setupPaymentMethodsSelectors();
         updateFormModeUI();
     }
 
@@ -108,12 +112,23 @@ public class AccountFragment extends Fragment {
 
         // Osserva l'utente autenticato per aggiornare nome ed email
         viewModel.getUserLiveData().observe(getViewLifecycleOwner(), user -> {
-            if (user != null && !user.isAnonymous()) {
+            if (user != null) {
                 String nome = user.getDisplayName();
-                binding.tvNomeUtente.setText(!TextUtils.isEmpty(nome) ? nome : getString(R.string.label_account_attivo));
-                binding.tvEmailUtente.setText(user.getEmail());
+                String displayNome = !TextUtils.isEmpty(nome) ? nome : getString(R.string.default_nome_utente);
+                binding.tvNomeUtente.setText(displayNome);
+                if (binding.tvNomeOspiteValore != null) {
+                    binding.tvNomeOspiteValore.setText(displayNome);
+                }
+                if (!user.isAnonymous()) {
+                    binding.tvEmailUtente.setText(user.getEmail());
+                }
             }
         });
+
+        binding.containerNomeUtente.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
+        if (binding.cardNomeOspite != null) {
+            binding.cardNomeOspite.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
+        }
 
         // Stato di caricamento (ProgressBar)
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), loading -> {
@@ -142,6 +157,25 @@ public class AccountFragment extends Fragment {
             if (binding != null && themeCode != null) {
                 String display = getDisplayThemeForCode(themeCode);
                 binding.tvTemaAppValore.setText(display);
+            }
+        });
+
+        // Osserva i tag di pagamento PayPal e Revolut
+        viewModel.getPaypalHandleLive().observe(getViewLifecycleOwner(), handle -> {
+            if (binding == null) return;
+            if (handle != null && !handle.trim().isEmpty()) {
+                binding.tvPaypalValore.setText("@" + handle.trim());
+            } else {
+                binding.tvPaypalValore.setText(R.string.badge_non_configurato);
+            }
+        });
+
+        viewModel.getRevolutHandleLive().observe(getViewLifecycleOwner(), handle -> {
+            if (binding == null) return;
+            if (handle != null && !handle.trim().isEmpty()) {
+                binding.tvRevolutValore.setText("@" + handle.trim());
+            } else {
+                binding.tvRevolutValore.setText(R.string.badge_non_configurato);
             }
         });
 
@@ -174,6 +208,37 @@ public class AccountFragment extends Fragment {
             // Reinvia direttamente l'email di verifica senza aprire dialog o pagine secondarie
             viewModel.reinviaEmailVerifica();
         });
+    }
+
+    private void mostraDialogModificaNomeProfilo() {
+        FirebaseUser currentUser = viewModel.getUserLiveData().getValue();
+        String currentName = (currentUser != null && !TextUtils.isEmpty(currentUser.getDisplayName()))
+                ? currentUser.getDisplayName() : "";
+
+        EditText input = new EditText(requireContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        input.setHint(R.string.hint_nome_partecipante);
+        input.setText(currentName);
+        if (!currentName.isEmpty()) {
+            input.setSelection(currentName.length());
+        }
+
+        FrameLayout container = new FrameLayout(requireContext());
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        container.setPadding(padding, padding / 2, padding, 0);
+        container.addView(input);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.dialog_titolo_modifica_nome_profilo)
+                .setView(container)
+                .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
+                    String nuovoNome = input.getText().toString().trim();
+                    if (!nuovoNome.isEmpty() && !nuovoNome.equals(currentName)) {
+                        viewModel.aggiornaNomeProfilo(nuovoNome);
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
     }
 
     private void setupCurrencySelector() {
@@ -455,6 +520,93 @@ public class AccountFragment extends Fragment {
                     .setNegativeButton(R.string.btn_annulla, null)
                     .show();
         }
+    }
+
+    private void setupPaymentMethodsSelectors() {
+        binding.rowPaypal.setOnClickListener(v -> mostraDialogModificaPaypal());
+        binding.rowRevolut.setOnClickListener(v -> mostraDialogModificaRevolut());
+    }
+
+    private void mostraDialogModificaPaypal() {
+        String currentHandle = viewModel.getPaypalHandle();
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_payment_handle, null);
+        TextInputLayout til = dialogView.findViewById(R.id.til_handle);
+        TextInputEditText et = dialogView.findViewById(R.id.et_handle);
+
+        til.setHint(getString(R.string.hint_paypal_tag));
+        til.setPrefixText("paypal.me/");
+        til.setHelperText(getString(R.string.helper_paypal));
+
+        if (!TextUtils.isEmpty(currentHandle)) {
+            et.setText(currentHandle);
+            et.setSelection(currentHandle.length());
+        }
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(dialogView)
+                .setPositiveButton(R.string.btn_salva, (d, which) -> {
+                    String raw = et.getText() != null ? et.getText().toString().trim() : "";
+                    viewModel.setPaypalHandle(raw);
+                    Snackbar.make(binding.getRoot(), R.string.msg_paypal_salvato, Snackbar.LENGTH_SHORT).show();
+                })
+                .setNeutralButton(R.string.btn_elimina, (d, which) -> {
+                    viewModel.setPaypalHandle("");
+                    Snackbar.make(binding.getRoot(), R.string.msg_paypal_salvato, Snackbar.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .create();
+
+        dialog.setOnShowListener(d -> {
+            android.widget.Button posBtn = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
+            if (posBtn != null) {
+                posBtn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check, 0, 0, 0);
+                posBtn.setCompoundDrawablePadding((int) (6 * getResources().getDisplayMetrics().density));
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void mostraDialogModificaRevolut() {
+        String currentHandle = viewModel.getRevolutHandle();
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_payment_handle, null);
+        TextInputLayout til = dialogView.findViewById(R.id.til_handle);
+        TextInputEditText et = dialogView.findViewById(R.id.et_handle);
+
+        til.setHint(getString(R.string.hint_revolut_tag));
+        til.setPrefixText("revolut.me/");
+        til.setHelperText(getString(R.string.helper_revolut));
+
+        if (!TextUtils.isEmpty(currentHandle)) {
+            et.setText(currentHandle);
+            et.setSelection(currentHandle.length());
+        }
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setView(dialogView)
+                .setPositiveButton(R.string.btn_salva, (d, which) -> {
+                    String raw = et.getText() != null ? et.getText().toString().trim() : "";
+                    viewModel.setRevolutHandle(raw);
+                    Snackbar.make(binding.getRoot(), R.string.msg_revolut_salvato, Snackbar.LENGTH_SHORT).show();
+                })
+                .setNeutralButton(R.string.btn_elimina, (d, which) -> {
+                    viewModel.setRevolutHandle("");
+                    Snackbar.make(binding.getRoot(), R.string.msg_revolut_salvato, Snackbar.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .create();
+
+        dialog.setOnShowListener(d -> {
+            android.widget.Button posBtn = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
+            if (posBtn != null) {
+                posBtn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check, 0, 0, 0);
+                posBtn.setCompoundDrawablePadding((int) (6 * getResources().getDisplayMetrics().density));
+            }
+        });
+
+        dialog.show();
     }
 
     @Override

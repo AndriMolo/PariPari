@@ -1,0 +1,76 @@
+<resources>
+    <!-- Gamer / Cyberpunk Neon Palette (Obsidian & Electric Cyan/Purple) -->
+    <color name="md_theme_primary">#00E5FF</color>
+    <color name="md_theme_onPrimary">#001C26</color>
+    <color name="md_theme_primaryContainer">#003846</color>
+    <color name="md_theme_onPrimaryContainer">#99F6FF</color>
+
+    <color name="md_theme_secondary">#A855F7</color>
+    <color name="md_theme_onSecondary">#1F0538</color>
+    <color name="md_theme_secondaryContainer">#3B1454</color>
+    <color name="md_theme_onSecondaryContainer">#F3E8FF</color>
+
+    <color name="md_theme_tertiary">#FF007A</color>
+    <color name="md_theme_onTertiary">#3B001B</color>
+    <color name="md_theme_tertiaryContainer">#66003B</color>
+    <color name="md_theme_onTertiaryContainer">#FFB3DA</color>
+
+    <color name="md_theme_error">#FF2A6D</color>
+    <color name="md_theme_onError">#3A0013</color>
+    <color name="md_theme_errorContainer">#660023</color>
+    <color name="md_theme_onErrorContainer">#FFB3C7</color>
+
+    <color name="md_theme_background">#0B0E17</color>
+    <color name="md_theme_onBackground">#F0F4FF</color>
+
+    <color name="md_theme_surface">#101422</color>
+    <color name="md_theme_onSurface">#F0F4FF</color>
+
+    <color name="md_theme_surfaceVariant">#1C2337</color>
+    <color name="md_theme_onSurfaceVariant">#A3A8B8</color>
+
+    <color name="md_theme_outline">#3B4660</color>
+    <color name="md_theme_outlineVariant">#252D40</color>
+    <color name="md_theme_scrim">#000000</color>
+
+    <color name="md_theme_inverseSurface">#F0F4FF</color>
+    <color name="md_theme_inverseOnSurface">#101422</color>
+    <color name="md_theme_inversePrimary">#006878</color>
+
+    <color name="md_theme_primaryFixed">#99F6FF</color>
+    <color name="md_theme_onPrimaryFixed">#001F28</color>
+    <color name="md_theme_primaryFixedDim">#00E5FF</color>
+    <color name="md_theme_onPrimaryFixedVariant">#004F5E</color>
+
+    <color name="md_theme_secondaryFixed">#F3E8FF</color>
+    <color name="md_theme_onSecondaryFixed">#220042</color>
+    <color name="md_theme_secondaryFixedDim">#A855F7</color>
+    <color name="md_theme_onSecondaryFixedVariant">#4A1772</color>
+
+    <color name="md_theme_tertiaryFixed">#FFB3DA</color>
+    <color name="md_theme_onTertiaryFixed">#40001D</color>
+    <color name="md_theme_tertiaryFixedDim">#FF007A</color>
+    <color name="md_theme_onTertiaryFixedVariant">#7A003E</color>
+
+    <color name="md_theme_surfaceDim">#0B0E17</color>
+    <color name="md_theme_surfaceBright">#252E46</color>
+
+    <color name="md_theme_surfaceContainerLowest">#06080F</color>
+    <color name="md_theme_surfaceContainerLow">#14192B</color>
+    <color name="md_theme_surfaceContainer">#1A2136</color>
+    <color name="md_theme_surfaceContainerHigh">#212B44</color>
+    <color name="md_theme_surfaceContainerHighest">#293652</color>
+
+    <!-- Semantic Gamer Status Colors -->
+    <color name="credit_green">#00FF87</color>
+    <color name="credit_green_bg">#2000FF87</color>
+    <color name="credit_green_stroke">#00E676</color>
+
+    <color name="debt_red">#FF2A6D</color>
+    <color name="debt_red_bg">#20FF2A6D</color>
+    <color name="debt_red_stroke">#FF1744</color>
+    <color name="delete_red">#FF2A6D</color>
+
+    <color name="warning_orange">#FFB800</color>
+    <color name="warning_orange_bg">#20FFB800</color>
+</resources>

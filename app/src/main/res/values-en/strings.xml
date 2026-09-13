@@ -159,6 +159,20 @@
     <string name="msg_conferma_rimuovi_membro">Do you want to remove %s from the group?</string>
     <string name="btn_rimuovi">Remove</string>
     <string name="msg_errore_rimozione_membro">Cannot remove member while they have active expenses or balances.</string>
+    <string name="msg_errore_uscita_debiti">Cannot leave the group: you have active expenses or balances. Settle your balances before leaving.</string>
+    <string name="titolo_impossibile_eliminare_scheda">Group with pending balances</string>
+    <string name="msg_errore_eliminazione_scheda_saldi">Cannot delete or leave this group: you have unsettled expenses or balances. Settle your balances inside the group before deleting it.</string>
+    <string name="titolo_esci_gruppo">Leave group</string>
+    <string name="msg_conferma_esci_gruppo">Are you sure you want to leave this group?</string>
+    <string name="msg_conferma_esci_gruppo_debiti">Warning: you have pending expenses or balances in this group. Are you sure you want to leave anyway?</string>
+    <string name="btn_esci">Leave</string>
+    <string name="msg_sei_uscito_dal_gruppo">You left the group</string>
+    <string name="msg_sei_stato_rimosso_dal_gruppo">You were removed from the group</string>
+    <string name="msg_membro_rimosso">%s was removed from the group</string>
+    <string name="titolo_bilancio_membri">Member Balances</string>
+    <string name="titolo_pagamenti_pareggio">Settlement Payments</string>
+    <string name="label_saldo_pareggio">Settlement transfer</string>
+    <string name="simbolo_freccia">→</string>
 
     <!-- Spese & Categorie -->
     <string name="empty_spese_titolo">No expenses recorded</string>
@@ -176,9 +190,13 @@
     <string name="label_pagato_da">Paid by %s</string>
     <string name="label_divisione_equa">Split among %d people</string>
     <string name="cat_cibo">Food</string>
+    <string name="cat_spesa">Groceries</string>
     <string name="cat_trasporti">Transport</string>
     <string name="cat_alloggio">Accommodation</string>
     <string name="cat_svago">Leisure</string>
+    <string name="cat_shopping">Shopping</string>
+    <string name="cat_bar">Bar &amp; Drinks</string>
+    <string name="cat_salute">Health</string>
     <string name="cat_altro">Other</string>
 
     <!-- Esportazione (CSV & PDF) -->
@@ -226,8 +244,16 @@
     <string name="dettaglio_rinomina_partecipante">Rename member</string>
     <string name="dettaglio_elimina_partecipante">Delete member</string>
     <string name="dialog_titolo_rinomina">Rename member</string>
+    <string name="dialog_titolo_modifica_nome_profilo">Edit profile name</string>
+    <string name="dialog_titolo_modifica_mio_nome">Edit your name in the group</string>
+    <string name="msg_nome_aggiornato_successo">Name updated in all groups</string>
+    <string name="msg_permesso_negato_modifica_nome">You can only edit your own name or members\' names if you are group leader.</string>
+    <string name="msg_permesso_negato_modifica_nome_altri">You can only edit your own name.</string>
     <string name="titolo_aggiungi_membro">Add Member</string>
     <string name="hint_nome_partecipante">Name</string>
+    <string name="label_tuo_nome_nel_gruppo">Your name in the group</string>
+    <string name="label_tuo_nome_profilo">Your profile name</string>
+    <string name="btn_modifica">Edit</string>
 
     <!-- Spese -->
     <string name="spesa_formato_importo">%1$.2f %2$s</string>
@@ -261,10 +287,17 @@
 
     <!-- Toolbar e azioni -->
     <string name="action_modifica_titolo">Edit name</string>
-    <string name="action_elimina_scheda">Delete group</string>
+    <string name="action_lascia_scheda">Leave group</string>
+    <string name="dialog_titolo_lascia_scheda">Leave group</string>
+    <string name="dialog_msg_lascia_scheda">Do you want to leave this group? Your local data and quotes will be removed.</string>
+    <string name="btn_lascia">Leave</string>
 
     <!-- Dettagli spesa nell'adapter -->
     <string name="spesa_formato_dettagli">Paid by %1$s • Split among %2$d</string>
+    <string name="format_handle">"@%1$s"</string>
+    <string name="msg_errore_apertura_link">Could not open link</string>
+    <string name="title_condividi">Share</string>
+    <string name="msg_operazione_completata">Operation completed</string>
 
     <!-- Saldi Globale -->
     <string name="label_da_ricevere">To receive</string>
@@ -293,11 +326,11 @@
     <!-- Invito e Codice Gruppo -->
     <string name="action_codice_gruppo">Group code</string>
     <string name="dialog_titolo_codice_gruppo">Group Code</string>
-    <string name="dialog_desc_codice_gruppo">Share this code or direct link so others can join the group:</string>
+    <string name="dialog_desc_codice_gruppo">Share this code so others can join the group:</string>
     <string name="btn_condividi_link">Share invite</string>
     <string name="btn_copia_codice">Copy code</string>
     <string name="msg_codice_copiato">Code copied to clipboard</string>
-    <string name="msg_invito_condivisione">Join my group \"%1$s\" on PariPari!\n\n🔗 Tap the link to join directly:\nparipari://join?code=%2$s\n\nOr open the app and enter code: %2$s</string>
+    <string name="msg_invito_condivisione">Join my group \"%1$s\" on PariPari!\n\nUse the invite code: %2$s</string>
     <string name="dialog_titolo_conferma_unione">Join group</string>
     <string name="dialog_msg_conferma_unione">Do you want to join the group with code %1$s?</string>
     <string name="btn_unisciti">Join</string>
@@ -344,5 +377,54 @@
     <string name="banner_spesa_non_modificabile">⚠️ Non-editable expense: includes members who are no longer in the group.</string>
     <string name="dialog_titolo_spesa_non_modificabile">Non-editable expense</string>
     <string name="dialog_msg_spesa_membro_assente">A member who participated in this expense has left the group. This expense can no longer be edited.</string>
+
+    <!-- Payment Methods (PayPal & Revolut) -->
+    <string name="section_metodi_pagamento">Payment Methods</string>
+    <string name="label_paypal_username">PayPal.me Account</string>
+    <string name="hint_paypal_username_desc">Share a direct paypal.me/username link</string>
+    <string name="label_revolut_username">Revolut.me Account</string>
+    <string name="hint_revolut_username_desc">Share a direct revolut.me/username link</string>
+    <string name="badge_non_configurato">Not configured</string>
+    <string name="dialog_titolo_paypal">Configure PayPal.me</string>
+    <string name="dialog_desc_paypal">Enter your PayPal.me username:</string>
+    <string name="dialog_titolo_revolut">Configure Revolut.me</string>
+    <string name="dialog_desc_revolut">Enter your Revolut.me username:</string>
+    <string name="hint_paypal_tag">Handle PayPal.me</string>
+    <string name="hint_revolut_tag">Handle Revolut.me</string>
+    <string name="helper_paypal">Username only, without paypal.me/</string>
+    <string name="helper_revolut">Username only, without revolut.me/</string>
+    <string name="msg_paypal_salvato">PayPal configured successfully</string>
+    <string name="msg_revolut_salvato">Revolut configured successfully</string>
+
+    <!-- Send and Share Payment Links in Balances -->
+    <string name="titolo_salda_debito">Settle Debt</string>
+    <string name="titolo_richiedi_pagamento">Request Payment</string>
+    <string name="desc_salda_debito">You owe %1$s to %2$s.</string>
+    <string name="desc_richiedi_pagamento">%1$s owes you %2$s.</string>
+    <string name="titolo_bottom_sheet_pagamento">Settle Debt</string>
+    <string name="desc_bottom_sheet_pagamento">Share a payment link or mark as settled %1$s.</string>
+    <string name="btn_invia_link_pagamento">Send payment link</string>
+    <string name="opzione_paypal">PayPal.me Payment</string>
+    <string name="opzione_revolut">Revolut.me Payment</string>
+    <string name="btn_condividi">Share</string>
+    <string name="btn_copia_link">Copy Link</string>
+    <string name="btn_segna_saldato">✔ Mark as settled</string>
+    <string name="msg_saldo_registrato">Settlement of %1$s between %2$s and %3$s marked as paid!</string>
+    <string name="msg_link_copiato">Payment link copied to clipboard</string>
+    <string name="msg_condividi_mio_paypal">Hi %1$s! Here is my PayPal link to settle %2$s on PariPari:\n%3$s</string>
+    <string name="msg_condividi_mio_revolut">Hi %1$s! Here is my Revolut link to settle %2$s on PariPari:\n%3$s</string>
+    <string name="msg_condividi_generico">Hi %1$s! Just a reminder to settle your debt of %2$s to %3$s on PariPari.</string>
+    <string name="avviso_pagamento_non_configurato">You haven\'t configured your PayPal or Revolut links yet. Configure them in your profile to send direct links!</string>
+    <string name="avviso_creditore_non_configurato">To pay online, ask %1$s to set up their PayPal or Revolut account in their profile settings. Or pay via cash/bank transfer and tap \"Mark as settled\" above.</string>
+    <string name="btn_vai_al_profilo">Go to Profile</string>
+
+    <!-- Settlement History -->
+    <string name="btn_storico_saldi">History</string>
+    <string name="titolo_storico_saldi">Settlement History</string>
+    <string name="subtitolo_storico_saldi">List of all settled balances</string>
+    <string name="empty_storico_saldi_titolo">No settlement history</string>
+    <string name="empty_storico_saldi_desc">Paid settlements and refunds will appear here.</string>
+    <string name="badge_saldato_effettuato">✔ Settled</string>
+    <string name="msg_spesa_saldo_non_modificabile">🔒 Settlement records are generated automatically and cannot be edited.</string>
 
 </resources>

@@ -30,7 +30,7 @@
                 android:text="@string/titolo_spese"
                 android:textSize="24sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="?attr/colorOnSurface" />
 
 
         </LinearLayout>

@@ -6,7 +6,8 @@
     style="@style/Widget_PariPari_CardItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="5dp"
     app:cardCornerRadius="16dp">
 
     <LinearLayout
@@ -14,7 +15,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="14dp">
 
         <TextView
             android:id="@+id/avatar_iniziale"
@@ -25,10 +26,10 @@
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnPrimaryContainer"
             android:textStyle="bold"
-            tools:text="M" />
+            tools:text="P" />
 
         <TextView
-            android:id="@+id/nome_partecipante"
+            android:id="@+id/nome_membro"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
@@ -36,24 +37,19 @@
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface"
             android:textStyle="bold"
-            tools:text="Marco" />
+            tools:text="Paolo" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/bottone_modifica"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:contentDescription="@string/dettaglio_rinomina_partecipante"
-            app:icon="@drawable/ic_edit"
-            app:iconTint="?attr/colorPrimary" />
+        <TextView
+            android:id="@+id/importo_bilancio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:background="@drawable/bg_badge_valuta"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textStyle="bold"
+            tools:text="+25,00 EUR"
+            tools:textColor="#2E7D32" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/bottone_elimina"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:contentDescription="@string/dettaglio_elimina_partecipante"
-            app:icon="@drawable/ic_delete"
-            app:iconTint="?attr/colorError" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

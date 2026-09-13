@@ -14,7 +14,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:title="@string/spesa_modifica_titolo"
-            app:navigationIcon="@drawable/ic_arrow_back" />
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="?attr/colorOnSurface" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

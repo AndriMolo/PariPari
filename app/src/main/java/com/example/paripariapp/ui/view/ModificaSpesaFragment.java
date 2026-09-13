@@ -98,6 +98,8 @@ public class ModificaSpesaFragment extends Fragment {
         binding.toolbarModificaSpesa.setNavigationOnClickListener(v -> getParentFragmentManager().popBackStack());
         binding.campoValuta.setText(valuta != null ? valuta : getString(R.string.valuta_default));
 
+        binding.campoImporto.setFilters(new android.text.InputFilter[]{new com.example.paripariapp.util.DecimalDigitsInputFilter(2)});
+
         setupCategorieDropdown();
         setupSwitchDivisione();
         setupAzioneElimina();
@@ -106,15 +108,39 @@ public class ModificaSpesaFragment extends Fragment {
     }
 
     private void setupCategorieDropdown() {
-        String[] categorie = new String[]{
+        final String[] categorie = new String[]{
                 getString(R.string.cat_cibo),
+                getString(R.string.cat_spesa),
                 getString(R.string.cat_trasporti),
                 getString(R.string.cat_alloggio),
                 getString(R.string.cat_svago),
+                getString(R.string.cat_shopping),
+                getString(R.string.cat_bar),
+                getString(R.string.cat_salute),
                 getString(R.string.cat_altro)
         };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, categorie);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, categorie) {
+            @NonNull
+            @Override
+            public android.widget.Filter getFilter() {
+                return new android.widget.Filter() {
+                    @Override
+                    protected FilterResults performFiltering(CharSequence constraint) {
+                        FilterResults results = new FilterResults();
+                        results.values = categorie;
+                        results.count = categorie.length;
+                        return results;
+                    }
+
+                    @Override
+                    protected void publishResults(CharSequence constraint, FilterResults results) {
+                        notifyDataSetChanged();
+                    }
+                };
+            }
+        };
         binding.menuCategoria.setAdapter(adapter);
+        binding.menuCategoria.setOnClickListener(v -> binding.menuCategoria.showDropDown());
     }
 
     private void setupSwitchDivisione() {
@@ -167,12 +193,32 @@ public class ModificaSpesaFragment extends Fragment {
             if (lista == null) return;
             this.partecipanti = lista;
 
-            List<String> nomi = new ArrayList<>();
+            final List<String> nomi = new ArrayList<>();
             for (Partecipante p : lista) {
                 nomi.add(p.getNome());
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, nomi);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, nomi) {
+                @NonNull
+                @Override
+                public android.widget.Filter getFilter() {
+                    return new android.widget.Filter() {
+                        @Override
+                        protected FilterResults performFiltering(CharSequence constraint) {
+                            FilterResults results = new FilterResults();
+                            results.values = nomi;
+                            results.count = nomi.size();
+                            return results;
+                        }
+
+                        @Override
+                        protected void publishResults(CharSequence constraint, FilterResults results) {
+                            notifyDataSetChanged();
+                        }
+                    };
+                }
+            };
             binding.menuPagante.setAdapter(adapter);
+            binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
 
             caricaDatiFormSePronto();
         });
@@ -306,6 +352,9 @@ public class ModificaSpesaFragment extends Fragment {
             EditText etQuotaPagata = row.findViewById(R.id.campo_quota_pagata);
             TextView tvSaldo = row.findViewById(R.id.tv_stato_saldo);
             View quotaContainer = row.findViewById(R.id.contenitore_quota);
+
+            etQuota.setFilters(new android.text.InputFilter[]{new com.example.paripariapp.util.DecimalDigitsInputFilter(2)});
+            etQuotaPagata.setFilters(new android.text.InputFilter[]{new com.example.paripariapp.util.DecimalDigitsInputFilter(2)});
 
             tvNome.setText(p.getNome());
 

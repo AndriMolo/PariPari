@@ -108,17 +108,33 @@ public class SpeseFragment extends Fragment {
                 Scheda schedaSelezionata = adapter.getLocalList().get(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
-                    new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle(R.string.dialog_titolo_elimina_scheda)
-                            .setMessage(R.string.dialog_msg_elimina_scheda)
-                            .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
-                                viewModel.eliminaScheda(schedaSelezionata);
-                            })
-                            .setNegativeButton(R.string.btn_annulla, (dialog, which) -> {
-                                adapter.notifyItemChanged(position);
-                            })
-                            .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
-                            .show();
+                    com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+                        boolean haSaldi = viewModel.haSaldiInSospeso(schedaSelezionata.getId());
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                if (haSaldi) {
+                                    adapter.notifyItemChanged(position);
+                                    new MaterialAlertDialogBuilder(requireContext())
+                                            .setTitle(R.string.titolo_impossibile_eliminare_scheda)
+                                            .setMessage(R.string.msg_errore_eliminazione_scheda_saldi)
+                                            .setPositiveButton(android.R.string.ok, null)
+                                            .show();
+                                } else {
+                                    new MaterialAlertDialogBuilder(requireContext())
+                                            .setTitle(R.string.dialog_titolo_elimina_scheda)
+                                            .setMessage(R.string.dialog_msg_elimina_scheda)
+                                            .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
+                                                viewModel.eliminaScheda(schedaSelezionata);
+                                            })
+                                            .setNegativeButton(R.string.btn_annulla, (dialog, which) -> {
+                                                adapter.notifyItemChanged(position);
+                                            })
+                                            .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
+                                            .show();
+                                }
+                            });
+                        }
+                    });
                 }
             }
 

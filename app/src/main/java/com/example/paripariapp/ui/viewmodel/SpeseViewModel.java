@@ -45,6 +45,10 @@ public class SpeseViewModel extends AndroidViewModel {
         repository.deleteScheda(schedaId);
     }
 
+    public boolean haSaldiInSospeso(String schedaId) {
+        return repository.haSaldiInSospeso(schedaId);
+    }
+
     public void ripristinaScheda(Scheda scheda, List<Partecipante> partecipanti) {
         repository.insertScheda(scheda, partecipanti);
     }
@@ -150,7 +154,11 @@ public class SpeseViewModel extends AndroidViewModel {
     }
 
     public void uniscitiAScheda(String codice, PariPariRepository.OnJoinSchedaCallback callback) {
-        repository.uniscitiASchedaTramiteCodice(codice, callback);
+        repository.uniscitiASchedaTramiteCodice(codice, null, callback);
+    }
+
+    public void uniscitiASchedaConNome(String codice, String nomePersonalizzato, PariPariRepository.OnJoinSchedaCallback callback) {
+        repository.uniscitiASchedaTramiteCodice(codice, nomePersonalizzato, callback);
     }
 
 }

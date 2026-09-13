@@ -30,7 +30,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_spese"
+                android:src="@drawable/ic_group"
                 app:tint="?attr/colorOnPrimaryContainer"
                 android:importantForAccessibility="no" />
 
@@ -49,7 +49,7 @@
                 android:id="@+id/tv_titolo_scheda"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textStyle="bold"
                 android:maxLines="1"
                 android:ellipsize="end"
@@ -60,9 +60,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawablePadding="4dp"
-                android:textColor="#757575"
-                android:textSize="13sp"
-                />
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginTop="2dp"
+                tools:text="3 partecipanti" />
 
         </LinearLayout>
 
@@ -72,9 +73,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_badge_valuta"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
             android:textStyle="bold"
             android:textColor="?attr/colorPrimary"
             android:layout_marginEnd="8dp"
@@ -85,7 +86,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_arrow_right"
-            app:tint="?android:attr/textColorSecondary"
+            app:tint="?attr/colorOutline"
             android:importantForAccessibility="no" />
 
     </LinearLayout>

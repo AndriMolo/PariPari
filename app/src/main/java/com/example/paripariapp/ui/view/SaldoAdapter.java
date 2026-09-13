@@ -17,6 +17,16 @@ import java.util.Objects;
 
 public class SaldoAdapter extends ListAdapter<TrasferimentoSaldo, SaldoAdapter.SaldoViewHolder> {
 
+    public interface OnItemClickListener {
+        void onItemClick(TrasferimentoSaldo item);
+    }
+
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
     public SaldoAdapter() {
         super(DIFF_CALLBACK);
     }
@@ -46,7 +56,7 @@ public class SaldoAdapter extends ListAdapter<TrasferimentoSaldo, SaldoAdapter.S
 
     @Override
     public void onBindViewHolder(@NonNull SaldoViewHolder holder, int position) {
-        holder.bind(getItem(position));
+        holder.bind(getItem(position), listener);
     }
 
     static class SaldoViewHolder extends RecyclerView.ViewHolder {
@@ -57,11 +67,15 @@ public class SaldoAdapter extends ListAdapter<TrasferimentoSaldo, SaldoAdapter.S
             this.binding = binding;
         }
 
-        public void bind(TrasferimentoSaldo item) {
+        public void bind(TrasferimentoSaldo item, OnItemClickListener listener) {
             Context ctx = binding.getRoot().getContext();
             binding.tvDebitore.setText(item.getDaPartecipanteNome());
             binding.tvCreditore.setText(item.getAPartecipanteNome());
             binding.tvImporto.setText(ctx.getString(R.string.saldi_formato_importo, item.getImporto(), item.getValuta()));
+
+            binding.getRoot().setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(item);
+            });
         }
     }
 }

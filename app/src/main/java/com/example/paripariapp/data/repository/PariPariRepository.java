@@ -46,6 +46,7 @@ public class PariPariRepository {
     private static final String TAG = "PariPariRepository";
     private static volatile PariPariRepository INSTANCE;
 
+    private final Application application;
     private final SchedaDao schedaDao;
     private final PartecipanteDao partecipanteDao;
     private final SpesaDao spesaDao;
@@ -60,6 +61,7 @@ public class PariPariRepository {
     private boolean saldiSourcesInitialized = false;
 
     private PariPariRepository(Application application) {
+        this.application = application;
         AppDatabase db = AppDatabase.getInstance(application);
         schedaDao = db.schedaDao();
         partecipanteDao = db.partecipanteDao();
@@ -152,6 +154,9 @@ public class PariPariRepository {
 
             if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
                 FirebaseUser currentUser = auth.getCurrentUser();
+                List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
+                String myPartId = Partecipante.findCurrentUserId(localParts, currentUser);
+
                 firestore.collection("groups").document(schedaId)
                         .collection("participants")
                         .get()
@@ -162,15 +167,22 @@ public class PariPariRepository {
                                         .addOnFailureListener(e -> Log.w(TAG, "Errore eliminazione gruppo remoto: " + e.getMessage()));
                             } else {
                                 // Il gruppo è condiviso: dissociati rimuovendo solo il proprio documento partecipante
+                                DocumentSnapshot targetDoc = null;
                                 for (DocumentSnapshot doc : snapshot.getDocuments()) {
                                     String email = doc.getString("email");
                                     String nome = doc.getString("nome");
-                                    boolean isCurrentUser = (currentUser.getEmail() != null && currentUser.getEmail().equalsIgnoreCase(email))
-                                            || (nome != null && (nome.trim().equalsIgnoreCase("io") || nome.trim().equalsIgnoreCase("me")));
-                                    if (isCurrentUser) {
-                                        doc.getReference().delete();
+                                    String userId = doc.getString("userId");
+                                    if ((myPartId != null && myPartId.equals(doc.getId()))
+                                            || (userId != null && userId.equals(currentUser.getUid()))
+                                            || (currentUser.getEmail() != null && currentUser.getEmail().equalsIgnoreCase(email))
+                                            || (nome != null && (nome.trim().equalsIgnoreCase("io") || nome.trim().equalsIgnoreCase("me")))) {
+                                        targetDoc = doc;
                                         break;
                                     }
+                                }
+
+                                if (targetDoc != null) {
+                                    targetDoc.getReference().delete();
                                 }
 
                                 // Se l'utente era registrato come creatoreId, riassegna per evitare che whereEqualTo lo risincronizzi
@@ -225,8 +237,161 @@ public class PariPariRepository {
             partecipanteDao.deleteById(partecipanteId);
 
             if (p != null && auth.getCurrentUser() != null && networkMonitor.isConnected()) {
-                firestore.collection("groups").document(p.getSchedaId())
-                        .collection("participants").document(partecipanteId).delete();
+                String schedaId = p.getSchedaId();
+                DocumentReference pRef = firestore.collection("groups").document(schedaId)
+                        .collection("participants").document(partecipanteId);
+
+                pRef.delete().addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
+                    firestore.collection("groups").document(schedaId).get()
+                            .addOnSuccessListener(AppDatabase.databaseWriteExecutor, groupDoc -> {
+                                if (groupDoc != null && groupDoc.exists()) {
+                                    String creatoreId = groupDoc.getString("creatoreId");
+                                    FirebaseUser currentUser = auth.getCurrentUser();
+                                    boolean eraCreatore = (creatoreId != null && currentUser != null &&
+                                            (creatoreId.equals(currentUser.getUid()) || creatoreId.equals(partecipanteId)));
+
+                                    if (eraCreatore) {
+                                        firestore.collection("groups").document(schedaId)
+                                                .collection("participants").get()
+                                                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
+                                                    if (pSnaps == null || pSnaps.isEmpty()) {
+                                                        firestore.collection("groups").document(schedaId).delete();
+                                                    } else {
+                                                        DocumentSnapshot nextP = pSnaps.getDocuments().get(0);
+                                                        String newCreatore = nextP.getString("userId");
+                                                        if (newCreatore == null || newCreatore.isEmpty()) {
+                                                            newCreatore = nextP.getId();
+                                                        }
+                                                        firestore.collection("groups").document(schedaId)
+                                                                .update("creatoreId", newCreatore);
+                                                    }
+                                                });
+                                    }
+                                }
+                            });
+                });
+            }
+        });
+    }
+
+    public void deleteSchedaLocale(String schedaId) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            spesaDao.deleteQuoteBySchedaId(schedaId);
+            spesaDao.deleteBySchedaId(schedaId);
+            partecipanteDao.deleteBySchedaId(schedaId);
+            schedaDao.deleteById(schedaId);
+        });
+    }
+
+    public boolean haSaldiInSospeso(String schedaId) {
+        if (schedaId == null) return false;
+        List<Partecipante> parti = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
+        List<Spesa> spese = spesaDao.getSpeseBySchedaSync(schedaId);
+        List<SpesaPartecipante> quote = spesaDao.getTutteQuoteBySchedaSync(schedaId);
+        if (parti == null || parti.isEmpty() || spese == null || spese.isEmpty()) {
+            return false;
+        }
+
+        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, "EUR");
+        FirebaseUser currentUser = auth.getCurrentUser();
+        String mioId = Partecipante.findCurrentUserId(parti, currentUser);
+        if (mioId != null && trasferimenti != null) {
+            for (TrasferimentoSaldo t : trasferimenti) {
+                if ((t.getDaPartecipanteId().equals(mioId) || t.getAPartecipanteId().equals(mioId)) && t.getImporto() > 0.001) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void aggiornaNomePartecipante(String partecipanteId, String nuovoNome) {
+        if (partecipanteId == null || nuovoNome == null || nuovoNome.trim().isEmpty()) return;
+        final String nomePulito = nuovoNome.trim();
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
+            if (p != null) {
+                p.setNome(nomePulito);
+                p.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                partecipanteDao.update(p);
+
+                if (networkMonitor.isConnected() && auth.getCurrentUser() != null) {
+                    uploadPartecipante(p);
+                }
+            }
+        });
+    }
+
+    public void aggiornaNomeUtenteInTuttiIGruppi(String nuovoNome) {
+        if (nuovoNome == null || nuovoNome.trim().isEmpty()) return;
+        final String nomePulito = nuovoNome.trim();
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            FirebaseUser currentUser = auth.getCurrentUser();
+            List<Scheda> schede = schedaDao.getAllSchedeSync();
+            if (schede != null) {
+                for (Scheda s : schede) {
+                    List<Partecipante> parti = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
+                    if (parti != null) {
+                        for (Partecipante p : parti) {
+                            if (Partecipante.isCurrentUserParticipant(p, currentUser)) {
+                                p.setNome(nomePulito);
+                                p.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                                partecipanteDao.update(p);
+                                if (networkMonitor.isConnected() && currentUser != null) {
+                                    uploadPartecipante(p);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public void esciDalGruppo(String schedaId, String partecipanteId) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            detachSubcollectionListeners(schedaId);
+
+            spesaDao.deleteQuoteBySchedaId(schedaId);
+            spesaDao.deleteBySchedaId(schedaId);
+            partecipanteDao.deleteBySchedaId(schedaId);
+            schedaDao.deleteById(schedaId);
+
+            if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+                DocumentReference pRef = firestore.collection("groups").document(schedaId)
+                        .collection("participants").document(partecipanteId);
+
+                pRef.delete().addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
+                    firestore.collection("groups").document(schedaId).get()
+                            .addOnSuccessListener(AppDatabase.databaseWriteExecutor, groupDoc -> {
+                                if (groupDoc != null && groupDoc.exists()) {
+                                    String creatoreId = groupDoc.getString("creatoreId");
+                                    FirebaseUser currentUser = auth.getCurrentUser();
+                                    boolean eraCreatore = (creatoreId != null && currentUser != null &&
+                                            (creatoreId.equals(currentUser.getUid()) || creatoreId.equals(partecipanteId)));
+
+                                    if (eraCreatore) {
+                                        firestore.collection("groups").document(schedaId)
+                                                .collection("participants").get()
+                                                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
+                                                    if (pSnaps == null || pSnaps.isEmpty()) {
+                                                        firestore.collection("groups").document(schedaId).delete();
+                                                    } else {
+                                                        DocumentSnapshot nextP = pSnaps.getDocuments().get(0);
+                                                        String newCreatore = nextP.getString("userId");
+                                                        if (newCreatore == null || newCreatore.isEmpty()) {
+                                                            newCreatore = nextP.getId();
+                                                        }
+                                                        firestore.collection("groups").document(schedaId)
+                                                                .update("creatoreId", newCreatore);
+                                                    }
+                                                });
+                                    }
+                                }
+                            });
+                });
             }
         });
     }
@@ -341,10 +506,10 @@ public class PariPariRepository {
                     for (TrasferimentoSaldo t : trasferimenti) {
                         if (t.getDaId().equals(mioId)) {
                             totaleDare += t.getImporto();
-                            bilanci.add(new BilancioPersonaItem(t.getANome(), titoloScheda, -t.getImporto(), valuta));
+                            bilanci.add(new BilancioPersonaItem(t.getANome(), titoloScheda, -t.getImporto(), valuta, idScheda, t));
                         } else if (t.getAId().equals(mioId)) {
                             totaleRicevere += t.getImporto();
-                            bilanci.add(new BilancioPersonaItem(t.getDaNome(), titoloScheda, t.getImporto(), valuta));
+                            bilanci.add(new BilancioPersonaItem(t.getDaNome(), titoloScheda, t.getImporto(), valuta, idScheda, t));
                         }
                     }
                 }
@@ -449,12 +614,61 @@ public class PariPariRepository {
         data.put("nome", p.getNome());
         data.put("email", p.getEmail());
 
+        FirebaseUser currentUser = auth.getCurrentUser();
+        List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(p.getSchedaId());
+        String myPartId = Partecipante.findCurrentUserId(localParts, currentUser);
+        boolean isMe = Partecipante.isCurrentUserParticipant(p, currentUser) || (myPartId != null && myPartId.equals(p.getId()));
+
+        UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(application);
+        if (isMe) {
+            data.put("userId", currentUser.getUid());
+            String paypal = prefs.getPaypalHandle();
+            String revolut = prefs.getRevolutHandle();
+            if (paypal != null && !paypal.trim().isEmpty()) {
+                data.put("paypalHandle", paypal);
+                p.setPaypalHandle(paypal);
+            }
+            if (revolut != null && !revolut.trim().isEmpty()) {
+                data.put("revolutHandle", revolut);
+                p.setRevolutHandle(revolut);
+            }
+        } else {
+            if (p.getPaypalHandle() != null) data.put("paypalHandle", p.getPaypalHandle());
+            if (p.getRevolutHandle() != null) data.put("revolutHandle", p.getRevolutHandle());
+        }
+
         firestore.collection("groups").document(p.getSchedaId())
                 .collection("participants").document(p.getId())
                 .set(data)
                 .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid ->
                         partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED))
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento partecipante fallito: " + e.getMessage()));
+    }
+
+    public void aggiornaPaymentHandlesInTuttiIGruppi(String paypalHandle, String revolutHandle) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            FirebaseUser currentUser = auth.getCurrentUser();
+            List<Scheda> schede = schedaDao.getAllSchedeSync();
+            if (schede != null) {
+                for (Scheda s : schede) {
+                    List<Partecipante> parti = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
+                    if (parti != null) {
+                        String myPartId = Partecipante.findCurrentUserId(parti, currentUser);
+                        for (Partecipante p : parti) {
+                            if (p.getId().equals(myPartId) || Partecipante.isCurrentUserParticipant(p, currentUser)) {
+                                p.setPaypalHandle(paypalHandle);
+                                p.setRevolutHandle(revolutHandle);
+                                p.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                                partecipanteDao.update(p);
+                                if (networkMonitor.isConnected() && currentUser != null) {
+                                    uploadPartecipante(p);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void uploadSpesaConQuote(Spesa spesa, @Nullable List<SpesaPartecipante> quote) {
@@ -605,13 +819,21 @@ public class PariPariRepository {
                             String partId = doc.getId();
                             if (dc.getType() == DocumentChange.Type.REMOVED) {
                                 Log.w(TAG, "Partecipante rimosso da remoto: " + partId);
+                                Partecipante pLocale = partecipanteDao.getPartecipanteById(partId);
                                 spesaDao.deleteQuoteByPartecipanteId(partId);
                                 partecipanteDao.deleteById(partId);
+
+                                FirebaseUser currentUser = auth.getCurrentUser();
+                                if (pLocale != null && Partecipante.isCurrentUserParticipant(pLocale, currentUser)) {
+                                    deleteSchedaLocale(groupId);
+                                }
                             } else {
                                 String nome = doc.getString("nome");
                                 String email = doc.getString("email");
+                                String paypal = doc.getString("paypalHandle");
+                                String revolut = doc.getString("revolutHandle");
                                 if (nome != null) {
-                                    Partecipante p = new Partecipante(partId, groupId, nome, email, SyncStatus.SYNCED);
+                                    Partecipante p = new Partecipante(partId, groupId, nome, email, SyncStatus.SYNCED, paypal, revolut);
                                     try {
                                         partecipanteDao.insert(p);
                                     } catch (Exception e) {
@@ -688,6 +910,39 @@ public class PariPariRepository {
                     });
                 });
         groupSubListeners.put(groupId + "_expenses", eReg);
+
+        // 3. LISTENER DOCUMENTO GRUPPO (titolo, creatoreId, codiceInvito)
+        if (!groupSubListeners.containsKey(groupId + "_doc")) {
+            ListenerRegistration gReg = firestore.collection("groups").document(groupId)
+                    .addSnapshotListener((snapshot, error) -> {
+                        if (error != null || snapshot == null || !snapshot.exists()) return;
+                        String titolo = snapshot.getString("titolo");
+                        String creatoreId = snapshot.getString("creatoreId");
+                        String codiceInvito = snapshot.getString("codiceInvito");
+                        AppDatabase.databaseWriteExecutor.execute(() -> {
+                            Scheda s = schedaDao.getSchedaById(groupId);
+                            if (s != null) {
+                                boolean changed = false;
+                                if (creatoreId != null && !creatoreId.equals(s.getCreatoreId())) {
+                                    s.setCreatoreId(creatoreId);
+                                    changed = true;
+                                }
+                                if (titolo != null && !titolo.equals(s.getTitolo())) {
+                                    s.setTitolo(titolo);
+                                    changed = true;
+                                }
+                                if (codiceInvito != null && !codiceInvito.equals(s.getCodiceInvito())) {
+                                    s.setCodiceInvito(codiceInvito);
+                                    changed = true;
+                                }
+                                if (changed) {
+                                    schedaDao.update(s);
+                                }
+                            }
+                        });
+                    });
+            groupSubListeners.put(groupId + "_doc", gReg);
+        }
     }
 
     private void detachSubcollectionListeners(String groupId) {
@@ -696,6 +951,9 @@ public class PariPariRepository {
 
         ListenerRegistration eReg = groupSubListeners.remove(groupId + "_expenses");
         if (eReg != null) eReg.remove();
+
+        ListenerRegistration gReg = groupSubListeners.remove(groupId + "_doc");
+        if (gReg != null) gReg.remove();
     }
 
     public synchronized void stopRealtimeSync() {
@@ -764,6 +1022,10 @@ public class PariPariRepository {
     }
 
     public void uniscitiASchedaTramiteCodice(String codice, OnJoinSchedaCallback callback) {
+        uniscitiASchedaTramiteCodice(codice, null, callback);
+    }
+
+    public void uniscitiASchedaTramiteCodice(String codice, @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
         String cleanCode = CodiceInvitoUtil.normalizzaCodice(codice);
         if (cleanCode.isEmpty()) {
@@ -794,12 +1056,12 @@ public class PariPariRepository {
             firestore.collection("groups").whereEqualTo("codiceInvito", cleanCode).limit(1).get()
                     .addOnSuccessListener(AppDatabase.databaseWriteExecutor, querySnapshot -> {
                         if (querySnapshot != null && !querySnapshot.isEmpty()) {
-                            elaboraJoinGruppo(querySnapshot.getDocuments().get(0), cleanCode, callback, mainHandler);
+                            elaboraJoinGruppo(querySnapshot.getDocuments().get(0), cleanCode, nomePersonalizzato, callback, mainHandler);
                         } else {
                             firestore.collection("groups").document(cleanCode).get()
                                     .addOnSuccessListener(AppDatabase.databaseWriteExecutor, docSnapshot -> {
                                         if (docSnapshot != null && docSnapshot.exists()) {
-                                            elaboraJoinGruppo(docSnapshot, cleanCode, callback, mainHandler);
+                                            elaboraJoinGruppo(docSnapshot, cleanCode, nomePersonalizzato, callback, mainHandler);
                                         } else {
                                             mainHandler.post(() -> callback.onError("Nessun gruppo trovato con il codice inserito"));
                                         }
@@ -815,7 +1077,7 @@ public class PariPariRepository {
         });
     }
 
-    private void elaboraJoinGruppo(DocumentSnapshot groupDoc, String cleanCode, OnJoinSchedaCallback callback, Handler mainHandler) {
+    private void elaboraJoinGruppo(DocumentSnapshot groupDoc, String cleanCode, @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback, Handler mainHandler) {
         String groupId = groupDoc.getId();
         String titolo = groupDoc.getString("titolo");
         String desc = groupDoc.getString("descrizione");
@@ -844,8 +1106,10 @@ public class PariPariRepository {
         FirebaseUser currentUser = auth.getCurrentUser();
         String currentEmail = currentUser != null ? currentUser.getEmail() : null;
         String currentUid = currentUser != null ? currentUser.getUid() : null;
-        String currentNome = (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty())
-                ? currentUser.getDisplayName() : "Io";
+        String currentNome = (nomePersonalizzato != null && !nomePersonalizzato.trim().isEmpty())
+                ? nomePersonalizzato.trim()
+                : ((currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty())
+                ? currentUser.getDisplayName() : "Io");
 
         groupDoc.getReference().collection("participants").get()
                 .addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
@@ -856,8 +1120,10 @@ public class PariPariRepository {
                             String pId = pDoc.getId();
                             String pNome = pDoc.getString("nome");
                             String pEmail = pDoc.getString("email");
+                            String paypal = pDoc.getString("paypalHandle");
+                            String revolut = pDoc.getString("revolutHandle");
                             if (pNome != null) {
-                                parts.add(new Partecipante(pId, groupId, pNome, pEmail, SyncStatus.SYNCED));
+                                parts.add(new Partecipante(pId, groupId, pNome, pEmail, SyncStatus.SYNCED, paypal, revolut));
                                 if ((currentEmail != null && currentEmail.equalsIgnoreCase(pEmail)) ||
                                     (currentUid != null && currentUid.equals(pId))) {
                                     giaPresente = true;
@@ -870,12 +1136,15 @@ public class PariPariRepository {
                     }
 
                     if (!giaPresente && currentUser != null) {
+                        UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(application);
                         Partecipante me = new Partecipante(
                                 UUID.randomUUID().toString(),
                                 groupId,
                                 currentNome,
                                 currentEmail,
-                                SyncStatus.PENDING_INSERT
+                                SyncStatus.PENDING_INSERT,
+                                prefs.getPaypalHandle(),
+                                prefs.getRevolutHandle()
                         );
                         partecipanteDao.insert(me);
                         uploadPartecipante(me);
