@@ -1,5 +1,6 @@
 package com.example.paripariapp.ui.view;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -7,9 +8,11 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -36,6 +39,7 @@ public class AccountGuestFragment extends Fragment {
 
     // true = registrazione (con Nome), false = accesso (solo Email e Password)
     private boolean isRegisterMode = true;
+    private OnBackPressedCallback backCallback;
 
     @Nullable
     @Override
@@ -51,9 +55,20 @@ public class AccountGuestFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
 
+        setupBackPressHandler();
         setupObservers();
         setupListeners();
         updateFormModeUI();
+    }
+
+    private void setupBackPressHandler() {
+        backCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                chiudiFormAuth();
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backCallback);
     }
 
     private void setupObservers() {
@@ -74,6 +89,7 @@ public class AccountGuestFragment extends Fragment {
             binding.progressBarAuth.setVisibility(isLoading ? View.VISIBLE : View.GONE);
             binding.btnSubmitAuth.setEnabled(!isLoading);
             binding.btnSwitchAuthMode.setEnabled(!isLoading);
+            binding.btnChiudiAuth.setEnabled(!isLoading);
         });
 
         // Messaggi di errore
@@ -88,7 +104,7 @@ public class AccountGuestFragment extends Fragment {
         viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), msg -> {
             if (!TextUtils.isEmpty(msg) && binding != null) {
                 AppSnackbar.show(binding.getRoot(), msg);
-                pulisciCampi();
+                chiudiFormAuth();
                 viewModel.clearSuccessMessage();
             }
         });
@@ -98,7 +114,14 @@ public class AccountGuestFragment extends Fragment {
         // Modifica nome ospite
         binding.cardNomeOspite.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
 
-        // Toggle Registrati / Accedi
+        // Apertura form da pulsanti iniziali
+        binding.btnMostraRegistrazione.setOnClickListener(v -> apriFormAuth(true));
+        binding.btnMostraLogin.setOnClickListener(v -> apriFormAuth(false));
+
+        // Chiusura form
+        binding.btnChiudiAuth.setOnClickListener(v -> chiudiFormAuth());
+
+        // Toggle Registrati / Accedi all'interno del form
         binding.btnSwitchAuthMode.setOnClickListener(v -> {
             isRegisterMode = !isRegisterMode;
             updateFormModeUI();
@@ -126,14 +149,54 @@ public class AccountGuestFragment extends Fragment {
         });
     }
 
+    private void apriFormAuth(boolean registerMode) {
+        if (binding == null) return;
+        isRegisterMode = registerMode;
+        updateFormModeUI();
+        binding.containerAuthButtons.setVisibility(View.GONE);
+        binding.cardAuthForm.setVisibility(View.VISIBLE);
+        if (backCallback != null) {
+            backCallback.setEnabled(true);
+        }
+        if (isRegisterMode && binding.etNome != null) {
+            binding.etNome.requestFocus();
+        } else if (binding.etEmail != null) {
+            binding.etEmail.requestFocus();
+        }
+    }
+
+    private void chiudiFormAuth() {
+        if (binding == null) return;
+        nascondiTastiera();
+        binding.cardAuthForm.setVisibility(View.GONE);
+        binding.containerAuthButtons.setVisibility(View.VISIBLE);
+        if (backCallback != null) {
+            backCallback.setEnabled(false);
+        }
+        pulisciCampi();
+    }
+
+    private void nascondiTastiera() {
+        if (getActivity() == null) return;
+        View currentFocus = getActivity().getCurrentFocus();
+        if (currentFocus != null) {
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+            }
+        }
+    }
+
     private void updateFormModeUI() {
         if (binding == null) return;
         if (isRegisterMode) {
+            binding.tvTitoloFormAuth.setText(R.string.btn_crea_account);
             binding.tilNome.setVisibility(View.VISIBLE);
             binding.tvPasswordDimenticata.setVisibility(View.GONE);
             binding.btnSubmitAuth.setText(R.string.btn_crea_account);
             binding.btnSwitchAuthMode.setText(R.string.switch_to_login);
         } else {
+            binding.tvTitoloFormAuth.setText(R.string.btn_accedi);
             binding.tilNome.setVisibility(View.GONE);
             binding.tvPasswordDimenticata.setVisibility(View.VISIBLE);
             binding.btnSubmitAuth.setText(R.string.btn_accedi);
