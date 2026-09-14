@@ -82,14 +82,12 @@ public class AccountProfileFragment extends Fragment {
                 binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.credit_green)));
                 binding.tvBadgeEmailTesto.setText(R.string.badge_verificata);
                 binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.credit_green));
-                binding.tvDescVerificaEmail.setText(R.string.desc_email_verificata);
             } else {
                 binding.cardBadgeEmail.setCardBackgroundColor(ContextCompat.getColor(context, R.color.warning_orange_bg));
                 binding.ivBadgeEmailIcon.setImageResource(R.drawable.ic_warning_amber);
                 binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.warning_orange)));
                 binding.tvBadgeEmailTesto.setText(R.string.badge_non_verificata);
                 binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.warning_orange));
-                binding.tvDescVerificaEmail.setText(R.string.desc_email_non_verificata);
                 if (isResumed()) {
                     viewModel.startEmailVerificationPolling();
                 }

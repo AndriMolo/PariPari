@@ -44,29 +44,14 @@
                 android:paddingHorizontal="4dp"
                 android:layout_marginBottom="4dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_valuta_predefinita"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hint_valuta_predefinita_desc"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
+                    android:text="@string/label_valuta_predefinita"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
 
                 <!-- Pillola con valuta corrente e icona dropdown -->
                 <LinearLayout
@@ -112,31 +97,16 @@
                 android:focusable="true"
                 android:paddingVertical="14dp"
                 android:paddingHorizontal="4dp"
-                android:layout_marginBottom="28dp">
+                android:layout_marginBottom="4dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_lingua_app"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hint_lingua_app_desc"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
+                    android:text="@string/label_lingua_app"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
 
                 <!-- Pillola con lingua corrente e icona dropdown -->
                 <LinearLayout
@@ -184,29 +154,14 @@
                 android:paddingHorizontal="4dp"
                 android:layout_marginBottom="12dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_tema_app"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hint_tema_app_desc"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
+                    android:text="@string/label_tema_app"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
 
                 <!-- Pillola con tema corrente e icona dropdown -->
                 <LinearLayout
@@ -270,29 +225,14 @@
                 android:paddingHorizontal="4dp"
                 android:layout_marginBottom="4dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_paypal_username"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hint_paypal_username_desc"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
+                    android:text="@string/label_paypal_username"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -339,29 +279,14 @@
                 android:paddingHorizontal="4dp"
                 android:layout_marginBottom="28dp">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_revolut_username"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hint_revolut_username_desc"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
+                    android:text="@string/label_revolut_username"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
