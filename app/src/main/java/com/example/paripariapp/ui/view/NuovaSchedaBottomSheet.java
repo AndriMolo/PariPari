@@ -72,48 +72,16 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
     }
 
     /**
-     * Inserisce il chip predefinito "Nome Utente (io)", cliccabile per personalizzare il proprio nome per questo nuovo gruppo.
+     * Inserisce il chip predefinito "Nome Utente (io)". Non modificabile alla creazione del gruppo.
      */
     private void setupInitialChip() {
         Chip chipIo = new Chip(requireContext());
         chipIo.setText(getNomeCreatoreFormat());
         chipIo.setCheckable(false);
-        chipIo.setClickable(true);
+        chipIo.setClickable(false);
         chipIo.setCloseIconVisible(false);
 
-        chipIo.setOnClickListener(v -> mostraDialogModificaMioNomeInNuovaScheda(chipIo));
-
         binding.chipGroupPartecipanti.addView(chipIo);
-    }
-
-    private void mostraDialogModificaMioNomeInNuovaScheda(Chip chipIo) {
-        String currentText = chipIo.getText().toString();
-        String currentClean = currentText.replace(" (io)", "").trim();
-
-        android.widget.EditText input = new android.widget.EditText(requireContext());
-        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        input.setHint(R.string.hint_nome_partecipante);
-        input.setText(currentClean);
-        if (!currentClean.isEmpty()) {
-            input.setSelection(currentClean.length());
-        }
-
-        android.widget.FrameLayout container = new android.widget.FrameLayout(requireContext());
-        int padding = (int) (16 * getResources().getDisplayMetrics().density);
-        container.setPadding(padding, padding / 2, padding, 0);
-        container.addView(input);
-
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.dialog_titolo_modifica_mio_nome)
-                .setView(container)
-                .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
-                    String nuovoNome = input.getText().toString().trim();
-                    if (!nuovoNome.isEmpty()) {
-                        chipIo.setText(nuovoNome + " (io)");
-                    }
-                })
-                .setNegativeButton(R.string.btn_annulla, null)
-                .show();
     }
 
     private void aggiornaValutaUI() {
@@ -208,7 +176,15 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         for (int i = 0; i < count; i++) {
             View child = binding.chipGroupPartecipanti.getChildAt(i);
             if (child instanceof Chip) {
-                nomiPartecipanti.add(((Chip) child).getText().toString().trim());
+                String nome = ((Chip) child).getText().toString().trim();
+                if (nome.toLowerCase().endsWith(" (io)")) {
+                    nome = nome.substring(0, nome.length() - 5).trim();
+                } else if (nome.toLowerCase().endsWith(" (me)")) {
+                    nome = nome.substring(0, nome.length() - 5).trim();
+                }
+                if (!TextUtils.isEmpty(nome)) {
+                    nomiPartecipanti.add(nome);
+                }
             }
         }
 

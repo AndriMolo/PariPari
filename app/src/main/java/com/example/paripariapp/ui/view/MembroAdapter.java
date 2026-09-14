@@ -1,8 +1,11 @@
 package com.example.paripariapp.ui.view;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,6 +13,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.databinding.ItemMembroGestioneBinding;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,7 +25,7 @@ import java.util.Objects;
 
 /**
  * Adapter per la gestione dei partecipanti di una scheda.
- * Utilizza ListAdapter con DiffUtil e ViewBinding per massimizzare le performance.
+ * Supporta la modifica inline del nome del membro senza aprire schede esterne o finestre di dialogo.
  */
 public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.MembroViewHolder> {
 
@@ -40,17 +44,18 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     };
 
     private OnEliminaClickListener onEliminaClickListener;
-    private OnModificaClickListener onModificaClickListener;
+    private OnNomeModificatoListener onNomeModificatoListener;
     private boolean isCapogruppo = true;
     private FirebaseUser currentUser;
     private String currentMyId;
+    private String editingParticipantId = null;
 
     public interface OnEliminaClickListener {
         void onEliminaClick(Partecipante partecipante);
     }
 
-    public interface OnModificaClickListener {
-        void onModificaClick(Partecipante partecipante);
+    public interface OnNomeModificatoListener {
+        void onNomeModificato(Partecipante partecipante, String nuovoNome);
     }
 
     public MembroAdapter() {
@@ -61,8 +66,8 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         this.onEliminaClickListener = listener;
     }
 
-    public void setOnModificaClickListener(OnModificaClickListener listener) {
-        this.onModificaClickListener = listener;
+    public void setOnNomeModificatoListener(OnNomeModificatoListener listener) {
+        this.onNomeModificatoListener = listener;
     }
 
     public void setCapogruppo(boolean capogruppo) {
@@ -76,6 +81,18 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     public void submitList(@Nullable List<Partecipante> list) {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         currentMyId = Partecipante.findCurrentUserId(list, currentUser);
+        if (editingParticipantId != null && list != null) {
+            boolean found = false;
+            for (Partecipante p : list) {
+                if (Objects.equals(p.getId(), editingParticipantId)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                editingParticipantId = null;
+            }
+        }
         super.submitList(list != null ? new ArrayList<>(list) : null);
     }
 
@@ -95,28 +112,111 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         boolean isMe = (currentMyId != null && currentMyId.equals(p.getId())) ||
                 Partecipante.isCurrentUserParticipant(p, currentUser);
 
-        String nomeDisplay = p.getNome();
-        if (isMe && !nomeDisplay.toLowerCase().endsWith("(io)") && !nomeDisplay.toLowerCase().endsWith("(me)")) {
-            nomeDisplay = nomeDisplay + " (io)";
-        }
-        holder.binding.nomePartecipante.setText(nomeDisplay);
-
         String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase() : "?";
         holder.binding.avatarIniziale.setText(iniziale);
 
-        holder.binding.bottoneModifica.setVisibility(isMe ? View.VISIBLE : View.GONE);
-        holder.binding.bottoneModifica.setOnClickListener(v -> {
-            if (onModificaClickListener != null) {
-                onModificaClickListener.onModificaClick(p);
-            }
-        });
+        boolean isEditing = Objects.equals(p.getId(), editingParticipantId);
 
-        holder.binding.bottoneElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
-        holder.binding.bottoneElimina.setOnClickListener(v -> {
-            if (onEliminaClickListener != null) {
-                onEliminaClickListener.onEliminaClick(p);
+        if (isEditing) {
+            // Modalità modifica inline
+            holder.binding.nomePartecipante.setVisibility(View.GONE);
+            holder.binding.bottoneModifica.setVisibility(View.GONE);
+            holder.binding.bottoneElimina.setVisibility(View.GONE);
+
+            holder.binding.tilModificaInline.setVisibility(View.VISIBLE);
+            holder.binding.tilModificaInline.setError(null);
+            holder.binding.bottoneSalvaInline.setVisibility(View.VISIBLE);
+            holder.binding.bottoneAnnullaInline.setVisibility(View.VISIBLE);
+
+            String nomeClean = p.getNome() != null ? p.getNome().trim() : "";
+            if (nomeClean.toLowerCase().endsWith(" (io)")) {
+                nomeClean = nomeClean.substring(0, nomeClean.length() - " (io)".length()).trim();
+            } else if (nomeClean.toLowerCase().endsWith(" (me)")) {
+                nomeClean = nomeClean.substring(0, nomeClean.length() - " (me)".length()).trim();
             }
-        });
+            holder.binding.etModificaInline.setText(nomeClean);
+            holder.binding.etModificaInline.setSelection(nomeClean.length());
+            holder.binding.etModificaInline.requestFocus();
+            holder.binding.etModificaInline.post(() -> showKeyboard(holder.binding.etModificaInline));
+
+            Runnable salvaAzione = () -> {
+                String nuovoNome = holder.binding.etModificaInline.getText() != null
+                        ? holder.binding.etModificaInline.getText().toString().trim()
+                        : "";
+                if (nuovoNome.isEmpty()) {
+                    holder.binding.tilModificaInline.setError(
+                            holder.binding.getRoot().getContext().getString(R.string.error_nome_obbligatorio));
+                    return;
+                }
+                holder.binding.tilModificaInline.setError(null);
+                hideKeyboard(holder.binding.etModificaInline);
+                editingParticipantId = null;
+                notifyDataSetChanged();
+
+                if (onNomeModificatoListener != null && !nuovoNome.equals(p.getNome())) {
+                    onNomeModificatoListener.onNomeModificato(p, nuovoNome);
+                }
+            };
+
+            holder.binding.bottoneSalvaInline.setOnClickListener(v -> salvaAzione.run());
+
+            holder.binding.etModificaInline.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    salvaAzione.run();
+                    return true;
+                }
+                return false;
+            });
+
+            holder.binding.bottoneAnnullaInline.setOnClickListener(v -> {
+                hideKeyboard(holder.binding.etModificaInline);
+                editingParticipantId = null;
+                notifyDataSetChanged();
+            });
+
+        } else {
+            // Modalità visualizzazione normale
+            holder.binding.tilModificaInline.setVisibility(View.GONE);
+            holder.binding.tilModificaInline.setError(null);
+            holder.binding.bottoneSalvaInline.setVisibility(View.GONE);
+            holder.binding.bottoneAnnullaInline.setVisibility(View.GONE);
+
+            String nomeDisplay = p.getNome();
+            if (isMe && !nomeDisplay.toLowerCase().endsWith("(io)") && !nomeDisplay.toLowerCase().endsWith("(me)")) {
+                nomeDisplay = nomeDisplay + " (io)";
+            }
+            holder.binding.nomePartecipante.setText(nomeDisplay);
+            holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
+
+            holder.binding.bottoneModifica.setVisibility(isMe ? View.VISIBLE : View.GONE);
+            holder.binding.bottoneModifica.setOnClickListener(v -> {
+                editingParticipantId = p.getId();
+                notifyDataSetChanged();
+            });
+
+            holder.binding.bottoneElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
+            holder.binding.bottoneElimina.setOnClickListener(v -> {
+                if (onEliminaClickListener != null) {
+                    onEliminaClickListener.onEliminaClick(p);
+                }
+            });
+        }
+    }
+
+    private void showKeyboard(View view) {
+        if (view == null) return;
+        InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
+
+    private void hideKeyboard(View view) {
+        if (view == null) return;
+        InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     static class MembroViewHolder extends RecyclerView.ViewHolder {

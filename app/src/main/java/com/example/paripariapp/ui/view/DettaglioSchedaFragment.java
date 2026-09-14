@@ -691,41 +691,7 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
-    private void mostraDialogRinominaPartecipante(Partecipante p) {
-        if (p == null) return;
-        boolean isMe = isMe(p);
 
-        if (!isMe) {
-            Toast.makeText(requireContext(), R.string.msg_permesso_negato_modifica_nome_altri, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        EditText input = new EditText(requireContext());
-        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        input.setHint(R.string.hint_nome_partecipante);
-        input.setText(p.getNome());
-        if (p.getNome() != null) {
-            input.setSelection(p.getNome().length());
-        }
-
-        FrameLayout container = new FrameLayout(requireContext());
-        int padding = (int) (16 * getResources().getDisplayMetrics().density);
-        container.setPadding(padding, padding / 2, padding, 0);
-        container.addView(input);
-
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.dialog_titolo_rinomina)
-                .setView(container)
-                .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
-                    String nuovoNome = input.getText().toString().trim();
-                    if (!nuovoNome.isEmpty() && !nuovoNome.equals(p.getNome())) {
-                        viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
-                        Toast.makeText(requireContext(), R.string.msg_nome_aggiornato_successo, Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton(R.string.btn_annulla, null)
-                .show();
-    }
 
 
     public void mostraSceltaEsportazione() {
@@ -770,8 +736,9 @@ public class DettaglioSchedaFragment extends Fragment {
         binding.recyclerMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerMembri.setAdapter(membroAdapter);
 
-        membroAdapter.setOnModificaClickListener(p -> {
-            mostraDialogRinominaPartecipante(p);
+        membroAdapter.setOnNomeModificatoListener((p, nuovoNome) -> {
+            viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
+            Toast.makeText(requireContext(), R.string.msg_nome_aggiornato_successo, Toast.LENGTH_SHORT).show();
         });
 
         membroAdapter.setOnEliminaClickListener(p -> {
