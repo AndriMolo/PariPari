@@ -425,12 +425,8 @@ public class DettaglioSchedaFragment extends Fragment {
             if (binding == null || partecipanti == null) return;
             this.partecipantiCache = partecipanti;
 
-            // Invia la lista aggiornata al RecyclerView della sezione Membri
-            if (membroAdapter != null) {
-                membroAdapter.submitList(partecipanti);
-                boolean isCapogruppo = calcolaIsCapogruppo(schedaCorrente, partecipanti);
-                membroAdapter.setCapogruppo(isCapogruppo);
-            }
+            // Invia la lista aggiornata e ordinata con proprietario in cima al RecyclerView
+            aggiornaMembriAdapter();
 
             if (partecipanti.isEmpty()) {
                 binding.layoutEmptyMembri.getRoot().setVisibility(View.VISIBLE);
@@ -451,9 +447,7 @@ public class DettaglioSchedaFragment extends Fragment {
                 if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
                     viewModel.assicuraCodiceInvito(scheda);
                 }
-                if (membroAdapter != null && partecipantiCache != null) {
-                    membroAdapter.setCapogruppo(calcolaIsCapogruppo(schedaCorrente, partecipantiCache));
-                }
+                aggiornaMembriAdapter();
             } else {
                 if (getActivity() != null && !getActivity().isFinishing() && isAdded()) {
                     Toast.makeText(requireContext(), R.string.msg_sei_stato_rimosso_dal_gruppo, Toast.LENGTH_SHORT).show();
@@ -463,44 +457,26 @@ public class DettaglioSchedaFragment extends Fragment {
         });
     }
 
+    private void aggiornaMembriAdapter() {
+        if (membroAdapter == null || partecipantiCache == null) return;
+
+        com.google.firebase.auth.FirebaseUser currentUser =
+                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        Partecipante proprietario = Partecipante.trovaProprietario(schedaCorrente, partecipantiCache, currentUser);
+        List<Partecipante> ordinati = Partecipante.ordinaConProprietarioInCima(schedaCorrente, partecipantiCache, currentUser);
+
+        boolean isCapogruppo = (proprietario != null && isMe(proprietario));
+        membroAdapter.setCapogruppo(isCapogruppo);
+        membroAdapter.setProprietarioId(proprietario != null ? proprietario.getId() : null);
+        membroAdapter.submitList(new ArrayList<>(ordinati));
+    }
+
     private boolean calcolaIsCapogruppo(Scheda scheda, List<Partecipante> partecipanti) {
         if (scheda == null || partecipanti == null || partecipanti.isEmpty()) return false;
-        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) return false;
-
-        String creatoreId = scheda.getCreatoreId();
-
-        // 1. Se il creatore della scheda corrisponde all'UID dell'utente corrente
-        if (creatoreId != null && !creatoreId.trim().isEmpty()) {
-            if (creatoreId.equals(currentUser.getUid())) {
-                return true;
-            }
-            // Se creatoreId corrisponde all'ID partecipante dell'utente corrente
-            String myPartId = Partecipante.findCurrentUserId(partecipanti, currentUser);
-            if (myPartId != null && myPartId.equals(creatoreId)) {
-                return true;
-            }
-        }
-
-        // 2. Controlla se il creatore originale è ancora presente nella lista dei partecipanti
-        boolean creatoreAncoraInGruppo = false;
-        if (creatoreId != null && !creatoreId.trim().isEmpty()) {
-            for (Partecipante p : partecipanti) {
-                if (p.getId().equals(creatoreId) || Partecipante.isCurrentUserParticipant(p, currentUser)) {
-                    creatoreAncoraInGruppo = true;
-                    break;
-                }
-            }
-        }
-
-        // 3. Se il creatore originale è ancora nel gruppo e non sono io -> non sono capogruppo
-        if (creatoreAncoraInGruppo) {
-            return false;
-        }
-
-        // 4. Se il creatore originale è uscito dal gruppo, il primo partecipante in carica eredita la proprietà
-        Partecipante primo = partecipanti.get(0);
-        return isMe(primo);
+        com.google.firebase.auth.FirebaseUser currentUser =
+                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        Partecipante proprietario = Partecipante.trovaProprietario(scheda, partecipanti, currentUser);
+        return proprietario != null && isMe(proprietario);
     }
 
     private void applicaFiltriERaggruppa() {
@@ -737,6 +713,12 @@ public class DettaglioSchedaFragment extends Fragment {
         binding.recyclerMembri.setAdapter(membroAdapter);
 
         membroAdapter.setOnNomeModificatoListener((p, nuovoNome) -> {
+            boolean isMe = isMe(p);
+            boolean isCapo = calcolaIsCapogruppo(schedaCorrente, partecipantiCache);
+            if (!isMe && !isCapo) {
+                Toast.makeText(requireContext(), R.string.msg_permesso_negato_modifica_nome_altri, Toast.LENGTH_SHORT).show();
+                return;
+            }
             viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
             Toast.makeText(requireContext(), R.string.msg_nome_aggiornato_successo, Toast.LENGTH_SHORT).show();
         });

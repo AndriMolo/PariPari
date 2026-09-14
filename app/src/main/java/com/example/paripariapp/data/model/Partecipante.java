@@ -188,4 +188,65 @@ public class Partecipante {
         // Fallback: primo partecipante della scheda
         return partecipanti.get(0).getId();
     }
+
+    /**
+     * Identifica il partecipante proprietario/capogruppo della scheda.
+     */
+    public static Partecipante trovaProprietario(
+            @androidx.annotation.Nullable Scheda scheda,
+            @androidx.annotation.Nullable java.util.List<Partecipante> partecipanti,
+            @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+        if (partecipanti == null || partecipanti.isEmpty()) return null;
+
+        String creatoreId = (scheda != null) ? scheda.getCreatoreId() : null;
+
+        if (creatoreId != null && !creatoreId.trim().isEmpty()) {
+            // 1. Corrispondenza diretta per ID Partecipante
+            for (Partecipante p : partecipanti) {
+                if (p.getId().equals(creatoreId)) {
+                    return p;
+                }
+            }
+
+            // 2. Corrispondenza se creatoreId corrisponde all'UID dell'utente autenticato
+            if (currentUser != null && creatoreId.equals(currentUser.getUid())) {
+                for (Partecipante p : partecipanti) {
+                    if (isCurrentUserParticipant(p, currentUser)) {
+                        return p;
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: primo partecipante della scheda
+        return partecipanti.get(0);
+    }
+
+    /**
+     * Riordina la lista posizionando il proprietario della scheda sempre al primo posto (in cima).
+     */
+    public static java.util.List<Partecipante> ordinaConProprietarioInCima(
+            @androidx.annotation.Nullable Scheda scheda,
+            @androidx.annotation.Nullable java.util.List<Partecipante> partecipanti,
+            @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+        if (partecipanti == null || partecipanti.size() <= 1) {
+            return partecipanti != null ? new java.util.ArrayList<>(partecipanti) : new java.util.ArrayList<>();
+        }
+
+        Partecipante proprietario = trovaProprietario(scheda, partecipanti, currentUser);
+        if (proprietario == null) {
+            return new java.util.ArrayList<>(partecipanti);
+        }
+
+        java.util.List<Partecipante> ordinati = new java.util.ArrayList<>();
+        ordinati.add(proprietario);
+
+        for (Partecipante p : partecipanti) {
+            if (!p.getId().equals(proprietario.getId())) {
+                ordinati.add(p);
+            }
+        }
+
+        return ordinati;
+    }
 }

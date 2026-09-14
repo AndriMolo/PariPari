@@ -27,6 +27,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
@@ -218,13 +219,13 @@ public class FirestoreSyncManager {
             if (currentUser.getEmail() != null && !currentUser.getEmail().isEmpty()) {
                 data.put("email", currentUser.getEmail());
             }
-        } else {
+        } else if (isMe) {
             data.put("isAutenticato", false);
         }
 
         firestore.collection("groups").document(p.getSchedaId())
                 .collection("participants").document(p.getId())
-                .set(data)
+                .set(data, SetOptions.merge())
                 .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED))
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento partecipante differito: " + e.getMessage()));
     }
@@ -573,6 +574,13 @@ public class FirestoreSyncManager {
                                     if (nome != null && !nome.trim().isEmpty()) {
                                         partecipanteDao.insert(new Partecipante(pId, groupId, nome, email, SyncStatus.SYNCED));
                                     }
+                                    String pUserId = doc.getString("userId");
+                                    if (pUserId != null && !pUserId.trim().isEmpty()) {
+                                        Scheda s = schedaDao.getSchedaById(groupId);
+                                        if (s != null && pUserId.equals(s.getCreatoreId())) {
+                                            schedaDao.updateCreatoreId(groupId, pId);
+                                        }
+                                    }
                                     break;
                                 case REMOVED:
                                     partecipanteDao.deleteById(pId);
@@ -859,6 +867,22 @@ public class FirestoreSyncManager {
                         }
                     }
 
+                    String creatoreId = groupDoc.getString("creatoreId");
+                    if (creatoreId != null && !creatoreId.trim().isEmpty() && membri.size() > 1) {
+                        int ownerIdx = -1;
+                        for (int i = 0; i < membri.size(); i++) {
+                            MembroGruppoPreview m = membri.get(i);
+                            if (m.getId().equals(creatoreId) || (m.getUserId() != null && m.getUserId().equals(creatoreId))) {
+                                ownerIdx = i;
+                                break;
+                            }
+                        }
+                        if (ownerIdx > 0) {
+                            MembroGruppoPreview owner = membri.remove(ownerIdx);
+                            membri.add(0, owner);
+                        }
+                    }
+
                     GruppoPreview preview = new GruppoPreview(
                             groupId,
                             titolo != null ? titolo : "Gruppo",
@@ -995,6 +1019,10 @@ public class FirestoreSyncManager {
                             boolean isClaimTarget = (claimedPartecipanteId != null && claimedPartecipanteId.equals(pDoc.getId()));
                             boolean isUserMatch = (currentUid != null && currentUid.equals(pUserId))
                                     || (currentEmail != null && currentEmail.equalsIgnoreCase(pEmail));
+
+                            if (creatoreId != null && (creatoreId.equals(pUserId) || creatoreId.equals(pDoc.getId()))) {
+                                scheda.setCreatoreId(pDoc.getId());
+                            }
 
                             if (isClaimTarget || isUserMatch) {
                                 giaPresente = true;

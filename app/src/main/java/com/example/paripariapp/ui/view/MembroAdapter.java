@@ -45,7 +45,8 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
     private OnEliminaClickListener onEliminaClickListener;
     private OnNomeModificatoListener onNomeModificatoListener;
-    private boolean isCapogruppo = true;
+    private boolean isCapogruppo = false;
+    private String proprietarioId = null;
     private FirebaseUser currentUser;
     private String currentMyId;
     private String editingParticipantId = null;
@@ -73,7 +74,14 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     public void setCapogruppo(boolean capogruppo) {
         if (this.isCapogruppo != capogruppo) {
             this.isCapogruppo = capogruppo;
-            notifyItemRangeChanged(0, getItemCount());
+            notifyDataSetChanged();
+        }
+    }
+
+    public void setProprietarioId(String proprietarioId) {
+        if (!Objects.equals(this.proprietarioId, proprietarioId)) {
+            this.proprietarioId = proprietarioId;
+            notifyDataSetChanged();
         }
     }
 
@@ -188,7 +196,8 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             holder.binding.nomePartecipante.setText(nomeDisplay);
             holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
 
-            holder.binding.bottoneModifica.setVisibility(isMe ? View.VISIBLE : View.GONE);
+            boolean canEdit = isMe || isCapogruppo;
+            holder.binding.bottoneModifica.setVisibility(canEdit ? View.VISIBLE : View.GONE);
             holder.binding.bottoneModifica.setOnClickListener(v -> {
                 editingParticipantId = p.getId();
                 notifyDataSetChanged();

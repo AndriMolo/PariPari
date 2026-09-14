@@ -60,4 +60,7 @@ public interface SchedaDao {
 
     @Query("UPDATE schede SET codice_invito = :codice WHERE id = :schedaId")
     void updateCodiceInvito(String schedaId, String codice);
+
+    @Query("UPDATE schede SET creatore_id = :creatoreId WHERE id = :schedaId")
+    void updateCreatoreId(String schedaId, String creatoreId);
 }

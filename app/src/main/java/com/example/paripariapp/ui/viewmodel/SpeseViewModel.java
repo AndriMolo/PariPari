@@ -113,6 +113,10 @@ public class SpeseViewModel extends AndroidViewModel {
             }
         }
 
+        if (!partecipanti.isEmpty()) {
+            nuovaScheda.setCreatoreId(partecipanti.get(0).getId());
+        }
+
         repository.insertScheda(nuovaScheda, partecipanti);
     }
 

@@ -258,9 +258,10 @@
     <string name="dialog_titolo_rinomina">Rinomina membro</string>
     <string name="dialog_titolo_modifica_nome_profilo">Modifica nome profilo</string>
     <string name="dialog_titolo_modifica_mio_nome">Modifica il tuo nome nel gruppo</string>
-    <string name="msg_nome_aggiornato_successo">Nome aggiornato in tutti i gruppi</string>
+    <string name="msg_nome_aggiornato_successo">Nome aggiornato con successo</string>
     <string name="msg_permesso_negato_modifica_nome">Puoi modificare solo il tuo nome o quello dei membri se sei capogruppo.</string>
     <string name="msg_permesso_negato_modifica_nome_altri">Puoi modificare soltanto il tuo nome.</string>
+    <string name="ruolo_proprietario">Proprietario</string>
     <string name="titolo_aggiungi_membro">Aggiungi Partecipante</string>
     <string name="hint_nome_partecipante">Nome</string>
     <string name="label_tuo_nome_nel_gruppo">Il tuo nome nel gruppo</string>

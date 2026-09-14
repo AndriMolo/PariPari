@@ -246,9 +246,10 @@
     <string name="dialog_titolo_rinomina">Rename member</string>
     <string name="dialog_titolo_modifica_nome_profilo">Edit profile name</string>
     <string name="dialog_titolo_modifica_mio_nome">Edit your name in the group</string>
-    <string name="msg_nome_aggiornato_successo">Name updated in all groups</string>
+    <string name="msg_nome_aggiornato_successo">Name updated successfully</string>
     <string name="msg_permesso_negato_modifica_nome">You can only edit your own name or members\' names if you are group leader.</string>
     <string name="msg_permesso_negato_modifica_nome_altri">You can only edit your own name.</string>
+    <string name="ruolo_proprietario">Owner</string>
     <string name="titolo_aggiungi_membro">Add Member</string>
     <string name="hint_nome_partecipante">Name</string>
     <string name="label_tuo_nome_nel_gruppo">Your name in the group</string>
