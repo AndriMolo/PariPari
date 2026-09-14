@@ -119,26 +119,7 @@ public class ModificaSpesaFragment extends Fragment {
                 getString(R.string.cat_salute),
                 getString(R.string.cat_altro)
         };
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, categorie) {
-            @NonNull
-            @Override
-            public android.widget.Filter getFilter() {
-                return new android.widget.Filter() {
-                    @Override
-                    protected FilterResults performFiltering(CharSequence constraint) {
-                        FilterResults results = new FilterResults();
-                        results.values = categorie;
-                        results.count = categorie.length;
-                        return results;
-                    }
-
-                    @Override
-                    protected void publishResults(CharSequence constraint, FilterResults results) {
-                        notifyDataSetChanged();
-                    }
-                };
-            }
-        };
+        ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), java.util.Arrays.asList(categorie));
         binding.menuCategoria.setAdapter(adapter);
         binding.menuCategoria.setOnClickListener(v -> binding.menuCategoria.showDropDown());
     }
@@ -197,26 +178,7 @@ public class ModificaSpesaFragment extends Fragment {
             for (Partecipante p : lista) {
                 nomi.add(p.getNome());
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, nomi) {
-                @NonNull
-                @Override
-                public android.widget.Filter getFilter() {
-                    return new android.widget.Filter() {
-                        @Override
-                        protected FilterResults performFiltering(CharSequence constraint) {
-                            FilterResults results = new FilterResults();
-                            results.values = nomi;
-                            results.count = nomi.size();
-                            return results;
-                        }
-
-                        @Override
-                        protected void publishResults(CharSequence constraint, FilterResults results) {
-                            notifyDataSetChanged();
-                        }
-                    };
-                }
-            };
+            ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
             binding.menuPagante.setAdapter(adapter);
             binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
 
@@ -558,7 +520,7 @@ public class ModificaSpesaFragment extends Fragment {
                     sommaPercentuali += perc;
                 }
 
-                if (Math.abs(sommaPercentuali - 100.0) > 0.05) {
+                if (!SpesaUiHelper.isSommaPercentualiValida(sommaPercentuali)) {
                     Toast.makeText(requireContext(),
                             getString(R.string.spesa_errore_somma_percentuali, sommaPercentuali),
                             Toast.LENGTH_LONG).show();

@@ -25,19 +25,43 @@ import java.util.UUID;
 public class SpeseViewModel extends AndroidViewModel {
 
     private final PariPariRepository repository;
+    private final androidx.lifecycle.MediatorLiveData<SpeseUiState> uiState = new androidx.lifecycle.MediatorLiveData<>();
+    private List<Scheda> currentSchede = null;
+    private Map<String, Integer> currentConteggi = new HashMap<>();
 
     public SpeseViewModel(@NonNull Application application) {
         super(application);
         this.repository = PariPariRepository.getInstance(application);
+
+        uiState.setValue(SpeseUiState.loading());
+
+        LiveData<List<Scheda>> schedeLive = repository.getAllSchede();
+        LiveData<Map<String, Integer>> conteggiLive = getMappaConteggioPartecipanti();
+
+        uiState.addSource(schedeLive, schede -> {
+            currentSchede = schede;
+            uiState.setValue(new SpeseUiState(false, currentSchede, currentConteggi, null));
+        });
+
+        uiState.addSource(conteggiLive, conteggi -> {
+            if (conteggi != null) {
+                currentConteggi = conteggi;
+            }
+            uiState.setValue(new SpeseUiState(false, currentSchede, currentConteggi, null));
+        });
+    }
+
+    /**
+     * Espone lo stato unificato della schermata Schede Spese secondo le raccomandazioni
+     * di architettura Android (Single Source of Truth per la UI).
+     */
+    public LiveData<SpeseUiState> getUiState() {
+        return uiState;
     }
 
     // --- SCHEDE ---
 
     public LiveData<List<Scheda>> getSchede() {
-        return repository.getAllSchede();
-    }
-
-    public LiveData<List<Scheda>> getTutteLeSchede() {
         return repository.getAllSchede();
     }
 
@@ -47,6 +71,21 @@ public class SpeseViewModel extends AndroidViewModel {
 
     public boolean haSaldiInSospeso(String schedaId) {
         return repository.haSaldiInSospeso(schedaId);
+    }
+
+    public void verificaSaldiInSospeso(String schedaId, java.util.function.Consumer<Boolean> callback) {
+        com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+            boolean haSaldi = repository.haSaldiInSospeso(schedaId);
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (callback != null) {
+                    callback.accept(haSaldi);
+                }
+            });
+        });
+    }
+
+    public LiveData<List<Spesa>> getStoricoSaldi(String schedaId) {
+        return repository.getStoricoSaldi(schedaId);
     }
 
     public void ripristinaScheda(Scheda scheda, List<Partecipante> partecipanti) {

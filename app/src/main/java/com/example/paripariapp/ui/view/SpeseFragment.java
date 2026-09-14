@@ -108,31 +108,27 @@ public class SpeseFragment extends Fragment {
                 Scheda schedaSelezionata = adapter.getLocalList().get(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
-                    com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
-                        boolean haSaldi = viewModel.haSaldiInSospeso(schedaSelezionata.getId());
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> {
-                                if (haSaldi) {
-                                    adapter.notifyItemChanged(position);
-                                    new MaterialAlertDialogBuilder(requireContext())
-                                            .setTitle(R.string.titolo_impossibile_eliminare_scheda)
-                                            .setMessage(R.string.msg_errore_eliminazione_scheda_saldi)
-                                            .setPositiveButton(android.R.string.ok, null)
-                                            .show();
-                                } else {
-                                    new MaterialAlertDialogBuilder(requireContext())
-                                            .setTitle(R.string.dialog_titolo_elimina_scheda)
-                                            .setMessage(R.string.dialog_msg_elimina_scheda)
-                                            .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
-                                                viewModel.eliminaScheda(schedaSelezionata);
-                                            })
-                                            .setNegativeButton(R.string.btn_annulla, (dialog, which) -> {
-                                                adapter.notifyItemChanged(position);
-                                            })
-                                            .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
-                                            .show();
-                                }
-                            });
+                    viewModel.verificaSaldiInSospeso(schedaSelezionata.getId(), haSaldi -> {
+                        if (!isAdded() || getContext() == null) return;
+                        if (haSaldi) {
+                            adapter.notifyItemChanged(position);
+                            new MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle(R.string.titolo_impossibile_eliminare_scheda)
+                                    .setMessage(R.string.msg_errore_eliminazione_scheda_saldi)
+                                    .setPositiveButton(android.R.string.ok, null)
+                                    .show();
+                        } else {
+                            new MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle(R.string.dialog_titolo_elimina_scheda)
+                                    .setMessage(R.string.dialog_msg_elimina_scheda)
+                                    .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
+                                        viewModel.eliminaScheda(schedaSelezionata);
+                                    })
+                                    .setNegativeButton(R.string.btn_annulla, (dialog, which) -> {
+                                        adapter.notifyItemChanged(position);
+                                    })
+                                    .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
+                                    .show();
                         }
                     });
                 }
@@ -204,24 +200,29 @@ public class SpeseFragment extends Fragment {
     }
 
     private void setupObservers() {
-        // 1. Osserva la lista delle schede
-        viewModel.getSchede().observe(getViewLifecycleOwner(), schede -> {
-            if (schede == null || schede.isEmpty()) {
-                binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
-                binding.recyclerSchede.setVisibility(View.GONE);
-            } else {
-                binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
-                binding.recyclerSchede.setVisibility(View.VISIBLE);
-                adapter.submitList(schede);
-            }
-        });
+        // Osserva l'UiState unificato conforme alle linee guida di Android Architecture
+        viewModel.getUiState().observe(getViewLifecycleOwner(), this::renderUiState);
+    }
 
-        // 2. Osserva tutti i conteggi in una volta sola (nessun ciclo for, caricamento immediato)
-        viewModel.getMappaConteggioPartecipanti().observe(getViewLifecycleOwner(), mappaConteggi -> {
-            if (mappaConteggi != null) {
-                adapter.aggiornaConteggioPartecipanti(mappaConteggi);
-            }
-        });
+    private void renderUiState(@Nullable com.example.paripariapp.ui.viewmodel.SpeseUiState state) {
+        if (state == null) return;
+
+        if (state.isEmpty()) {
+            binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
+            binding.recyclerSchede.setVisibility(View.GONE);
+        } else {
+            binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
+            binding.recyclerSchede.setVisibility(View.VISIBLE);
+            adapter.submitList(state.getSchede());
+        }
+
+        if (!state.getConteggioPartecipanti().isEmpty()) {
+            adapter.aggiornaConteggioPartecipanti(state.getConteggioPartecipanti());
+        }
+
+        if (state.getErrorMessage() != null) {
+            Snackbar.make(binding.getRoot(), state.getErrorMessage(), Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     private void setupListeners() {

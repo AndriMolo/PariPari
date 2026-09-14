@@ -3,23 +3,47 @@ package com.example.paripariapp.ui.view;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
+import com.example.paripariapp.databinding.ItemMembroGestioneBinding;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class MembroAdapter extends RecyclerView.Adapter<MembroAdapter.MembroViewHolder> {
+/**
+ * Adapter per la gestione dei partecipanti di una scheda.
+ * Utilizza ListAdapter con DiffUtil e ViewBinding per massimizzare le performance.
+ */
+public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.MembroViewHolder> {
 
-    private final List<Partecipante> items = new ArrayList<>();
+    private static final DiffUtil.ItemCallback<Partecipante> DIFF_CALLBACK = new DiffUtil.ItemCallback<Partecipante>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Partecipante oldItem, @NonNull Partecipante newItem) {
+            return Objects.equals(oldItem.getId(), newItem.getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Partecipante oldItem, @NonNull Partecipante newItem) {
+            return Objects.equals(oldItem.getNome(), newItem.getNome()) &&
+                    Objects.equals(oldItem.getEmail(), newItem.getEmail()) &&
+                    Objects.equals(oldItem.getSchedaId(), newItem.getSchedaId());
+        }
+    };
+
     private OnEliminaClickListener onEliminaClickListener;
     private OnModificaClickListener onModificaClickListener;
     private boolean isCapogruppo = true;
+    private FirebaseUser currentUser;
+    private String currentMyId;
 
     public interface OnEliminaClickListener {
         void onEliminaClick(Partecipante partecipante);
@@ -27,6 +51,10 @@ public class MembroAdapter extends RecyclerView.Adapter<MembroAdapter.MembroView
 
     public interface OnModificaClickListener {
         void onModificaClick(Partecipante partecipante);
+    }
+
+    public MembroAdapter() {
+        super(DIFF_CALLBACK);
     }
 
     public void setOnEliminaClickListener(OnEliminaClickListener listener) {
@@ -38,72 +66,65 @@ public class MembroAdapter extends RecyclerView.Adapter<MembroAdapter.MembroView
     }
 
     public void setCapogruppo(boolean capogruppo) {
-        this.isCapogruppo = capogruppo;
-        notifyDataSetChanged();
+        if (this.isCapogruppo != capogruppo) {
+            this.isCapogruppo = capogruppo;
+            notifyItemRangeChanged(0, getItemCount());
+        }
     }
 
-    public void submitList(List<Partecipante> newItems) {
-        items.clear();
-        if (newItems != null) items.addAll(newItems);
-        notifyDataSetChanged();
+    @Override
+    public void submitList(@Nullable List<Partecipante> list) {
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        currentMyId = Partecipante.findCurrentUserId(list, currentUser);
+        super.submitList(list != null ? new ArrayList<>(list) : null);
     }
 
     @NonNull
     @Override
     public MembroViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_membro_gestione, parent, false);
-        return new MembroViewHolder(v);
+        ItemMembroGestioneBinding binding = ItemMembroGestioneBinding.inflate(
+                LayoutInflater.from(parent.getContext()), parent, false
+        );
+        return new MembroViewHolder(binding);
     }
 
     @Override
     public void onBindViewHolder(@NonNull MembroViewHolder holder, int position) {
-        Partecipante p = items.get(position);
+        Partecipante p = getItem(position);
 
-        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-        String myId = Partecipante.findCurrentUserId(items, currentUser);
-        boolean isMe = Partecipante.isCurrentUserParticipant(p, currentUser) || (myId != null && myId.equals(p.getId()));
+        boolean isMe = (currentMyId != null && currentMyId.equals(p.getId())) ||
+                Partecipante.isCurrentUserParticipant(p, currentUser);
 
         String nomeDisplay = p.getNome();
         if (isMe && !nomeDisplay.toLowerCase().endsWith("(io)") && !nomeDisplay.toLowerCase().endsWith("(me)")) {
             nomeDisplay = nomeDisplay + " (io)";
         }
-        holder.tvNome.setText(nomeDisplay);
+        holder.binding.nomePartecipante.setText(nomeDisplay);
 
         String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase() : "?";
-        holder.tvIniziale.setText(iniziale);
+        holder.binding.avatarIniziale.setText(iniziale);
 
-        holder.btnModifica.setVisibility(isMe ? View.VISIBLE : View.GONE);
-        holder.btnModifica.setOnClickListener(v -> {
+        holder.binding.bottoneModifica.setVisibility(isMe ? View.VISIBLE : View.GONE);
+        holder.binding.bottoneModifica.setOnClickListener(v -> {
             if (onModificaClickListener != null) {
                 onModificaClickListener.onModificaClick(p);
             }
         });
 
-        holder.btnElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
-        holder.btnElimina.setOnClickListener(v -> {
+        holder.binding.bottoneElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
+        holder.binding.bottoneElimina.setOnClickListener(v -> {
             if (onEliminaClickListener != null) {
                 onEliminaClickListener.onEliminaClick(p);
             }
         });
     }
 
-    @Override
-    public int getItemCount() {
-        return items.size();
-    }
-
     static class MembroViewHolder extends RecyclerView.ViewHolder {
-        TextView tvIniziale;
-        TextView tvNome;
-        View btnModifica;
-        View btnElimina;
+        final ItemMembroGestioneBinding binding;
 
-        MembroViewHolder(@NonNull View itemView) {
-            super(itemView);
-            tvIniziale = itemView.findViewById(R.id.avatar_iniziale);
-            tvNome = itemView.findViewById(R.id.nome_partecipante);
-            btnModifica = itemView.findViewById(R.id.bottone_modifica);
-            btnElimina = itemView.findViewById(R.id.bottone_elimina);
+        MembroViewHolder(@NonNull ItemMembroGestioneBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 }

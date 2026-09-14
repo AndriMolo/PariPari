@@ -4,36 +4,52 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.databinding.ItemStoricoSaldoBinding;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-public class StoricoSaldiAdapter extends RecyclerView.Adapter<StoricoSaldiAdapter.ViewHolder> {
+/**
+ * Adapter per la visualizzazione dello storico dei saldi e pareggi effettuati.
+ * Utilizza ListAdapter con DiffUtil e ViewBinding.
+ */
+public class StoricoSaldiAdapter extends ListAdapter<Spesa, StoricoSaldiAdapter.ViewHolder> {
+
+    private static final DiffUtil.ItemCallback<Spesa> DIFF_CALLBACK = new DiffUtil.ItemCallback<Spesa>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Spesa oldItem, @NonNull Spesa newItem) {
+            return Objects.equals(oldItem.getId(), newItem.getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Spesa oldItem, @NonNull Spesa newItem) {
+            return Objects.equals(oldItem.getTitolo(), newItem.getTitolo()) &&
+                    Double.compare(oldItem.getImporto(), newItem.getImporto()) == 0 &&
+                    oldItem.getDataSpesa() == newItem.getDataSpesa() &&
+                    Objects.equals(oldItem.getValuta(), newItem.getValuta());
+        }
+    };
 
     public interface OnItemClickListener {
         void onItemClick(Spesa spesa);
     }
 
-    private final List<Spesa> items = new ArrayList<>();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("d MMM yyyy • HH:mm", Locale.getDefault());
     private OnItemClickListener listener;
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        this.listener = listener;
+    public StoricoSaldiAdapter() {
+        super(DIFF_CALLBACK);
     }
 
-    public void submitList(List<Spesa> newItems) {
-        items.clear();
-        if (newItems != null) items.addAll(newItems);
-        notifyDataSetChanged();
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -47,7 +63,7 @@ public class StoricoSaldiAdapter extends RecyclerView.Adapter<StoricoSaldiAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Spesa item = items.get(position);
+        Spesa item = getItem(position);
         holder.binding.tvTitoloSaldo.setText(item.getTitolo());
         holder.binding.tvDataSaldo.setText(dateFormat.format(new Date(item.getDataSpesa())));
         holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "%.2f %s", item.getImporto(), item.getValuta()));
@@ -55,11 +71,6 @@ public class StoricoSaldiAdapter extends RecyclerView.Adapter<StoricoSaldiAdapte
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(item);
         });
-    }
-
-    @Override
-    public int getItemCount() {
-        return items.size();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

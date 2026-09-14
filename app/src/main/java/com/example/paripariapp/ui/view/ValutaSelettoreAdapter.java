@@ -6,6 +6,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
@@ -16,27 +18,38 @@ import java.util.List;
 
 /**
  * Adapter per la lista di selezione valute nel Searchable Bottom Sheet.
- * Supporta la ricerca istantanea (filtraggio dinamico) e l'evidenziazione
- * della valuta correntemente attiva.
+ * Utilizza ListAdapter con DiffUtil e ViewBinding per filtraggio istantaneo e fluido.
  */
-public class ValutaSelettoreAdapter extends RecyclerView.Adapter<ValutaSelettoreAdapter.ValutaViewHolder> {
+public class ValutaSelettoreAdapter extends ListAdapter<String, ValutaSelettoreAdapter.ValutaViewHolder> {
+
+    private static final DiffUtil.ItemCallback<String> DIFF_CALLBACK = new DiffUtil.ItemCallback<String>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull String oldItem, @NonNull String newItem) {
+            return oldItem.equals(newItem);
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull String oldItem, @NonNull String newItem) {
+            return oldItem.equals(newItem);
+        }
+    };
 
     public interface OnCurrencyClickListener {
         void onCurrencyClicked(String currencyFull);
     }
 
     private final List<String> allCurrencies;
-    private final List<String> filteredCurrencies;
     private final String selectedCode;
     private final OnCurrencyClickListener listener;
 
     public ValutaSelettoreAdapter(@NonNull List<String> currencies,
                                   @Nullable String currentlySelected,
                                   @NonNull OnCurrencyClickListener listener) {
+        super(DIFF_CALLBACK);
         this.allCurrencies = new ArrayList<>(currencies);
-        this.filteredCurrencies = new ArrayList<>(currencies);
         this.selectedCode = UserPreferencesRepository.extractCurrencyCode(currentlySelected);
         this.listener = listener;
+        submitList(new ArrayList<>(currencies));
     }
 
     @NonNull
@@ -52,13 +65,8 @@ public class ValutaSelettoreAdapter extends RecyclerView.Adapter<ValutaSelettore
 
     @Override
     public void onBindViewHolder(@NonNull ValutaViewHolder holder, int position) {
-        String item = filteredCurrencies.get(position);
+        String item = getItem(position);
         holder.bind(item, selectedCode, listener);
-    }
-
-    @Override
-    public int getItemCount() {
-        return filteredCurrencies.size();
     }
 
     /**
@@ -68,21 +76,21 @@ public class ValutaSelettoreAdapter extends RecyclerView.Adapter<ValutaSelettore
      * @return Numero di elementi rimanenti dopo il filtro
      */
     public int filter(String query) {
-        filteredCurrencies.clear();
+        List<String> filtered = new ArrayList<>();
         if (query == null || query.trim().isEmpty()) {
-            filteredCurrencies.addAll(allCurrencies);
+            filtered.addAll(allCurrencies);
         } else {
             String lower = query.trim().toLowerCase();
             for (String item : allCurrencies) {
                 String code = UserPreferencesRepository.extractCurrencyCode(item).toLowerCase();
                 String name = UserPreferencesRepository.extractCurrencyName(item).toLowerCase();
                 if (code.contains(lower) || name.contains(lower)) {
-                    filteredCurrencies.add(item);
+                    filtered.add(item);
                 }
             }
         }
-        notifyDataSetChanged();
-        return filteredCurrencies.size();
+        submitList(filtered);
+        return filtered.size();
     }
 
     static class ValutaViewHolder extends RecyclerView.ViewHolder {
@@ -105,6 +113,7 @@ public class ValutaSelettoreAdapter extends RecyclerView.Adapter<ValutaSelettore
 
             boolean isSelected = selectedCode != null && selectedCode.equalsIgnoreCase(code);
             binding.ivValutaCheck.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+            binding.getRoot().setSelected(isSelected);
 
             binding.getRoot().setOnClickListener(v -> {
                 if (listener != null) {

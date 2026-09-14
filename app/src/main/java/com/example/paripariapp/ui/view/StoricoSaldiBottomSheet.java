@@ -10,9 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.paripariapp.R;
-import com.example.paripariapp.data.local.AppDatabase;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.databinding.BottomSheetStoricoSaldiBinding;
+import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -73,28 +73,17 @@ public class StoricoSaldiBottomSheet extends BottomSheetDialogFragment {
                     .show();
         });
 
-        caricaStoricoSaldi();
-    }
-
-    private void caricaStoricoSaldi() {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext().getApplicationContext());
-            List<Spesa> saldiList = (schedaId != null && !schedaId.isEmpty())
-                    ? db.spesaDao().getSaldiBySchedaSync(schedaId)
-                    : db.spesaDao().getTuttiSaldiSync();
-
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    if (binding == null) return;
-                    if (saldiList == null || saldiList.isEmpty()) {
-                        binding.layoutEmptyStorico.setVisibility(View.VISIBLE);
-                        binding.recyclerStoricoSaldi.setVisibility(View.GONE);
-                    } else {
-                        binding.layoutEmptyStorico.setVisibility(View.GONE);
-                        binding.recyclerStoricoSaldi.setVisibility(View.VISIBLE);
-                        adapter.submitList(saldiList);
-                    }
-                });
+        androidx.lifecycle.ViewModelProvider provider = new androidx.lifecycle.ViewModelProvider(this);
+        SpeseViewModel viewModel = provider.get(SpeseViewModel.class);
+        viewModel.getStoricoSaldi(schedaId).observe(getViewLifecycleOwner(), saldiList -> {
+            if (binding == null) return;
+            if (saldiList == null || saldiList.isEmpty()) {
+                binding.layoutEmptyStorico.setVisibility(View.VISIBLE);
+                binding.recyclerStoricoSaldi.setVisibility(View.GONE);
+            } else {
+                binding.layoutEmptyStorico.setVisibility(View.GONE);
+                binding.recyclerStoricoSaldi.setVisibility(View.VISIBLE);
+                adapter.submitList(saldiList);
             }
         });
     }

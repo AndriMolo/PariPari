@@ -39,19 +39,23 @@ public class TrasferimentoSaldo {
         return aNome;
     }
 
-    // Getter con nomenclatura compatta (usati in SaldiFragment)
+    // Getter con nomenclatura compatta (mantenuti per retrocompatibilità, preferire i getter canonici sopra)
+    @Deprecated
     public String getDaId() {
         return daId;
     }
 
+    @Deprecated
     public String getDaNome() {
         return daNome;
     }
 
+    @Deprecated
     public String getAId() {
         return aId;
     }
 
+    @Deprecated
     public String getANome() {
         return aNome;
     }

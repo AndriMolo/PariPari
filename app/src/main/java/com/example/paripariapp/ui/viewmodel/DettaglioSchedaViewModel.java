@@ -79,34 +79,8 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.aggiornaNomePartecipante(partecipanteId, nuovoNome);
     }
 
-    /**
-     * Aggiunge una nuova spesa e suddivide equamente l'importo tra tutti i partecipanti della scheda.
-     */
-    public void aggiungiSpesa(String schedaId, String titolo, double importo, String valuta,
-                              String pagatoDaId, List<Partecipante> partecipanti) {
-        if (schedaId == null || titolo == null || titolo.trim().isEmpty() || importo <= 0 || pagatoDaId == null) {
-            return;
-        }
-
-        Spesa spesa = Spesa.createNew(
-                schedaId,
-                titolo.trim(),
-                importo,
-                valuta,
-                "Generale",
-                pagatoDaId,
-                null
-        );
-
-        List<SpesaPartecipante> quote = new ArrayList<>();
-        if (partecipanti != null && !partecipanti.isEmpty()) {
-            double quotaEqua = importo / partecipanti.size();
-            for (Partecipante p : partecipanti) {
-                quote.add(new SpesaPartecipante(spesa.getId(), p.getId(), quotaEqua, SyncStatus.PENDING_INSERT));
-            }
-        }
-
-        repository.insertSpesa(spesa, quote);
+    public LiveData<List<Spesa>> getStoricoSaldi(String schedaId) {
+        return repository.getStoricoSaldi(schedaId);
     }
 
     public void inserisciSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {

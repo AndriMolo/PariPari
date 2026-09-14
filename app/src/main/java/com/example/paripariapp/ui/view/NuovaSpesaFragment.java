@@ -145,26 +145,7 @@ public class NuovaSpesaFragment extends Fragment {
             for (Partecipante p : lista) {
                 nomi.add(p.getNome());
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line, nomi) {
-                @NonNull
-                @Override
-                public android.widget.Filter getFilter() {
-                    return new android.widget.Filter() {
-                        @Override
-                        protected FilterResults performFiltering(CharSequence constraint) {
-                            FilterResults results = new FilterResults();
-                            results.values = nomi;
-                            results.count = nomi.size();
-                            return results;
-                        }
-
-                        @Override
-                        protected void publishResults(CharSequence constraint, FilterResults results) {
-                            notifyDataSetChanged();
-                        }
-                    };
-                }
-            };
+            ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
             binding.menuPagante.setAdapter(adapter);
             if (!nomi.isEmpty()) {
                 binding.menuPagante.setText(nomi.get(0), false);
@@ -253,24 +234,7 @@ public class NuovaSpesaFragment extends Fragment {
                     return;
                 }
 
-                double totaleAssegnato = 0.0;
-                for (int i = 0; i < partecipantiInclusi.size(); i++) {
-                    Partecipante p = partecipantiInclusi.get(i);
-                    double qVal;
-                    if (i == partecipantiInclusi.size() - 1) {
-                        qVal = Math.round((importo - totaleAssegnato) * 100.0) / 100.0;
-                    } else {
-                        qVal = Math.round((importo / partecipantiInclusi.size()) * 100.0) / 100.0;
-                        totaleAssegnato += qVal;
-                    }
-                    quote.add(new SpesaPartecipante(spesaId, p.getId(), qVal, SyncStatus.PENDING_INSERT));
-                }
-                for (Partecipante p : partecipanti) {
-                    CheckBox cb = checkMap.get(p.getId());
-                    if (cb == null || !cb.isChecked()) {
-                        quote.add(new SpesaPartecipante(spesaId, p.getId(), 0.0, SyncStatus.PENDING_INSERT));
-                    }
-                }
+                quote = SpesaUiHelper.calcolaDivisioneEqua(spesaId, importo, partecipantiInclusi, partecipanti, SyncStatus.PENDING_INSERT);
             } else {
                 // Divisione Personalizzata in Percentuale (%)
                 List<Partecipante> partecipantiInclusi = new ArrayList<>();
@@ -282,13 +246,7 @@ public class NuovaSpesaFragment extends Fragment {
                     if (cb != null && cb.isChecked()) {
                         partecipantiInclusi.add(p);
                         EditText et = quotaInputMap.get(p.getId());
-                        double perc = 0.0;
-                        try {
-                            if (et != null && et.getText() != null && !et.getText().toString().trim().isEmpty()) {
-                                perc = Double.parseDouble(et.getText().toString().replace(",", "."));
-                            }
-                        } catch (Exception ignored) {}
-
+                        double perc = SpesaUiHelper.parseImporto(et != null && et.getText() != null ? et.getText().toString() : null);
                         percentualiInserite.put(p.getId(), perc);
                         sommaPercentuali += perc;
                     }
@@ -299,38 +257,14 @@ public class NuovaSpesaFragment extends Fragment {
                     return;
                 }
 
-                // Verifica che la somma sia il 100% (tolleranza 0.05 per decimali)
-                if (Math.abs(sommaPercentuali - 100.0) > 0.05) {
+                if (!SpesaUiHelper.isSommaPercentualiValida(sommaPercentuali)) {
                     Toast.makeText(requireContext(),
                             getString(R.string.spesa_errore_somma_percentuali, sommaPercentuali),
                             Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                // Conversione percentuale -> importo in valuta con bilanciamento centesimi sull'ultimo partecipante
-                double totaleAssegnato = 0.0;
-                for (int i = 0; i < partecipantiInclusi.size(); i++) {
-                    Partecipante p = partecipantiInclusi.get(i);
-                    double perc = percentualiInserite.get(p.getId());
-                    double quotaEuro;
-
-                    if (i == partecipantiInclusi.size() - 1) {
-                        quotaEuro = Math.round((importo - totaleAssegnato) * 100.0) / 100.0;
-                    } else {
-                        quotaEuro = Math.round((importo * (perc / 100.0)) * 100.0) / 100.0;
-                        totaleAssegnato += quotaEuro;
-                    }
-
-                    quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaEuro, SyncStatus.PENDING_INSERT));
-                }
-
-                // Registra anche i partecipanti del gruppo esclusi con quota 0 per mantenere lo storico del gruppo
-                for (Partecipante p : partecipanti) {
-                    CheckBox cb = checkMap.get(p.getId());
-                    if (cb == null || !cb.isChecked()) {
-                        quote.add(new SpesaPartecipante(spesaId, p.getId(), 0.0, SyncStatus.PENDING_INSERT));
-                    }
-                }
+                quote = SpesaUiHelper.calcolaDivisionePercentuale(spesaId, importo, partecipantiInclusi, partecipanti, percentualiInserite, SyncStatus.PENDING_INSERT);
             }
 
             Spesa spesa = new Spesa(

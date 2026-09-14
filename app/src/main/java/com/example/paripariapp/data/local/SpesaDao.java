@@ -35,6 +35,9 @@ public interface SpesaDao {
     void insert(Spesa spesa);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Spesa> spese);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertQuote(List<SpesaPartecipante> quote);
 
     @Query("DELETE FROM spese WHERE id = :spesaId")
@@ -85,6 +88,12 @@ public interface SpesaDao {
     @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     List<Spesa> getTuttiSaldiSync();
 
+    @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    LiveData<List<Spesa>> getTuttiSaldiLive();
+
     @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     List<Spesa> getSaldiBySchedaSync(String schedaId);
+
+    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    LiveData<List<Spesa>> getSaldiBySchedaLive(String schedaId);
 }

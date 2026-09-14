@@ -619,38 +619,6 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
-    public void mostraDialogGestioneMembri() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_gestione_membri, null);
-        EditText inputNuovo = dialogView.findViewById(R.id.input_nome_nuovo_membro);
-        View btnAggiungi = dialogView.findViewById(R.id.bottone_conferma_aggiungi);
-        LinearLayout contenitoreMembri = dialogView.findViewById(R.id.contenitore_membri);
-
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setView(dialogView)
-                .setPositiveButton(R.string.btn_salva, null)
-                .create();
-
-        riempiListaMembri(contenitoreMembri, dialog);
-
-        btnAggiungi.setOnClickListener(v -> {
-            String nome = inputNuovo.getText() != null ? inputNuovo.getText().toString().trim() : "";
-            if (!nome.isEmpty()) {
-                Partecipante nuovoP = new Partecipante(
-                        UUID.randomUUID().toString(),
-                        schedaId,
-                        nome,
-                        null,
-                        SyncStatus.PENDING_INSERT
-                );
-                viewModel.aggiungiPartecipante(nuovoP);
-                inputNuovo.setText("");
-                partecipantiCache.add(nuovoP);
-                riempiListaMembri(contenitoreMembri, dialog);
-            }
-        });
-
-        dialog.show();
-    }
 
     private boolean haSpeseODebiti(Partecipante p) {
         if (p == null) return false;
@@ -759,42 +727,6 @@ public class DettaglioSchedaFragment extends Fragment {
                 .show();
     }
 
-    private void riempiListaMembri(LinearLayout contenitore, @Nullable androidx.appcompat.app.AlertDialog dialog) {
-        contenitore.removeAllViews();
-
-        boolean isCapogruppo = calcolaIsCapogruppo(schedaCorrente, partecipantiCache);
-
-        for (Partecipante p : partecipantiCache) {
-            View row = getLayoutInflater().inflate(R.layout.item_membro_gestione, contenitore, false);
-            TextView tvIniziale = row.findViewById(R.id.avatar_iniziale);
-            TextView tvNome = row.findViewById(R.id.nome_partecipante);
-            View btnMatita = row.findViewById(R.id.bottone_modifica);
-            View btnCestino = row.findViewById(R.id.bottone_elimina);
-
-            boolean isMe = isMe(p);
-            String nome = p.getNome();
-            String nomeDisplay = nome;
-            if (isMe && !nomeDisplay.toLowerCase().endsWith("(io)") && !nomeDisplay.toLowerCase().endsWith("(me)")) {
-                nomeDisplay = nomeDisplay + " (io)";
-            }
-            tvNome.setText(nomeDisplay);
-            tvIniziale.setText(!nome.isEmpty() ? String.valueOf(nome.charAt(0)).toUpperCase() : "?");
-
-            btnMatita.setVisibility(isMe ? View.VISIBLE : View.GONE);
-            btnCestino.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
-
-            btnMatita.setOnClickListener(v -> mostraDialogRinominaPartecipante(p));
-
-            btnCestino.setOnClickListener(v -> {
-                gestisciRimozioneMembro(p, dialog, () -> {
-                    partecipantiCache.remove(p);
-                    riempiListaMembri(contenitore, dialog);
-                });
-            });
-
-            contenitore.addView(row);
-        }
-    }
 
     public void mostraSceltaEsportazione() {
         String[] opzioni = {

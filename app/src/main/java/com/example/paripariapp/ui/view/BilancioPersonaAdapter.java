@@ -1,36 +1,51 @@
 package com.example.paripariapp.ui.view;
 
-
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.BilancioPersonaItem;
 import com.example.paripariapp.databinding.ItemBilancioPersonaBinding;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-public class BilancioPersonaAdapter extends RecyclerView.Adapter<BilancioPersonaAdapter.ViewHolder> {
+/**
+ * Adapter per la visualizzazione dei bilanci aggregati per persona.
+ * Utilizza ListAdapter con DiffUtil e ViewBinding.
+ */
+public class BilancioPersonaAdapter extends ListAdapter<BilancioPersonaItem, BilancioPersonaAdapter.ViewHolder> {
 
-    private final List<BilancioPersonaItem> items = new ArrayList<>();
+    private static final DiffUtil.ItemCallback<BilancioPersonaItem> DIFF_CALLBACK = new DiffUtil.ItemCallback<BilancioPersonaItem>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull BilancioPersonaItem oldItem, @NonNull BilancioPersonaItem newItem) {
+            return Objects.equals(oldItem.getSchedaId(), newItem.getSchedaId()) &&
+                    Objects.equals(oldItem.getNomePersona(), newItem.getNomePersona());
+        }
 
-    public void submitList(List<BilancioPersonaItem> newItems) {
-        items.clear();
-        if (newItems != null) items.addAll(newItems);
-        notifyDataSetChanged();
-    }
+        @Override
+        public boolean areContentsTheSame(@NonNull BilancioPersonaItem oldItem, @NonNull BilancioPersonaItem newItem) {
+            return Double.compare(oldItem.getImporto(), newItem.getImporto()) == 0 &&
+                    Objects.equals(oldItem.getNomeGruppo(), newItem.getNomeGruppo()) &&
+                    Objects.equals(oldItem.getValuta(), newItem.getValuta());
+        }
+    };
 
     public interface OnItemClickListener {
         void onItemClick(BilancioPersonaItem item);
     }
 
     private OnItemClickListener listener;
+
+    public BilancioPersonaAdapter() {
+        super(DIFF_CALLBACK);
+    }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
@@ -47,11 +62,13 @@ public class BilancioPersonaAdapter extends RecyclerView.Adapter<BilancioPersona
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        BilancioPersonaItem item = items.get(position);
+        BilancioPersonaItem item = getItem(position);
         holder.binding.tvNomePersona.setText(item.getNomePersona());
         holder.binding.tvDettaglioGruppo.setText(item.getNomeGruppo());
 
-        String iniziale = !item.getNomePersona().isEmpty() ? String.valueOf(item.getNomePersona().charAt(0)).toUpperCase() : "?";
+        String iniziale = !item.getNomePersona().isEmpty()
+                ? String.valueOf(item.getNomePersona().charAt(0)).toUpperCase(Locale.getDefault())
+                : "?";
         holder.binding.tvAvatar.setText(iniziale);
 
         if (item.isCredito()) {
@@ -67,13 +84,8 @@ public class BilancioPersonaAdapter extends RecyclerView.Adapter<BilancioPersona
         });
     }
 
-    @Override
-    public int getItemCount() {
-        return items.size();
-    }
-
     static class ViewHolder extends RecyclerView.ViewHolder {
-        ItemBilancioPersonaBinding binding;
+        final ItemBilancioPersonaBinding binding;
         ViewHolder(@NonNull ItemBilancioPersonaBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
