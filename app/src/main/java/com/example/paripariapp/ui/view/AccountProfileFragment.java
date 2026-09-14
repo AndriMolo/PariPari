@@ -21,9 +21,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentAccountProfileBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseUser;
@@ -82,14 +82,12 @@ public class AccountProfileFragment extends Fragment {
                 binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.credit_green)));
                 binding.tvBadgeEmailTesto.setText(R.string.badge_verificata);
                 binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.credit_green));
-                binding.tvDescVerificaEmail.setText(R.string.desc_email_verificata);
             } else {
                 binding.cardBadgeEmail.setCardBackgroundColor(ContextCompat.getColor(context, R.color.warning_orange_bg));
                 binding.ivBadgeEmailIcon.setImageResource(R.drawable.ic_warning_amber);
                 binding.ivBadgeEmailIcon.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.warning_orange)));
                 binding.tvBadgeEmailTesto.setText(R.string.badge_non_verificata);
                 binding.tvBadgeEmailTesto.setTextColor(ContextCompat.getColor(context, R.color.warning_orange));
-                binding.tvDescVerificaEmail.setText(R.string.desc_email_non_verificata);
                 if (isResumed()) {
                     viewModel.startEmailVerificationPolling();
                 }
@@ -99,7 +97,7 @@ public class AccountProfileFragment extends Fragment {
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error) && binding != null) {
-                Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_LONG).show();
+                AppSnackbar.showLong(binding.getRoot(), error);
                 viewModel.clearErrorMessage();
             }
         });
@@ -107,7 +105,7 @@ public class AccountProfileFragment extends Fragment {
         // Messaggi di successo
         viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), msg -> {
             if (!TextUtils.isEmpty(msg) && binding != null) {
-                Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), msg);
                 viewModel.clearSuccessMessage();
             }
         });
@@ -128,7 +126,7 @@ public class AccountProfileFragment extends Fragment {
             if (binding == null) return;
             Boolean verified = viewModel.getIsEmailVerifiedLive().getValue();
             if (Boolean.TRUE.equals(verified)) {
-                Snackbar.make(binding.getRoot(), R.string.msg_email_gia_verificata, Snackbar.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), R.string.msg_email_gia_verificata);
                 return;
             }
             viewModel.reinviaEmailVerifica();
@@ -173,50 +171,40 @@ public class AccountProfileFragment extends Fragment {
         }
 
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_email, null);
-        dialog.setContentView(dialogView);
+        com.example.paripariapp.databinding.DialogModificaEmailBinding dialogBinding =
+                com.example.paripariapp.databinding.DialogModificaEmailBinding.inflate(getLayoutInflater());
+        dialog.setContentView(dialogBinding.getRoot());
 
-        TextInputLayout tilNuovaEmail = dialogView.findViewById(R.id.til_nuova_email);
-        TextInputEditText etNuovaEmail = dialogView.findViewById(R.id.et_nuova_email);
-        TextInputLayout tilPasswordAttuale = dialogView.findViewById(R.id.til_password_attuale);
-        TextInputEditText etPasswordAttuale = dialogView.findViewById(R.id.et_password_attuale);
-        View btnAnnulla = dialogView.findViewById(R.id.btn_dialog_annulla);
-        View btnConferma = dialogView.findViewById(R.id.btn_dialog_conferma);
+        dialogBinding.btnDialogAnnulla.setOnClickListener(v -> dialog.dismiss());
 
-        if (btnAnnulla != null) {
-            btnAnnulla.setOnClickListener(v -> dialog.dismiss());
-        }
+        dialogBinding.btnDialogConferma.setOnClickListener(v -> {
+            String nuovaEmail = dialogBinding.etNuovaEmail.getText() != null
+                    ? dialogBinding.etNuovaEmail.getText().toString().trim() : "";
+            String password = dialogBinding.etPasswordAttuale.getText() != null
+                    ? dialogBinding.etPasswordAttuale.getText().toString().trim() : "";
 
-        if (btnConferma != null) {
-            btnConferma.setOnClickListener(v -> {
-                String nuovaEmail = etNuovaEmail != null && etNuovaEmail.getText() != null
-                        ? etNuovaEmail.getText().toString().trim() : "";
-                String password = etPasswordAttuale != null && etPasswordAttuale.getText() != null
-                        ? etPasswordAttuale.getText().toString().trim() : "";
+            boolean valid = true;
+            dialogBinding.tilNuovaEmail.setError(null);
+            dialogBinding.tilPasswordAttuale.setError(null);
 
-                boolean valid = true;
-                if (tilNuovaEmail != null) tilNuovaEmail.setError(null);
-                if (tilPasswordAttuale != null) tilPasswordAttuale.setError(null);
+            if (TextUtils.isEmpty(nuovaEmail) || !Patterns.EMAIL_ADDRESS.matcher(nuovaEmail).matches()) {
+                dialogBinding.tilNuovaEmail.setError(getString(R.string.error_email_valida));
+                valid = false;
+            } else if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(nuovaEmail)) {
+                dialogBinding.tilNuovaEmail.setError(getString(R.string.error_email_uguale));
+                valid = false;
+            }
 
-                if (TextUtils.isEmpty(nuovaEmail) || !Patterns.EMAIL_ADDRESS.matcher(nuovaEmail).matches()) {
-                    if (tilNuovaEmail != null) tilNuovaEmail.setError(getString(R.string.error_email_valida));
-                    valid = false;
-                } else if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(nuovaEmail)) {
-                    if (tilNuovaEmail != null) tilNuovaEmail.setError(getString(R.string.error_email_uguale));
-                    valid = false;
-                }
+            if (TextUtils.isEmpty(password)) {
+                dialogBinding.tilPasswordAttuale.setError(getString(R.string.error_password_vuota));
+                valid = false;
+            }
 
-                if (TextUtils.isEmpty(password)) {
-                    if (tilPasswordAttuale != null) tilPasswordAttuale.setError(getString(R.string.error_password_vuota));
-                    valid = false;
-                }
-
-                if (valid) {
-                    viewModel.modificaEmail(nuovaEmail, password);
-                    dialog.dismiss();
-                }
-            });
-        }
+            if (valid) {
+                viewModel.modificaEmail(nuovaEmail, password);
+                dialog.dismiss();
+            }
+        });
 
         dialog.show();
     }

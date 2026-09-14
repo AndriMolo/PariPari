@@ -26,10 +26,6 @@
     <string name="empty_saldi_titolo">Tutto in pari! 👍</string>
     <string name="empty_saldi_desc">Non ci sono saldi da saldare o rimborsi in sospeso.</string>
 
-    <!-- Header Valuta -->
-    <string name="valuta_header_titolo">Converti un Importo</string>
-    <string name="valuta_header_subtitolo">Inserisci la cifra da valutare in un\'altra valuta con i tassi di cambio BCE aggiornati.</string>
-
     <!-- Preferenza Tema -->
     <string name="label_tema_app">Tema dell\'applicazione</string>
     <string name="hint_tema_app_desc">Chiaro, Scuro o Predefinito di sistema</string>
@@ -57,7 +53,7 @@
     <string name="nome_gruppo_default">Gruppo</string>
 
     <!-- Spese Fragment & Unisciti Gruppo -->
-    <string name="titolo_spese">I Tuoi Gruppi</string>
+    <string name="titolo_spese">Gruppi</string>
     <string name="btn_entra_testo">Entra con codice</string>
     <string name="dialog_entra">Entra in un Gruppo</string>
     <string name="dialog_titolo">Inserisci il codice invito alfanumerico per sincronizzare le spese con i tuoi amici.</string>
@@ -86,7 +82,7 @@
     <string name="btn_inverti">⇅ Inverti</string>
     <string name="btn_converti">Converti</string>
     <string name="label_risultato">Risultato</string>
-    <string name="placeholder_risultato">—</string>
+    <string name="placeholder_risultato">-</string>
     <string name="tassi_bce_aggiornati">Tassi BCE aggiornati al: %s</string>
     <string name="error_importo_valuta">Inserisci un importo valido (es. 10 oppure 12.50)</string>
     <string name="error_importo_zero">L\'importo deve essere maggiore di zero</string>
@@ -112,6 +108,9 @@
     <string name="hint_password">Password</string>
     <string name="btn_crea_account">Crea Account</string>
     <string name="btn_accedi">Accedi</string>
+    <string name="btn_accedi_google">Accedi con Google</string>
+    <string name="btn_continua_google">Continua con Google</string>
+    <string name="label_oppure">oppure</string>
     <string name="switch_to_login">Hai già un account? Accedi</string>
     <string name="switch_to_register">Non hai un account? Registrati</string>
     <string name="btn_logout">Disconnetti</string>
@@ -125,6 +124,7 @@
     <string name="error_password_minima">La password deve avere almeno 6 caratteri</string>
     <string name="msg_registrazione_ok">Account creato con successo!</string>
     <string name="msg_login_ok">Accesso effettuato con successo!</string>
+    <string name="msg_login_google_ok">Accesso con Google completato con successo!</string>
     <string name="msg_logout_ok">Disconnesso. Sei ora in modalità ospite.</string>
 
     <!-- Preferenze Account -->
@@ -146,6 +146,7 @@
     <string name="dialog_titolo_elimina_scheda">Elimina scheda</string>
     <string name="dialog_msg_elimina_scheda">Sei sicuro di voler eliminare questa scheda? Tutte le spese associate verranno rimosse dal tuo dispositivo.</string>
     <string name="dialog_msg_elimina_scheda_con_saldi">Attenzione: hai ancora dei saldi aperti in questa scheda. Eliminandola, la scheda verrà rimossa dal tuo dispositivo e i suoi debiti o crediti non saranno più conteggiati nei tuoi saldi totali. Vuoi procedere?</string>
+    <string name="msg_scheda_eliminata">Gruppo eliminato</string>
     <string name="label_totale_spese">Totale spese</string>
     <string name="label_partecipanti_formato">Partecipanti: %s</string>
 
@@ -335,7 +336,9 @@
     <string name="btn_condividi_link">Condividi invito</string>
     <string name="btn_copia_codice">Copia codice</string>
     <string name="msg_codice_copiato">Codice copiato negli appunti</string>
-    <string name="msg_invito_condivisione">Unisciti al mio gruppo \"%1$s\" su PariPari!\n\nUsa il codice invito: %2$s</string>
+    <string name="label_inquadra_fotocamera">Inquadra con la fotocamera per unirti</string>
+    <string name="desc_qr_code">Codice QR con link di invito</string>
+    <string name="msg_invito_condivisione">Unisciti al mio gruppo \"%1$s\" su PariPari!\n\nClicca sul link per entrare direttamente:\n%2$s\n\nOppure inserisci il codice invito: %3$s</string>
     <string name="dialog_titolo_conferma_unione">Unisciti al gruppo</string>
     <string name="dialog_msg_conferma_unione">Vuoi unirti al gruppo con codice %1$s?</string>
     <string name="btn_unisciti">Unisciti</string>
@@ -464,5 +467,8 @@
     <string name="tipo_rimborso">Rimborso</string>
     <string name="label_ricevuto_da">A chi</string>
     <string name="msg_saldi_rimozione_solo_spese">Per modificare o rimuovere un rimborso, utilizza la schermata Spese del gruppo.</string>
+
+    <string name="label_codice_6_caratteri">Codice a 6 caratteri</string>
+    <string name="handle_format">@%s</string>
 
 </resources>

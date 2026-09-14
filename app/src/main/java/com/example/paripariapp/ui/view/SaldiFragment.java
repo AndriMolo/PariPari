@@ -98,8 +98,8 @@ public class SaldiFragment extends Fragment {
     private void aggiornaUi(double ricevere, double dare) {
         if (binding == null) return;
         String valuta = viewModel.getDefaultCurrency();
-        binding.tvTotaleDaRicevere.setText(String.format(Locale.getDefault(), "%.2f %s", ricevere, valuta));
-        binding.tvTotaleDaDare.setText(String.format(Locale.getDefault(), "%.2f %s", dare, valuta));
+        binding.tvTotaleDaRicevere.setText(com.example.paripariapp.util.ImportoUtil.formatta(ricevere, valuta));
+        binding.tvTotaleDaDare.setText(com.example.paripariapp.util.ImportoUtil.formatta(dare, valuta));
         applicaFiltro();
     }
 

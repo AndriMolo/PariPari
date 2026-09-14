@@ -2,7 +2,11 @@
   "auth": {
     "providers": {
       "anonymous": true,
-      "emailPassword": true
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "PariPari",
+        "supportEmail": "nicoscotti2004@gmail.com"
+      }
     }
   },
   "storage": {

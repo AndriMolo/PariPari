@@ -147,10 +147,6 @@ public class FirestoreSyncManager {
         return networkMonitor.isConnected();
     }
 
-    // ===============================================================
-    // UPLOAD DIFFERITI E AGGIORNAMENTI
-    // ===============================================================
-
     public void uploadScheda(Scheda scheda, @Nullable List<Partecipante> partecipanti) {
         if (auth.getCurrentUser() == null) return;
 
@@ -280,10 +276,6 @@ public class FirestoreSyncManager {
         }
     }
 
-    // ===============================================================
-    // CANCELLAZIONI REMOTE
-    // ===============================================================
-
     public void deleteScheda(String schedaId) {
         detachSubcollectionListeners(schedaId);
 
@@ -394,10 +386,6 @@ public class FirestoreSyncManager {
         }
     }
 
-    // ===============================================================
-    // SINCRONIZZAZIONE DATI PENDENTI
-    // ===============================================================
-
     public void syncPendingData() {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) return;
@@ -444,10 +432,6 @@ public class FirestoreSyncManager {
             }
         });
     }
-
-    // ===============================================================
-    // REAL-TIME SYNC (SNAPSHOT LISTENERS)
-    // ===============================================================
 
     public synchronized void startRealtimeSync() {
         FirebaseUser currentUser = auth.getCurrentUser();
@@ -722,10 +706,6 @@ public class FirestoreSyncManager {
 
         groupSubListeners.put(groupId + "_doc", gReg);
     }
-
-    // ===============================================================
-    // CODICI INVITO & JOIN GRUPPO
-    // ===============================================================
 
     private interface AuthSessionCallback {
         void onAuthenticated(@NonNull FirebaseUser user);

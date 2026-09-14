@@ -13,7 +13,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,6 +33,7 @@ import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.data.model.TrasferimentoSaldo;
 import com.example.paripariapp.databinding.FragmentDettaglioSchedaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.EsportatoreDati;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -387,6 +387,13 @@ public class DettaglioSchedaFragment extends Fragment {
     private void setupRicercaEFiltri() {
         MenuItem searchItem = binding.toolbarDettaglio.getMenu().findItem(R.id.action_cerca);
         if (searchItem != null) {
+            if (searchItem.getIcon() != null) {
+                int colorOnSurface = com.google.android.material.color.MaterialColors.getColor(
+                        binding.toolbarDettaglio, com.google.android.material.R.attr.colorOnSurface);
+                android.graphics.drawable.Drawable tintedIcon = androidx.core.graphics.drawable.DrawableCompat.wrap(searchItem.getIcon().mutate());
+                androidx.core.graphics.drawable.DrawableCompat.setTint(tintedIcon, colorOnSurface);
+                searchItem.setIcon(tintedIcon);
+            }
             SearchView searchView = (SearchView) searchItem.getActionView();
             if (searchView != null) {
                 searchView.setQueryHint(getString(R.string.hint_ricerca_spese));
@@ -394,14 +401,14 @@ public class DettaglioSchedaFragment extends Fragment {
                 searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                     @Override
                     public boolean onQueryTextSubmit(String query) {
-                        queryFiltroTesto = query != null ? query.trim().toLowerCase() : "";
+                        queryFiltroTesto = query != null ? query.trim().toLowerCase(java.util.Locale.getDefault()) : "";
                         applicaFiltriERaggruppa();
                         return true;
                     }
 
                     @Override
                     public boolean onQueryTextChange(String newText) {
-                        queryFiltroTesto = newText != null ? newText.trim().toLowerCase() : "";
+                        queryFiltroTesto = newText != null ? newText.trim().toLowerCase(java.util.Locale.getDefault()) : "";
                         applicaFiltriERaggruppa();
                         return true;
                     }
@@ -423,8 +430,8 @@ public class DettaglioSchedaFragment extends Fragment {
             }
         }
 
-        // Listener compatibile sia con versioni Material vecchie che recenti
-        binding.chipGroupCategorie.setOnCheckedChangeListener((group, checkedId) -> {
+        binding.chipGroupCategorie.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            int checkedId = (checkedIds != null && !checkedIds.isEmpty()) ? checkedIds.get(0) : View.NO_ID;
             if (checkedId == View.NO_ID || checkedId == R.id.chip_cat_tutte) {
                 categoriaSelezionata = getString(R.string.filtro_tutte);
             } else {
@@ -484,7 +491,7 @@ public class DettaglioSchedaFragment extends Fragment {
         viewModel.getTotaleSpese(schedaId).observe(getViewLifecycleOwner(), totale -> {
             if (binding == null) return;
             double amount = (totale != null) ? totale : 0.0;
-            binding.tvTotaleScheda.setText(String.format(Locale.getDefault(), "%.2f %s", amount, valuta != null ? valuta : "EUR"));
+            binding.tvTotaleScheda.setText(com.example.paripariapp.util.ImportoUtil.formatta(amount, valuta));
         });
 
         viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), partecipanti -> {
@@ -516,8 +523,16 @@ public class DettaglioSchedaFragment extends Fragment {
                 aggiornaMembriAdapter();
             } else {
                 if (getActivity() != null && !getActivity().isFinishing() && isAdded()) {
-                    Toast.makeText(requireContext(), R.string.msg_sei_stato_rimosso_dal_gruppo, Toast.LENGTH_SHORT).show();
-                    getActivity().finish();
+                    if (binding != null) {
+                        AppSnackbar.show(binding.getRoot(), R.string.msg_sei_stato_rimosso_dal_gruppo);
+                        binding.getRoot().postDelayed(() -> {
+                            if (getActivity() != null && !getActivity().isFinishing()) {
+                                getActivity().finish();
+                            }
+                        }, 500);
+                    } else {
+                        getActivity().finish();
+                    }
                 }
             }
         });
@@ -565,7 +580,7 @@ public class DettaglioSchedaFragment extends Fragment {
             }
 
             boolean matchTesto = queryFiltroTesto.isEmpty() ||
-                    s.getTitolo().toLowerCase().contains(queryFiltroTesto);
+                    s.getTitolo().toLowerCase(java.util.Locale.getDefault()).contains(queryFiltroTesto);
 
             boolean matchCat = categoriaSelezionata.equalsIgnoreCase(labelTutte) ||
                     categoriaSelezionata.equalsIgnoreCase(s.getCategoria());
@@ -731,13 +746,21 @@ public class DettaglioSchedaFragment extends Fragment {
                         if (dialogToDismiss != null && dialogToDismiss.isShowing()) {
                             dialogToDismiss.dismiss();
                         }
-                        Toast.makeText(requireContext(), R.string.msg_sei_uscito_dal_gruppo, Toast.LENGTH_SHORT).show();
-                        if (getActivity() != null && !getActivity().isFinishing()) {
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), R.string.msg_sei_uscito_dal_gruppo);
+                            binding.getRoot().postDelayed(() -> {
+                                if (getActivity() != null && !getActivity().isFinishing()) {
+                                    getActivity().finish();
+                                }
+                            }, 400);
+                        } else if (getActivity() != null && !getActivity().isFinishing()) {
                             getActivity().finish();
                         }
                     } else {
                         viewModel.eliminaPartecipante(p.getId());
-                        Toast.makeText(requireContext(), getString(R.string.msg_membro_rimosso, p.getNome()), Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_rimosso, p.getNome()));
+                        }
                         if (onMemberRemovedLocally != null) {
                             onMemberRemovedLocally.run();
                         }
@@ -760,7 +783,9 @@ public class DettaglioSchedaFragment extends Fragment {
                 .setTitle(getString(R.string.titolo_dialog_esporta))
                 .setItems(opzioni, (dialog, which) -> {
                     if (speseCache.isEmpty()) {
-                        Toast.makeText(requireContext(), R.string.msg_nessuna_spesa_export, Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), R.string.msg_nessuna_spesa_export);
+                        }
                         return;
                     }
 
@@ -774,7 +799,9 @@ public class DettaglioSchedaFragment extends Fragment {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(requireContext(), R.string.msg_errore_esportazione, Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), R.string.msg_errore_esportazione);
+                        }
                     }
                 })
                 .setNegativeButton(getString(R.string.btn_annulla), null)
@@ -783,6 +810,11 @@ public class DettaglioSchedaFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (binding != null) {
+            binding.recyclerSpese.setAdapter(null);
+            binding.recyclerSaldi.setAdapter(null);
+            binding.recyclerMembri.setAdapter(null);
+        }
         super.onDestroyView();
         binding = null;
     }
@@ -796,11 +828,15 @@ public class DettaglioSchedaFragment extends Fragment {
             boolean isMe = isMe(p);
             boolean isCapo = calcolaIsCapogruppo(schedaCorrente, partecipantiCache);
             if (!isMe && !isCapo) {
-                Toast.makeText(requireContext(), R.string.msg_permesso_negato_modifica_nome_altri, Toast.LENGTH_SHORT).show();
+                if (binding != null) {
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_permesso_negato_modifica_nome_altri);
+                }
                 return;
             }
             viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
-            Toast.makeText(requireContext(), R.string.msg_nome_aggiornato_successo, Toast.LENGTH_SHORT).show();
+            if (binding != null) {
+                AppSnackbar.show(binding.getRoot(), R.string.msg_nome_aggiornato_successo);
+            }
         });
 
         membroAdapter.setOnEliminaClickListener(p -> {
@@ -865,30 +901,50 @@ public class DettaglioSchedaFragment extends Fragment {
     private void mostraDialogCodiceGruppo() {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_codice_gruppo, binding.getRoot(), false);
-        dialog.setContentView(sheetView);
+        com.example.paripariapp.databinding.DialogCodiceGruppoBinding sheetBinding =
+                com.example.paripariapp.databinding.DialogCodiceGruppoBinding.inflate(getLayoutInflater());
+        dialog.setContentView(sheetBinding.getRoot());
 
-        TextView tvCodiceGruppo = sheetView.findViewById(R.id.tvCodiceGruppo);
         String codice = (schedaCorrente != null && schedaCorrente.getCodiceInvito() != null && !schedaCorrente.getCodiceInvito().isEmpty())
                 ? schedaCorrente.getCodiceInvito() : "CARICO";
 
         if ("CARICO".equals(codice) && schedaCorrente != null) {
             viewModel.assicuraCodiceInvito(schedaCorrente);
         }
-        tvCodiceGruppo.setText(codice);
+        sheetBinding.tvCodiceGruppo.setText(codice);
 
-        sheetView.findViewById(R.id.btnCopiaCodice).setOnClickListener(v -> {
+        // Genera asincronamente il QR Code con il logo PariPari al centro
+        String linkInvito = com.example.paripariapp.util.CodiceInvitoUtil.generaLinkInvito(codice);
+        sheetBinding.progressQr.setVisibility(View.VISIBLE);
+        sheetBinding.ivQrCode.setVisibility(View.INVISIBLE);
+
+        com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+            if (getContext() == null) return;
+            android.graphics.Bitmap qrBitmap = com.example.paripariapp.util.QrCodeUtil.generaQrCodeConLogo(
+                    requireContext().getApplicationContext(), linkInvito, 600);
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (isAdded() && getContext() != null && dialog.isShowing()) {
+                    sheetBinding.progressQr.setVisibility(View.GONE);
+                    if (qrBitmap != null) {
+                        sheetBinding.ivQrCode.setImageBitmap(qrBitmap);
+                        sheetBinding.ivQrCode.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+        });
+
+        sheetBinding.btnCopiaCodice.setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("Codice gruppo", codice);
             if (clipboard != null) {
                 clipboard.setPrimaryClip(clip);
-                Toast.makeText(requireContext(), R.string.msg_codice_copiato, Toast.LENGTH_SHORT).show();
+                AppSnackbar.show(sheetBinding.getRoot(), R.string.msg_codice_copiato);
             }
         });
 
-        sheetView.findViewById(R.id.btnCondividiLink).setOnClickListener(v -> {
+        sheetBinding.btnCondividiLink.setOnClickListener(v -> {
             String titoloGruppo = (titolo != null && !titolo.isEmpty()) ? titolo : (schedaCorrente != null ? schedaCorrente.getTitolo() : "Gruppo");
-            String messaggio = getString(R.string.msg_invito_condivisione, titoloGruppo, codice);
+            String messaggio = getString(R.string.msg_invito_condivisione, titoloGruppo, linkInvito, codice);
 
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
@@ -897,7 +953,7 @@ public class DettaglioSchedaFragment extends Fragment {
             startActivity(Intent.createChooser(shareIntent, getString(R.string.btn_condividi_link)));
         });
 
-        sheetView.findViewById(R.id.btnChiudiDialogCodice).setOnClickListener(v -> dialog.dismiss());
+        sheetBinding.btnChiudiDialogCodice.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }

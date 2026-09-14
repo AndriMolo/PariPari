@@ -103,6 +103,7 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+<<<<<<< HEAD
         StoricoItem item = getItem(position);
         Spesa spesa = item.getSpesa();
         Context ctx = holder.itemView.getContext();
@@ -131,6 +132,12 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
             holder.binding.tvBadgeTipoSaldo.setText(R.string.badge_inviato);
             holder.binding.tvBadgeTipoSaldo.setTextColor(redColor);
         }
+=======
+        Spesa item = getItem(position);
+        holder.binding.tvTitoloSaldo.setText(item.getTitolo());
+        holder.binding.tvDataSaldo.setText(dateFormat.format(new Date(item.getDataSpesa())));
+        holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formatta(item.getImporto(), item.getValuta()));
+>>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(item);

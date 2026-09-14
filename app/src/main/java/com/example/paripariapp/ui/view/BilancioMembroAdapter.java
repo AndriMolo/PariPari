@@ -62,14 +62,12 @@ public class BilancioMembroAdapter extends ListAdapter<BilancioMembro, BilancioM
         double saldo = item.getSaldoNetto();
         String valuta = item.getValuta() != null ? item.getValuta() : "EUR";
 
+        holder.binding.importoBilancio.setText(com.example.paripariapp.util.ImportoUtil.formattaConSegno(saldo, valuta));
         if (saldo > 0.009) {
-            holder.binding.importoBilancio.setText(String.format(Locale.getDefault(), "+%.2f %s", saldo, valuta));
             holder.binding.importoBilancio.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.credit_green));
         } else if (saldo < -0.009) {
-            holder.binding.importoBilancio.setText(String.format(Locale.getDefault(), "%.2f %s", saldo, valuta));
             holder.binding.importoBilancio.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.debt_red));
         } else {
-            holder.binding.importoBilancio.setText(String.format(Locale.getDefault(), "0,00 %s", valuta));
             holder.binding.importoBilancio.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.md_theme_outline));
         }
     }

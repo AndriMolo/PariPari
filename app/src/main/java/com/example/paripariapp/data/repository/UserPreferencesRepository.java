@@ -8,6 +8,8 @@ import androidx.core.os.LocaleListCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.paripariapp.R;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -64,6 +66,15 @@ public class UserPreferencesRepository {
             "THB - Baht thailandese",
             "TRY - Lira turca",
             "ZAR - Rand sudafricano"
+    );
+
+    public static final List<String> SUPPORTED_LANGUAGE_CODES = Arrays.asList(
+            LANGUAGE_SYSTEM,
+            "it",
+            "en",
+            "es",
+            "fr",
+            "de"
     );
 
     public static final List<String> SUPPORTED_LANGUAGES = Arrays.asList(
@@ -136,7 +147,7 @@ public class UserPreferencesRepository {
         if (currencyCode == null || currencyCode.trim().isEmpty()) {
             return;
         }
-        String cleanCode = currencyCode.trim().toUpperCase();
+        String cleanCode = currencyCode.trim().toUpperCase(Locale.ROOT);
         preferences.edit().putString(KEY_DEFAULT_CURRENCY, cleanCode).apply();
         defaultCurrencyLive.postValue(cleanCode);
     }
@@ -168,7 +179,7 @@ public class UserPreferencesRepository {
         if (displayCurrency.contains(" - ")) {
             return displayCurrency.split(" - ")[0].trim();
         }
-        return displayCurrency.trim().toUpperCase();
+        return displayCurrency.trim().toUpperCase(Locale.ROOT);
     }
 
     /**
@@ -179,7 +190,7 @@ public class UserPreferencesRepository {
             return SUPPORTED_CURRENCIES.get(0);
         }
         for (String item : SUPPORTED_CURRENCIES) {
-            if (item.startsWith(currencyCode.toUpperCase())) {
+            if (item.startsWith(currencyCode.toUpperCase(Locale.ROOT))) {
                 return item;
             }
         }
@@ -192,7 +203,7 @@ public class UserPreferencesRepository {
     public static int getIndexOfCurrencyCode(String currencyCode) {
         if (currencyCode == null) return 0;
         for (int i = 0; i < SUPPORTED_CURRENCIES.size(); i++) {
-            if (SUPPORTED_CURRENCIES.get(i).startsWith(currencyCode.toUpperCase())) {
+            if (SUPPORTED_CURRENCIES.get(i).startsWith(currencyCode.toUpperCase(Locale.ROOT))) {
                 return i;
             }
         }
@@ -217,7 +228,7 @@ public class UserPreferencesRepository {
      */
     public static String getCurrencyFlag(String currencyCode) {
         if (currencyCode == null) return "🏳️";
-        switch (currencyCode.toUpperCase().trim()) {
+        switch (currencyCode.toUpperCase(Locale.ROOT).trim()) {
             case "EUR": return "🇪🇺";
             case "USD": return "🇺🇸";
             case "GBP": return "🇬🇧";
@@ -251,10 +262,6 @@ public class UserPreferencesRepository {
             default: return "💰";
         }
     }
-
-    // ====================================================================
-    // GESTIONE LINGUA & LOCALE APP
-    // ====================================================================
 
     /**
      * Restituisce il codice lingua attualmente salvato ("SYSTEM", "it", "en", ecc.).
@@ -307,7 +314,10 @@ public class UserPreferencesRepository {
      * Estrae il codice lingua da una stringa formattata (es. "it - Italiano" -> "it").
      */
     public static String extractLanguageCode(String displayLanguage) {
-        if (displayLanguage == null || displayLanguage.isEmpty()) {
+        if (displayLanguage == null || displayLanguage.isEmpty()
+                || LANGUAGE_SYSTEM.equalsIgnoreCase(displayLanguage)
+                || "Predefinita di sistema".equalsIgnoreCase(displayLanguage)
+                || "System default".equalsIgnoreCase(displayLanguage)) {
             return LANGUAGE_SYSTEM;
         }
         if (displayLanguage.contains(" - ")) {
@@ -317,18 +327,39 @@ public class UserPreferencesRepository {
     }
 
     /**
-     * Restituisce la dicitura leggibile per la lingua specificata.
+     * Restituisce la dicitura leggibile per la lingua specificata, risolvendo "Predefinita di sistema"
+     * coerentemente con il tema tramite la risorsa R.string.lingua_sistema.
+     */
+    public static String getDisplayLanguageForCode(Context context, String langCode) {
+        if (langCode == null || LANGUAGE_SYSTEM.equalsIgnoreCase(langCode)) {
+            return context != null ? context.getString(R.string.lingua_sistema) : "Predefinita di sistema";
+        }
+        switch (langCode.toLowerCase(Locale.ROOT)) {
+            case "it":
+                return "Italiano";
+            case "en":
+                return "English";
+            case "es":
+                return "Español";
+            case "fr":
+                return "Français";
+            case "de":
+                return "Deutsch";
+            default:
+                for (String item : SUPPORTED_LANGUAGES) {
+                    if (item.startsWith(langCode + " - ")) {
+                        return item.split(" - ")[1].trim();
+                    }
+                }
+                return langCode;
+        }
+    }
+
+    /**
+     * Sovraccarico legacy senza Context.
      */
     public static String getDisplayLanguageForCode(String langCode) {
-        if (langCode == null || LANGUAGE_SYSTEM.equalsIgnoreCase(langCode)) {
-            return "Predefinita di sistema";
-        }
-        for (String item : SUPPORTED_LANGUAGES) {
-            if (item.startsWith(langCode + " - ")) {
-                return item.split(" - ")[1].trim();
-            }
-        }
-        return langCode;
+        return getDisplayLanguageForCode(null, langCode);
     }
 
     /**
@@ -336,6 +367,11 @@ public class UserPreferencesRepository {
      */
     public static int getIndexOfLanguageCode(String langCode) {
         if (langCode == null) return 0;
+        for (int i = 0; i < SUPPORTED_LANGUAGE_CODES.size(); i++) {
+            if (SUPPORTED_LANGUAGE_CODES.get(i).equalsIgnoreCase(langCode)) {
+                return i;
+            }
+        }
         for (int i = 0; i < SUPPORTED_LANGUAGES.size(); i++) {
             if (SUPPORTED_LANGUAGES.get(i).startsWith(langCode)) {
                 return i;
@@ -355,10 +391,6 @@ public class UserPreferencesRepository {
         return Locale.forLanguageTag(lang);
     }
 
-    // ====================================================================
-    // GESTIONE TEMA APP
-    // ====================================================================
-
     public String getAppTheme() {
         return preferences.getString(KEY_APP_THEME, THEME_SYSTEM);
     }
@@ -371,7 +403,7 @@ public class UserPreferencesRepository {
         if (themeCode == null || themeCode.trim().isEmpty()) {
             return;
         }
-        String cleanCode = themeCode.trim().toUpperCase();
+        String cleanCode = themeCode.trim().toUpperCase(Locale.ROOT);
         preferences.edit().putString(KEY_APP_THEME, cleanCode).apply();
         appThemeLive.postValue(cleanCode);
         applyTheme(cleanCode);
@@ -390,10 +422,6 @@ public class UserPreferencesRepository {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
     }
-
-    // ====================================================================
-    // GESTIONE ACCOUNT PAGAMENTO (PAYPAL & REVOLUT)
-    // ====================================================================
 
     public String getPaypalHandle() {
         return preferences.getString(KEY_PAYPAL_HANDLE, "");
@@ -426,11 +454,12 @@ public class UserPreferencesRepository {
     public static String cleanPaypalHandle(String input) {
         if (input == null) return "";
         String clean = input.trim();
-        if (clean.toLowerCase().startsWith("https://paypal.me/")) {
+        String cleanLower = clean.toLowerCase(Locale.ROOT);
+        if (cleanLower.startsWith("https://paypal.me/")) {
             clean = clean.substring("https://paypal.me/".length());
-        } else if (clean.toLowerCase().startsWith("http://paypal.me/")) {
+        } else if (cleanLower.startsWith("http://paypal.me/")) {
             clean = clean.substring("http://paypal.me/".length());
-        } else if (clean.toLowerCase().startsWith("paypal.me/")) {
+        } else if (cleanLower.startsWith("paypal.me/")) {
             clean = clean.substring("paypal.me/".length());
         }
         if (clean.startsWith("@")) {
@@ -450,11 +479,12 @@ public class UserPreferencesRepository {
     public static String cleanRevolutHandle(String input) {
         if (input == null) return "";
         String clean = input.trim();
-        if (clean.toLowerCase().startsWith("https://revolut.me/")) {
+        String cleanLower = clean.toLowerCase(Locale.ROOT);
+        if (cleanLower.startsWith("https://revolut.me/")) {
             clean = clean.substring("https://revolut.me/".length());
-        } else if (clean.toLowerCase().startsWith("http://revolut.me/")) {
+        } else if (cleanLower.startsWith("http://revolut.me/")) {
             clean = clean.substring("http://revolut.me/".length());
-        } else if (clean.toLowerCase().startsWith("revolut.me/")) {
+        } else if (cleanLower.startsWith("revolut.me/")) {
             clean = clean.substring("revolut.me/".length());
         }
         if (clean.startsWith("@")) {
@@ -478,7 +508,7 @@ public class UserPreferencesRepository {
             return "https://paypal.me/" + clean;
         }
         String formattedAmount = String.format(Locale.US, "%.2f", importo);
-        String code = (valuta != null && !valuta.trim().isEmpty()) ? valuta.trim().toUpperCase() : "EUR";
+        String code = (valuta != null && !valuta.trim().isEmpty()) ? valuta.trim().toUpperCase(Locale.ROOT) : "EUR";
         return "https://paypal.me/" + clean + "/" + formattedAmount + code;
     }
 

@@ -1,5 +1,6 @@
 package com.example.paripariapp.ui.view;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -7,9 +8,17 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.util.Log;
+
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -18,8 +27,15 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentAccountGuestBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
+import com.example.paripariapp.util.AppSnackbar;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseUser;
@@ -27,15 +43,48 @@ import com.google.firebase.auth.FirebaseUser;
 /**
  * Child fragment dedicato alla gestione dell'utente non autenticato (Ospite).
  * Include la modifica del nome locale, il form di registrazione e di accesso,
- * e il flusso di recupero password.
+ * il flusso di recupero password e l'accesso rapido con Google.
  */
 public class AccountGuestFragment extends Fragment {
+
+    private static final String TAG = "AccountGuestFragment";
 
     private FragmentAccountGuestBinding binding;
     private AccountViewModel viewModel;
 
     // true = registrazione (con Nome), false = accesso (solo Email e Password)
     private boolean isRegisterMode = true;
+    private OnBackPressedCallback backCallback;
+
+    private ActivityResultLauncher<Intent> googleSignInLauncher;
+    private GoogleSignInClient googleSignInClient;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        try {
+                            GoogleSignInAccount account = task.getResult(ApiException.class);
+                            if (account != null && account.getIdToken() != null) {
+                                viewModel.accediConGoogle(account.getIdToken());
+                            } else {
+                                AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), "Impossibile recuperare le credenziali Google");
+                            }
+                        } catch (ApiException e) {
+                            Log.w(TAG, "Accesso con Google fallito: code=" + e.getStatusCode(), e);
+                            if (e.getStatusCode() != GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                                String msg = e.getLocalizedMessage() != null ? e.getLocalizedMessage() : "Errore Google Sign-In (" + e.getStatusCode() + ")";
+                                AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), msg);
+                            }
+                        }
+                    }
+                }
+        );
+    }
 
     @Nullable
     @Override
@@ -51,9 +100,39 @@ public class AccountGuestFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
 
+        setupGoogleSignIn();
+        setupBackPressHandler();
         setupObservers();
         setupListeners();
         updateFormModeUI();
+    }
+
+    private void setupGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .requestProfile()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
+    }
+
+    private void avviaAccessoGoogle() {
+        if (googleSignInClient == null) return;
+        googleSignInClient.signOut().addOnCompleteListener(task -> {
+            if (googleSignInLauncher != null) {
+                googleSignInLauncher.launch(googleSignInClient.getSignInIntent());
+            }
+        });
+    }
+
+    private void setupBackPressHandler() {
+        backCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                chiudiFormAuth();
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backCallback);
     }
 
     private void setupObservers() {
@@ -74,21 +153,26 @@ public class AccountGuestFragment extends Fragment {
             binding.progressBarAuth.setVisibility(isLoading ? View.VISIBLE : View.GONE);
             binding.btnSubmitAuth.setEnabled(!isLoading);
             binding.btnSwitchAuthMode.setEnabled(!isLoading);
+            binding.btnChiudiAuth.setEnabled(!isLoading);
+            binding.btnMostraRegistrazione.setEnabled(!isLoading);
+            binding.btnMostraLogin.setEnabled(!isLoading);
+            binding.btnGoogleSigninInitial.setEnabled(!isLoading);
+            binding.btnGoogleSigninForm.setEnabled(!isLoading);
         });
 
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error) && binding != null) {
-                Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_LONG).show();
+                AppSnackbar.showLong(binding.getRoot(), error);
                 viewModel.clearErrorMessage();
             }
         });
 
-        // Messaggi di successo
+        // Messaggi di success
         viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), msg -> {
             if (!TextUtils.isEmpty(msg) && binding != null) {
-                Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
-                pulisciCampi();
+                AppSnackbar.show(binding.getRoot(), msg);
+                chiudiFormAuth();
                 viewModel.clearSuccessMessage();
             }
         });
@@ -98,7 +182,18 @@ public class AccountGuestFragment extends Fragment {
         // Modifica nome ospite
         binding.cardNomeOspite.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
 
-        // Toggle Registrati / Accedi
+        // Apertura form da pulsanti iniziali
+        binding.btnMostraRegistrazione.setOnClickListener(v -> apriFormAuth(true));
+        binding.btnMostraLogin.setOnClickListener(v -> apriFormAuth(false));
+
+        // Chiusura form
+        binding.btnChiudiAuth.setOnClickListener(v -> chiudiFormAuth());
+
+        // Accesso Google (sia iniziale sia dentro il form)
+        binding.btnGoogleSigninInitial.setOnClickListener(v -> avviaAccessoGoogle());
+        binding.btnGoogleSigninForm.setOnClickListener(v -> avviaAccessoGoogle());
+
+        // Toggle Registrati / Accedi all'interno del form
         binding.btnSwitchAuthMode.setOnClickListener(v -> {
             isRegisterMode = !isRegisterMode;
             updateFormModeUI();
@@ -126,14 +221,54 @@ public class AccountGuestFragment extends Fragment {
         });
     }
 
+    private void apriFormAuth(boolean registerMode) {
+        if (binding == null) return;
+        isRegisterMode = registerMode;
+        updateFormModeUI();
+        binding.containerAuthButtons.setVisibility(View.GONE);
+        binding.cardAuthForm.setVisibility(View.VISIBLE);
+        if (backCallback != null) {
+            backCallback.setEnabled(true);
+        }
+        if (isRegisterMode && binding.etNome != null) {
+            binding.etNome.requestFocus();
+        } else if (binding.etEmail != null) {
+            binding.etEmail.requestFocus();
+        }
+    }
+
+    private void chiudiFormAuth() {
+        if (binding == null) return;
+        nascondiTastiera();
+        binding.cardAuthForm.setVisibility(View.GONE);
+        binding.containerAuthButtons.setVisibility(View.VISIBLE);
+        if (backCallback != null) {
+            backCallback.setEnabled(false);
+        }
+        pulisciCampi();
+    }
+
+    private void nascondiTastiera() {
+        if (getActivity() == null) return;
+        View currentFocus = getActivity().getCurrentFocus();
+        if (currentFocus != null) {
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+            }
+        }
+    }
+
     private void updateFormModeUI() {
         if (binding == null) return;
         if (isRegisterMode) {
+            binding.tvTitoloFormAuth.setText(R.string.btn_crea_account);
             binding.tilNome.setVisibility(View.VISIBLE);
             binding.tvPasswordDimenticata.setVisibility(View.GONE);
             binding.btnSubmitAuth.setText(R.string.btn_crea_account);
             binding.btnSwitchAuthMode.setText(R.string.switch_to_login);
         } else {
+            binding.tvTitoloFormAuth.setText(R.string.btn_accedi);
             binding.tilNome.setVisibility(View.GONE);
             binding.tvPasswordDimenticata.setVisibility(View.VISIBLE);
             binding.btnSubmitAuth.setText(R.string.btn_accedi);
@@ -243,7 +378,7 @@ public class AccountGuestFragment extends Fragment {
                         if (!TextUtils.isEmpty(email) && Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                             viewModel.inviaEmailRecuperoPassword(email);
                         } else if (binding != null) {
-                            Snackbar.make(binding.getRoot(), R.string.error_email_valida, Snackbar.LENGTH_SHORT).show();
+                            AppSnackbar.show(binding.getRoot(), R.string.error_email_valida);
                         }
                     })
                     .setNegativeButton(R.string.btn_annulla, null)

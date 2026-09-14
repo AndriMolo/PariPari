@@ -81,7 +81,11 @@ public class CalcolatoreSaldi {
         Map<String, Spesa> spesaMap = new HashMap<>();
         String valutaDef = valutaPredefinita != null ? valutaPredefinita : "EUR";
 
+<<<<<<< HEAD
         // 1. Aggiunge gli importi anticipati da ciascuno (+ credito) convertiti nella valuta predefinita della scheda
+=======
+        // Accredito importi anticipati da ciascun pagatore
+>>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
         for (Spesa s : spese) {
             spesaMap.put(s.getId(), s);
             String pagatoreId = s.getPagatoDaId();
@@ -93,7 +97,7 @@ public class CalcolatoreSaldi {
             }
         }
 
-        // 2. Sottrae le quote dovute da ciascuno (- debito) tenendo conto di quanto già pagato
+        // Addebito quote a carico dei partecipanti al netto di acconti già versati
         if (quote != null && !quote.isEmpty()) {
             for (SpesaPartecipante q : quote) {
                 String debitoreId = q.getPartecipanteId();
@@ -191,7 +195,7 @@ public class CalcolatoreSaldi {
 
         Map<String, Double> bilanci = calcolaMapBilanci(partecipanti, spese, quote, valutaPredefinita, context);
 
-        // 3. Separa debitori e creditori
+        // Separazione debitori e creditori
         List<Map.Entry<String, Double>> debitori = new ArrayList<>();
         List<Map.Entry<String, Double>> creditori = new ArrayList<>();
 
@@ -204,7 +208,7 @@ public class CalcolatoreSaldi {
             }
         }
 
-        // 4. Algoritmo greedy per minimizzare il numero di scambi
+        // Compensazione diretta (greedy) dei debiti e crediti
         int iDeb = 0;
         int iCred = 0;
 
@@ -216,8 +220,8 @@ public class CalcolatoreSaldi {
             importoMinimo = Math.round(importoMinimo * 100.0) / 100.0;
 
             if (importoMinimo > 0.001) {
-                String nomeDa = nomiMap.getOrDefault(deb.getKey(), "—");
-                String nomeA = nomiMap.getOrDefault(cred.getKey(), "—");
+                String nomeDa = nomiMap.getOrDefault(deb.getKey(), "");
+                String nomeA = nomiMap.getOrDefault(cred.getKey(), "");
 
                 trasferimenti.add(new TrasferimentoSaldo(
                         deb.getKey(),

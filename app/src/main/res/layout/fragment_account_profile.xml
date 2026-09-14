@@ -122,30 +122,14 @@
         android:paddingVertical="14dp"
         android:paddingHorizontal="4dp">
 
-        <LinearLayout
+        <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/label_verifica_email"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
-
-            <TextView
-                android:id="@+id/tv_desc_verifica_email"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/desc_email_non_verificata"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginTop="2dp" />
-
-        </LinearLayout>
+            android:text="@string/label_verifica_email"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
 
         <!-- Pillola Badge stato email (arancione se non verificata, verde se verificata) -->
         <com.google.android.material.card.MaterialCardView

@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,7 +16,11 @@ import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.databinding.FragmentNuovaSpesaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+<<<<<<< HEAD
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
+=======
+import com.example.paripariapp.util.AppSnackbar;
+>>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,10 +134,15 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 String paganteNome = binding.menuPagante.getText() != null ? binding.menuPagante.getText().toString() : "";
                 String destinatarioNome = binding.menuDestinatario.getText() != null ? binding.menuDestinatario.getText().toString() : "";
 
+<<<<<<< HEAD
                 if (paganteNome.equals(destinatarioNome)) {
                     Toast.makeText(requireContext(), "Il mittente e il destinatario non possono coincidere", Toast.LENGTH_SHORT).show();
                     return;
                 }
+=======
+            viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
+            AppSnackbar.showFromFragment(this, R.string.msg_spesa_aggiunta);
+>>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
 
                 String daId = null;
                 String aId = null;

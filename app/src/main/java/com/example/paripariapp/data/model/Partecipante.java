@@ -8,6 +8,7 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -62,12 +63,14 @@ public class Partecipante {
     public static String pulisciNome(@Nullable String nome) {
         if (nome == null) return "";
         String pulito = nome.trim();
-        while (pulito.toLowerCase().endsWith("(io)") || pulito.toLowerCase().endsWith("(me)")) {
-            if (pulito.toLowerCase().endsWith("(io)")) {
+        String pulitoLower = pulito.toLowerCase(Locale.ROOT);
+        while (pulitoLower.endsWith("(io)") || pulitoLower.endsWith("(me)")) {
+            if (pulitoLower.endsWith("(io)")) {
                 pulito = pulito.substring(0, pulito.length() - 4).trim();
-            } else if (pulito.toLowerCase().endsWith("(me)")) {
+            } else if (pulitoLower.endsWith("(me)")) {
                 pulito = pulito.substring(0, pulito.length() - 4).trim();
             }
+            pulitoLower = pulito.toLowerCase(Locale.ROOT);
         }
         return pulito;
     }
@@ -230,7 +233,22 @@ public class Partecipante {
             return true;
         }
 
+<<<<<<< HEAD
         if (p.getId().equals(currentUid)) {
+=======
+        // 3. Corrispondenza per Display Name
+        if (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
+            String displayName = currentUser.getDisplayName().trim().toLowerCase(Locale.ROOT);
+            String pNome = pulisciNome(p.getNome()).toLowerCase(Locale.ROOT);
+            if (pNome.equalsIgnoreCase(displayName)) {
+                return true;
+            }
+        }
+
+        // 4. Se il partecipante ha nome letterale "io" o "me" (fallback per gruppi offline locali)
+        String n = pulisciNome(p.getNome()).toLowerCase(Locale.ROOT);
+        if (n.equals("io") || n.equals("me")) {
+>>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
             return true;
         }
 

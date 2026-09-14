@@ -12,7 +12,20 @@
           "package_name": "com.example.paripariapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "523752134020-qdjrrivu4452qo77ag9dg140v95vekiq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.paripariapp",
+            "certificate_hash": "a8e30eaf4c919d48b7ce111ffa05392f6689c00d"
+          }
+        },
+        {
+          "client_id": "523752134020-p2afumua01m7uao1vh1odi05hv5rbln4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBTHw4Rae_oXlOOYeXDS6__IBw7du71PvI"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "523752134020-p2afumua01m7uao1vh1odi05hv5rbln4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

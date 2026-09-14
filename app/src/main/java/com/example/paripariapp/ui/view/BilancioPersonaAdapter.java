@@ -73,10 +73,10 @@ public class BilancioPersonaAdapter extends ListAdapter<BilancioPersonaItem, Bil
 
         if (item.isCredito()) {
             holder.binding.tvImportoSaldo.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.credit_green));
-            holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "+%.2f %s", item.getImporto(), item.getValuta()));
+            holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formattaConSegno(item.getImporto(), item.getValuta()));
         } else {
             holder.binding.tvImportoSaldo.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.debt_red));
-            holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "-%.2f %s", Math.abs(item.getImporto()), item.getValuta()));
+            holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formattaConSegno(-Math.abs(item.getImporto()), item.getValuta()));
         }
 
         holder.itemView.setOnClickListener(v -> {

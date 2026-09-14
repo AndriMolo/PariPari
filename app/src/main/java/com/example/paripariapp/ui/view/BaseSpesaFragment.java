@@ -11,7 +11,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,7 +19,11 @@ import androidx.fragment.app.Fragment;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
+<<<<<<< HEAD
 import com.example.paripariapp.util.CalcolatoreSaldi;
+=======
+import com.example.paripariapp.util.AppSnackbar;
+>>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
@@ -369,12 +372,13 @@ public abstract class BaseSpesaFragment extends Fragment {
         lockedParticipantIds.clear();
 
         for (Partecipante p : lista) {
-            View row = getLayoutInflater().inflate(R.layout.item_quota_partecipante, layoutElencoQuote, false);
-            CheckBox cb = row.findViewById(R.id.spunta_partecipante);
-            TextView tvNome = row.findViewById(R.id.nome_partecipante);
-            TextView tvEqua = row.findViewById(R.id.tv_quota_equa);
-            EditText etQuota = row.findViewById(R.id.campo_quota);
-            TextInputLayout quotaContainer = row.findViewById(R.id.contenitore_quota);
+            com.example.paripariapp.databinding.ItemQuotaPartecipanteBinding rowBinding =
+                    com.example.paripariapp.databinding.ItemQuotaPartecipanteBinding.inflate(getLayoutInflater(), layoutElencoQuote, false);
+            CheckBox cb = rowBinding.spuntaPartecipante;
+            TextView tvNome = rowBinding.nomePartecipante;
+            TextView tvEqua = rowBinding.tvQuotaEqua;
+            EditText etQuota = rowBinding.campoQuota;
+            TextInputLayout quotaContainer = rowBinding.contenitoreQuota;
 
             tvNome.setText(p.getNome());
             etQuota.setFilters(FILTRO_DUE_DECIMALI);
@@ -501,7 +505,7 @@ public abstract class BaseSpesaFragment extends Fragment {
                 public void afterTextChanged(Editable s) {}
             });
 
-            layoutElencoQuote.addView(row);
+            layoutElencoQuote.addView(rowBinding.getRoot());
         }
     }
 
@@ -550,7 +554,9 @@ public abstract class BaseSpesaFragment extends Fragment {
         List<Partecipante> partecipantiInclusi = getPartecipantiInclusi();
 
         if (partecipantiInclusi.isEmpty()) {
-            Toast.makeText(requireContext(), R.string.spesa_errore_nessun_partecipante, Toast.LENGTH_SHORT).show();
+            if (getView() != null) {
+                AppSnackbar.show(getView(), R.string.spesa_errore_nessun_partecipante);
+            }
             return null;
         }
 
