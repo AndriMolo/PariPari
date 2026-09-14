@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,10 +21,10 @@ import com.example.paripariapp.data.remote.FirestoreSyncManager;
 import com.example.paripariapp.data.repository.PariPariRepository;
 import com.example.paripariapp.databinding.BottomSheetUniscitiSchedaBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.CodiceInvitoUtil;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.color.MaterialColors;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -191,7 +190,7 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
                 binding.progressCaricamento.setVisibility(View.GONE);
                 binding.btnCercaScheda.setEnabled(true);
 
-                Snackbar.make(binding.getRoot(), errore, Snackbar.LENGTH_LONG).show();
+                AppSnackbar.showLong(binding.getRoot(), errore);
             }
         });
     }
@@ -251,7 +250,7 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
             @Override
             public void onSuccess(String schedaId, String titolo) {
                 if (!isAdded() || getContext() == null) return;
-                Toast.makeText(requireContext(), getString(R.string.msg_unione_successo, titolo), Toast.LENGTH_SHORT).show();
+                AppSnackbar.showFromFragment(UniscitiSchedaBottomSheet.this, getString(R.string.msg_unione_successo, titolo));
 
                 Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
                 intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, schedaId);
@@ -267,7 +266,7 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
                 binding.progressCaricamento.setVisibility(View.GONE);
                 binding.btnConfermaUnione.setEnabled(true);
                 binding.btnAnnullaUnione.setEnabled(true);
-                Snackbar.make(binding.getRoot(), errore, Snackbar.LENGTH_LONG).show();
+                AppSnackbar.showLong(binding.getRoot(), errore);
             }
         });
     }

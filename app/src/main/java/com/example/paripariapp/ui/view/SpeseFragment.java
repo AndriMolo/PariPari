@@ -1,10 +1,7 @@
 package com.example.paripariapp.ui.view;
 
 import android.content.Intent;
-import android.widget.Toast;
-import com.example.paripariapp.data.repository.PariPariRepository;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -25,18 +22,18 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.databinding.FragmentSpeseBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Fragment della pagina "Schede Spese".
  * Mostra la lista delle schede spese, l'empty state se vuota,
- * supporta riordinamento (drag & drop), eliminazione con swipe verso sinistra,
+ * supporta riordinamento (drag & drop), eliminazione fluida con swipe verso sinistra
+ * e possibilità di annullare l'eliminazione tramite Snackbar (senza popup bloccanti),
  * accesso tramite codice invito e apertura BottomSheet per nuova scheda.
  */
 public class SpeseFragment extends Fragment {
@@ -44,6 +41,9 @@ public class SpeseFragment extends Fragment {
     private FragmentSpeseBinding binding;
     private SpeseViewModel viewModel;
     private SchedaAdapter adapter;
+
+    private Scheda schedaInSospeso = null;
+    private Snackbar snackbarElimina = null;
 
     @Nullable
     @Override
@@ -68,6 +68,7 @@ public class SpeseFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new SchedaAdapter(scheda -> {
+            confermaEliminazioneInSospeso();
             if (scheda != null) {
                 Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
                 intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, scheda.getId());
@@ -105,6 +106,7 @@ public class SpeseFragment extends Fragment {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getBindingAdapterPosition();
+                if (position < 0 || position >= adapter.getLocalList().size()) return;
                 Scheda schedaSelezionata = adapter.getLocalList().get(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
@@ -118,17 +120,7 @@ public class SpeseFragment extends Fragment {
                                     .setPositiveButton(android.R.string.ok, null)
                                     .show();
                         } else {
-                            new MaterialAlertDialogBuilder(requireContext())
-                                    .setTitle(R.string.dialog_titolo_elimina_scheda)
-                                    .setMessage(R.string.dialog_msg_elimina_scheda)
-                                    .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
-                                        viewModel.eliminaScheda(schedaSelezionata);
-                                    })
-                                    .setNegativeButton(R.string.btn_annulla, (dialog, which) -> {
-                                        adapter.notifyItemChanged(position);
-                                    })
-                                    .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
-                                    .show();
+                            eseguiEliminazioneConUndo(schedaSelezionata);
                         }
                     });
                 }
@@ -149,7 +141,6 @@ public class SpeseFragment extends Fragment {
                 viewHolder.itemView.setAlpha(1.0f);
                 viewHolder.itemView.setElevation(0f);
             }
-
 
             @Override
             public void onChildDraw(@NonNull Canvas c,
@@ -194,6 +185,57 @@ public class SpeseFragment extends Fragment {
         itemTouchHelper.attachToRecyclerView(binding.recyclerSchede);
     }
 
+    private void eseguiEliminazioneConUndo(@NonNull Scheda scheda) {
+        confermaEliminazioneInSospeso();
+
+        schedaInSospeso = scheda;
+
+        List<Scheda> listaAggiornata = new ArrayList<>();
+        for (Scheda s : adapter.getLocalList()) {
+            if (!s.getId().equals(scheda.getId())) {
+                listaAggiornata.add(s);
+            }
+        }
+
+        if (listaAggiornata.isEmpty()) {
+            binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
+            binding.recyclerSchede.setVisibility(View.GONE);
+        }
+        adapter.submitList(listaAggiornata);
+
+        snackbarElimina = AppSnackbar.make(
+                binding.getRoot(),
+                getString(R.string.msg_scheda_eliminata),
+                Snackbar.LENGTH_LONG
+        );
+
+        snackbarElimina.setAction(R.string.btn_annulla, v -> {
+            schedaInSospeso = null;
+            if (viewModel.getUiState().getValue() != null) {
+                renderUiState(viewModel.getUiState().getValue());
+            }
+        });
+
+        snackbarElimina.addCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                if (event != DISMISS_EVENT_ACTION) {
+                    confermaEliminazioneInSospeso();
+                }
+            }
+        });
+
+        snackbarElimina.show();
+    }
+
+    private void confermaEliminazioneInSospeso() {
+        if (schedaInSospeso != null) {
+            Scheda daEliminare = schedaInSospeso;
+            schedaInSospeso = null;
+            viewModel.eliminaScheda(daEliminare);
+        }
+    }
+
     private void setupEmptyState() {
         binding.layoutEmptyState.tvEmptyTitle.setText(R.string.empty_schede_titolo);
         binding.layoutEmptyState.tvEmptyDesc.setText(R.string.empty_schede_desc);
@@ -207,13 +249,22 @@ public class SpeseFragment extends Fragment {
     private void renderUiState(@Nullable com.example.paripariapp.ui.viewmodel.SpeseUiState state) {
         if (state == null) return;
 
-        if (state.isEmpty()) {
+        List<Scheda> schedeDaMostrare = new ArrayList<>();
+        if (state.getSchede() != null) {
+            for (Scheda s : state.getSchede()) {
+                if (schedaInSospeso == null || !s.getId().equals(schedaInSospeso.getId())) {
+                    schedeDaMostrare.add(s);
+                }
+            }
+        }
+
+        if (schedeDaMostrare.isEmpty()) {
             binding.layoutEmptyState.getRoot().setVisibility(View.VISIBLE);
             binding.recyclerSchede.setVisibility(View.GONE);
         } else {
             binding.layoutEmptyState.getRoot().setVisibility(View.GONE);
             binding.recyclerSchede.setVisibility(View.VISIBLE);
-            adapter.submitList(state.getSchede());
+            adapter.submitList(schedeDaMostrare);
         }
 
         if (!state.getConteggioPartecipanti().isEmpty()) {
@@ -221,13 +272,15 @@ public class SpeseFragment extends Fragment {
         }
 
         if (state.getErrorMessage() != null) {
-            Snackbar.make(binding.getRoot(), state.getErrorMessage(), Snackbar.LENGTH_SHORT).show();
+            AppSnackbar.show(binding.getRoot(), state.getErrorMessage());
         }
     }
 
     private void setupListeners() {
-        binding.fabNuovaScheda.setOnClickListener(v -> mostraDialogSceltaNuovaScheda());
-
+        binding.fabNuovaScheda.setOnClickListener(v -> {
+            confermaEliminazioneInSospeso();
+            mostraDialogSceltaNuovaScheda();
+        });
     }
 
     private void mostraDialogSceltaNuovaScheda() {
@@ -256,6 +309,10 @@ public class SpeseFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (snackbarElimina != null && snackbarElimina.isShown()) {
+            snackbarElimina.dismiss();
+        }
+        confermaEliminazioneInSospeso();
         binding = null;
     }
 }

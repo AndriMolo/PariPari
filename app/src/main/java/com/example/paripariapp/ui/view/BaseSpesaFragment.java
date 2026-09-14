@@ -11,7 +11,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
+import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
@@ -533,7 +533,9 @@ public abstract class BaseSpesaFragment extends Fragment {
         List<Partecipante> partecipantiInclusi = getPartecipantiInclusi();
 
         if (partecipantiInclusi.isEmpty()) {
-            Toast.makeText(requireContext(), R.string.spesa_errore_nessun_partecipante, Toast.LENGTH_SHORT).show();
+            if (getView() != null) {
+                AppSnackbar.show(getView(), R.string.spesa_errore_nessun_partecipante);
+            }
             return null;
         }
 

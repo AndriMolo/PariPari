@@ -13,7 +13,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,6 +33,7 @@ import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.data.model.TrasferimentoSaldo;
 import com.example.paripariapp.databinding.FragmentDettaglioSchedaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.EsportatoreDati;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -450,8 +450,16 @@ public class DettaglioSchedaFragment extends Fragment {
                 aggiornaMembriAdapter();
             } else {
                 if (getActivity() != null && !getActivity().isFinishing() && isAdded()) {
-                    Toast.makeText(requireContext(), R.string.msg_sei_stato_rimosso_dal_gruppo, Toast.LENGTH_SHORT).show();
-                    getActivity().finish();
+                    if (binding != null) {
+                        AppSnackbar.show(binding.getRoot(), R.string.msg_sei_stato_rimosso_dal_gruppo);
+                        binding.getRoot().postDelayed(() -> {
+                            if (getActivity() != null && !getActivity().isFinishing()) {
+                                getActivity().finish();
+                            }
+                        }, 500);
+                    } else {
+                        getActivity().finish();
+                    }
                 }
             }
         });
@@ -665,13 +673,21 @@ public class DettaglioSchedaFragment extends Fragment {
                         if (dialogToDismiss != null && dialogToDismiss.isShowing()) {
                             dialogToDismiss.dismiss();
                         }
-                        Toast.makeText(requireContext(), R.string.msg_sei_uscito_dal_gruppo, Toast.LENGTH_SHORT).show();
-                        if (getActivity() != null && !getActivity().isFinishing()) {
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), R.string.msg_sei_uscito_dal_gruppo);
+                            binding.getRoot().postDelayed(() -> {
+                                if (getActivity() != null && !getActivity().isFinishing()) {
+                                    getActivity().finish();
+                                }
+                            }, 400);
+                        } else if (getActivity() != null && !getActivity().isFinishing()) {
                             getActivity().finish();
                         }
                     } else {
                         viewModel.eliminaPartecipante(p.getId());
-                        Toast.makeText(requireContext(), getString(R.string.msg_membro_rimosso, p.getNome()), Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_rimosso, p.getNome()));
+                        }
                         if (onMemberRemovedLocally != null) {
                             onMemberRemovedLocally.run();
                         }
@@ -694,7 +710,9 @@ public class DettaglioSchedaFragment extends Fragment {
                 .setTitle(getString(R.string.titolo_dialog_esporta))
                 .setItems(opzioni, (dialog, which) -> {
                     if (speseCache.isEmpty()) {
-                        Toast.makeText(requireContext(), R.string.msg_nessuna_spesa_export, Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), R.string.msg_nessuna_spesa_export);
+                        }
                         return;
                     }
 
@@ -708,7 +726,9 @@ public class DettaglioSchedaFragment extends Fragment {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(requireContext(), R.string.msg_errore_esportazione, Toast.LENGTH_SHORT).show();
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), R.string.msg_errore_esportazione);
+                        }
                     }
                 })
                 .setNegativeButton(getString(R.string.btn_annulla), null)
@@ -730,11 +750,15 @@ public class DettaglioSchedaFragment extends Fragment {
             boolean isMe = isMe(p);
             boolean isCapo = calcolaIsCapogruppo(schedaCorrente, partecipantiCache);
             if (!isMe && !isCapo) {
-                Toast.makeText(requireContext(), R.string.msg_permesso_negato_modifica_nome_altri, Toast.LENGTH_SHORT).show();
+                if (binding != null) {
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_permesso_negato_modifica_nome_altri);
+                }
                 return;
             }
             viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
-            Toast.makeText(requireContext(), R.string.msg_nome_aggiornato_successo, Toast.LENGTH_SHORT).show();
+            if (binding != null) {
+                AppSnackbar.show(binding.getRoot(), R.string.msg_nome_aggiornato_successo);
+            }
         });
 
         membroAdapter.setOnEliminaClickListener(p -> {
@@ -816,7 +840,7 @@ public class DettaglioSchedaFragment extends Fragment {
             ClipData clip = ClipData.newPlainText("Codice gruppo", codice);
             if (clipboard != null) {
                 clipboard.setPrimaryClip(clip);
-                Toast.makeText(requireContext(), R.string.msg_codice_copiato, Toast.LENGTH_SHORT).show();
+                AppSnackbar.show(sheetView, R.string.msg_codice_copiato);
             }
         });
 

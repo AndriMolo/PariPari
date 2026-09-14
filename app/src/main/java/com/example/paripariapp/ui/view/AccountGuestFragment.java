@@ -18,8 +18,8 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentAccountGuestBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseUser;
@@ -79,15 +79,15 @@ public class AccountGuestFragment extends Fragment {
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error) && binding != null) {
-                Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_LONG).show();
+                AppSnackbar.showLong(binding.getRoot(), error);
                 viewModel.clearErrorMessage();
             }
         });
 
-        // Messaggi di successo
+        // Messaggi di success
         viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), msg -> {
             if (!TextUtils.isEmpty(msg) && binding != null) {
-                Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), msg);
                 pulisciCampi();
                 viewModel.clearSuccessMessage();
             }
@@ -243,7 +243,7 @@ public class AccountGuestFragment extends Fragment {
                         if (!TextUtils.isEmpty(email) && Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                             viewModel.inviaEmailRecuperoPassword(email);
                         } else if (binding != null) {
-                            Snackbar.make(binding.getRoot(), R.string.error_email_valida, Snackbar.LENGTH_SHORT).show();
+                            AppSnackbar.show(binding.getRoot(), R.string.error_email_valida);
                         }
                     })
                     .setNegativeButton(R.string.btn_annulla, null)

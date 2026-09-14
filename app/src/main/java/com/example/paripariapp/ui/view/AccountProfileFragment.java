@@ -21,9 +21,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentAccountProfileBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseUser;
@@ -99,7 +99,7 @@ public class AccountProfileFragment extends Fragment {
         // Messaggi di errore
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
             if (!TextUtils.isEmpty(error) && binding != null) {
-                Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_LONG).show();
+                AppSnackbar.showLong(binding.getRoot(), error);
                 viewModel.clearErrorMessage();
             }
         });
@@ -107,7 +107,7 @@ public class AccountProfileFragment extends Fragment {
         // Messaggi di successo
         viewModel.getSuccessMessage().observe(getViewLifecycleOwner(), msg -> {
             if (!TextUtils.isEmpty(msg) && binding != null) {
-                Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), msg);
                 viewModel.clearSuccessMessage();
             }
         });
@@ -128,7 +128,7 @@ public class AccountProfileFragment extends Fragment {
             if (binding == null) return;
             Boolean verified = viewModel.getIsEmailVerifiedLive().getValue();
             if (Boolean.TRUE.equals(verified)) {
-                Snackbar.make(binding.getRoot(), R.string.msg_email_gia_verificata, Snackbar.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), R.string.msg_email_gia_verificata);
                 return;
             }
             viewModel.reinviaEmailVerifica();

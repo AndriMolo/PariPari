@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +19,7 @@ import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.databinding.FragmentModificaSpesaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
     private void setupAzioneElimina() {
         binding.azioneElimina.setOnClickListener(v -> {
             if (isReadOnly) {
-                Toast.makeText(requireContext(), R.string.msg_spesa_non_modificabile_membro_assente, Toast.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), R.string.msg_spesa_non_modificabile_membro_assente);
                 return;
             }
             new MaterialAlertDialogBuilder(requireContext())
@@ -109,7 +109,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
                     .setMessage(R.string.dialog_msg_elimina_spesa)
                     .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
                         viewModel.eliminaSpesa(spesaId, schedaId);
-                        Toast.makeText(requireContext(), R.string.msg_spesa_eliminata, Toast.LENGTH_SHORT).show();
+                        AppSnackbar.showFromFragment(this, R.string.msg_spesa_eliminata);
                         if (getParentFragmentManager() != null) {
                             getParentFragmentManager().popBackStack();
                         }
@@ -236,7 +236,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         if (binding == null) return;
 
         binding.cardBannerReadonly.setVisibility(View.VISIBLE);
-        Toast.makeText(requireContext(), R.string.msg_spesa_non_modificabile_membro_assente, Toast.LENGTH_LONG).show();
+        AppSnackbar.showLong(binding.getRoot(), R.string.msg_spesa_non_modificabile_membro_assente);
 
         binding.azioneSalva.setVisibility(View.GONE);
         binding.azioneElimina.setVisibility(View.GONE);
@@ -263,7 +263,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
     private void setupSalva() {
         binding.azioneSalva.setOnClickListener(v -> {
             if (isReadOnly) {
-                Toast.makeText(requireContext(), R.string.msg_spesa_non_modificabile_membro_assente, Toast.LENGTH_SHORT).show();
+                AppSnackbar.show(binding.getRoot(), R.string.msg_spesa_non_modificabile_membro_assente);
                 return;
             }
 
@@ -299,7 +299,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
             );
 
             viewModel.aggiornaSpesaConQuote(spesaAggiornata, nuoveQuote);
-            Toast.makeText(requireContext(), R.string.msg_spesa_aggiornata, Toast.LENGTH_SHORT).show();
+            AppSnackbar.showFromFragment(this, R.string.msg_spesa_aggiornata);
 
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();

@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +21,7 @@ import com.example.paripariapp.data.model.TrasferimentoSaldo;
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.databinding.BottomSheetInvioPagamentoBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.Locale;
@@ -162,7 +162,7 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
             if (schedaId != null && daId != null && aId != null) {
                 SpeseViewModel viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
                 viewModel.registraPagamento(schedaId, daId, aId, importo, valuta);
-                Toast.makeText(requireContext(), R.string.msg_operazione_completata, Toast.LENGTH_SHORT).show();
+                AppSnackbar.showFromFragment(InvioPagamentoBottomSheet.this, R.string.msg_operazione_completata);
                 dismiss();
             } else {
                 dismiss();
@@ -231,7 +231,9 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(requireContext(), R.string.msg_errore_apertura_link, Toast.LENGTH_SHORT).show();
+            if (binding != null) {
+                AppSnackbar.show(binding.getRoot(), R.string.msg_errore_apertura_link);
+            }
         }
     }
 
@@ -240,7 +242,9 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         ClipData clip = ClipData.newPlainText("Link pagamento", testo);
         if (clipboard != null) {
             clipboard.setPrimaryClip(clip);
-            Toast.makeText(requireContext(), R.string.msg_link_copiato, Toast.LENGTH_SHORT).show();
+            if (binding != null) {
+                AppSnackbar.show(binding.getRoot(), R.string.msg_link_copiato);
+            }
         }
     }
 

@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,6 +16,7 @@ import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.databinding.FragmentNuovaSpesaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,7 +113,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             );
 
             viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
-            Toast.makeText(requireContext(), R.string.msg_spesa_aggiunta, Toast.LENGTH_SHORT).show();
+            AppSnackbar.showFromFragment(this, R.string.msg_spesa_aggiunta);
 
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();

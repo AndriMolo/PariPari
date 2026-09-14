@@ -8,6 +8,8 @@ import androidx.core.os.LocaleListCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.paripariapp.R;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -64,6 +66,15 @@ public class UserPreferencesRepository {
             "THB - Baht thailandese",
             "TRY - Lira turca",
             "ZAR - Rand sudafricano"
+    );
+
+    public static final List<String> SUPPORTED_LANGUAGE_CODES = Arrays.asList(
+            LANGUAGE_SYSTEM,
+            "it",
+            "en",
+            "es",
+            "fr",
+            "de"
     );
 
     public static final List<String> SUPPORTED_LANGUAGES = Arrays.asList(
@@ -307,7 +318,10 @@ public class UserPreferencesRepository {
      * Estrae il codice lingua da una stringa formattata (es. "it - Italiano" -> "it").
      */
     public static String extractLanguageCode(String displayLanguage) {
-        if (displayLanguage == null || displayLanguage.isEmpty()) {
+        if (displayLanguage == null || displayLanguage.isEmpty()
+                || LANGUAGE_SYSTEM.equalsIgnoreCase(displayLanguage)
+                || "Predefinita di sistema".equalsIgnoreCase(displayLanguage)
+                || "System default".equalsIgnoreCase(displayLanguage)) {
             return LANGUAGE_SYSTEM;
         }
         if (displayLanguage.contains(" - ")) {
@@ -317,18 +331,39 @@ public class UserPreferencesRepository {
     }
 
     /**
-     * Restituisce la dicitura leggibile per la lingua specificata.
+     * Restituisce la dicitura leggibile per la lingua specificata, risolvendo "Predefinita di sistema"
+     * coerentemente con il tema tramite la risorsa R.string.lingua_sistema.
+     */
+    public static String getDisplayLanguageForCode(Context context, String langCode) {
+        if (langCode == null || LANGUAGE_SYSTEM.equalsIgnoreCase(langCode)) {
+            return context != null ? context.getString(R.string.lingua_sistema) : "Predefinita di sistema";
+        }
+        switch (langCode.toLowerCase(Locale.ROOT)) {
+            case "it":
+                return "Italiano";
+            case "en":
+                return "English";
+            case "es":
+                return "Español";
+            case "fr":
+                return "Français";
+            case "de":
+                return "Deutsch";
+            default:
+                for (String item : SUPPORTED_LANGUAGES) {
+                    if (item.startsWith(langCode + " - ")) {
+                        return item.split(" - ")[1].trim();
+                    }
+                }
+                return langCode;
+        }
+    }
+
+    /**
+     * Sovraccarico legacy senza Context.
      */
     public static String getDisplayLanguageForCode(String langCode) {
-        if (langCode == null || LANGUAGE_SYSTEM.equalsIgnoreCase(langCode)) {
-            return "Predefinita di sistema";
-        }
-        for (String item : SUPPORTED_LANGUAGES) {
-            if (item.startsWith(langCode + " - ")) {
-                return item.split(" - ")[1].trim();
-            }
-        }
-        return langCode;
+        return getDisplayLanguageForCode(null, langCode);
     }
 
     /**
@@ -336,6 +371,11 @@ public class UserPreferencesRepository {
      */
     public static int getIndexOfLanguageCode(String langCode) {
         if (langCode == null) return 0;
+        for (int i = 0; i < SUPPORTED_LANGUAGE_CODES.size(); i++) {
+            if (SUPPORTED_LANGUAGE_CODES.get(i).equalsIgnoreCase(langCode)) {
+                return i;
+            }
+        }
         for (int i = 0; i < SUPPORTED_LANGUAGES.size(); i++) {
             if (SUPPORTED_LANGUAGES.get(i).startsWith(langCode)) {
                 return i;

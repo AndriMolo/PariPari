@@ -15,8 +15,8 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.databinding.FragmentAccountBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -91,7 +91,7 @@ public class AccountFragment extends Fragment {
         // Lingua dell'applicazione
         viewModel.getAppLanguageLive().observe(getViewLifecycleOwner(), langCode -> {
             if (binding != null && langCode != null) {
-                String display = UserPreferencesRepository.getDisplayLanguageForCode(langCode);
+                String display = getDisplayLanguageForCode(langCode);
                 binding.tvLinguaAppValore.setText(display);
             }
         });
@@ -136,7 +136,7 @@ public class AccountFragment extends Fragment {
         sheet.setOnCurrencySelectedListener(currencyFull -> {
             String code = UserPreferencesRepository.extractCurrencyCode(currencyFull);
             viewModel.setDefaultCurrency(code);
-            Snackbar.make(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code), Snackbar.LENGTH_SHORT).show();
+            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code));
         });
         sheet.show(getParentFragmentManager(), "selettore_valuta_account");
     }
@@ -146,18 +146,38 @@ public class AccountFragment extends Fragment {
     }
 
     private void showLanguageSelectionDialog() {
+        String[] languageCodes = new String[]{
+                UserPreferencesRepository.LANGUAGE_SYSTEM,
+                "it",
+                "en",
+                "es",
+                "fr",
+                "de"
+        };
+        String[] items = new String[]{
+                getString(R.string.lingua_sistema),
+                "Italiano",
+                "English",
+                "Español",
+                "Français",
+                "Deutsch"
+        };
         String currentCode = viewModel.getAppLanguage();
-        int selectedIndex = UserPreferencesRepository.getIndexOfLanguageCode(currentCode);
-        String[] items = UserPreferencesRepository.SUPPORTED_LANGUAGES.toArray(new String[0]);
+        int selectedIndex = 0;
+        for (int i = 0; i < languageCodes.length; i++) {
+            if (languageCodes[i].equalsIgnoreCase(currentCode)) {
+                selectedIndex = i;
+                break;
+            }
+        }
 
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.label_lingua_app)
                 .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
-                    String selected = items[which];
-                    String code = UserPreferencesRepository.extractLanguageCode(selected);
+                    String code = languageCodes[which];
                     viewModel.setAppLanguage(code);
-                    String display = UserPreferencesRepository.getDisplayLanguageForCode(code);
-                    Snackbar.make(binding.getRoot(), getString(R.string.msg_lingua_aggiornata, display), Snackbar.LENGTH_SHORT).show();
+                    String display = getDisplayLanguageForCode(code);
+                    AppSnackbar.show(binding.getRoot(), getString(R.string.msg_lingua_aggiornata, display));
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
@@ -192,7 +212,7 @@ public class AccountFragment extends Fragment {
                         code = UserPreferencesRepository.THEME_DARK;
                     }
                     viewModel.setAppTheme(code);
-                    Snackbar.make(binding.getRoot(), R.string.msg_tema_aggiornato, Snackbar.LENGTH_SHORT).show();
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_tema_aggiornato);
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
@@ -207,6 +227,13 @@ public class AccountFragment extends Fragment {
         } else {
             return getString(R.string.tema_sistema);
         }
+    }
+
+    private String getDisplayLanguageForCode(String code) {
+        if (code == null || UserPreferencesRepository.LANGUAGE_SYSTEM.equalsIgnoreCase(code)) {
+            return getString(R.string.lingua_sistema);
+        }
+        return UserPreferencesRepository.getDisplayLanguageForCode(requireContext(), code);
     }
 
     private void setupPaymentMethodsSelectors() {
@@ -235,11 +262,11 @@ public class AccountFragment extends Fragment {
                 .setPositiveButton(R.string.btn_salva, (d, which) -> {
                     String raw = et.getText() != null ? et.getText().toString().trim() : "";
                     viewModel.setPaypalHandle(raw);
-                    Snackbar.make(binding.getRoot(), R.string.msg_paypal_salvato, Snackbar.LENGTH_SHORT).show();
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_paypal_salvato);
                 })
                 .setNeutralButton(R.string.btn_elimina, (d, which) -> {
                     viewModel.setPaypalHandle("");
-                    Snackbar.make(binding.getRoot(), R.string.msg_paypal_salvato, Snackbar.LENGTH_SHORT).show();
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_paypal_salvato);
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .create();
@@ -276,11 +303,11 @@ public class AccountFragment extends Fragment {
                 .setPositiveButton(R.string.btn_salva, (d, which) -> {
                     String raw = et.getText() != null ? et.getText().toString().trim() : "";
                     viewModel.setRevolutHandle(raw);
-                    Snackbar.make(binding.getRoot(), R.string.msg_revolut_salvato, Snackbar.LENGTH_SHORT).show();
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_revolut_salvato);
                 })
                 .setNeutralButton(R.string.btn_elimina, (d, which) -> {
                     viewModel.setRevolutHandle("");
-                    Snackbar.make(binding.getRoot(), R.string.msg_revolut_salvato, Snackbar.LENGTH_SHORT).show();
+                    AppSnackbar.show(binding.getRoot(), R.string.msg_revolut_salvato);
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .create();
