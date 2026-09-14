@@ -47,4 +47,30 @@ public class CodiceInvitoUtilTest {
         assertEquals("", CodiceInvitoUtil.normalizzaCodice(null));
         assertEquals("", CodiceInvitoUtil.normalizzaCodice("   "));
     }
+
+    @Test
+    public void testGeneraLinkInvito() {
+        String link = CodiceInvitoUtil.generaLinkInvito("abc234");
+        assertEquals("https://paripari-app-2026.web.app/join?code=ABC234", link);
+
+        String linkConSpazi = CodiceInvitoUtil.generaLinkInvito("  x y z 9 9 9 ");
+        assertEquals("https://paripari-app-2026.web.app/join?code=XYZ999", linkConSpazi);
+    }
+
+    @Test
+    public void testEstraiCodiceDaUrlString() {
+        // Query param standard
+        assertEquals("ABC123", CodiceInvitoUtil.estraiCodiceDaUrlString("https://paripari-app-2026.web.app/join?code=abc123"));
+        assertEquals("ABC123", CodiceInvitoUtil.estraiCodiceDaUrlString("paripari://join?code=abc123"));
+        assertEquals("ABC123", CodiceInvitoUtil.estraiCodiceDaUrlString("https://paripari.app/join?code=abc123&ref=share"));
+
+        // Path standard
+        assertEquals("XYZ789", CodiceInvitoUtil.estraiCodiceDaUrlString("https://paripari-app-2026.web.app/join/xyz789"));
+        assertEquals("XYZ789", CodiceInvitoUtil.estraiCodiceDaUrlString("https://paripari.app/join/xyz789?ref=app"));
+
+        // Null o invalidi
+        assertEquals(null, CodiceInvitoUtil.estraiCodiceDaUrlString(null));
+        assertEquals(null, CodiceInvitoUtil.estraiCodiceDaUrlString(""));
+        assertEquals(null, CodiceInvitoUtil.estraiCodiceDaUrlString("https://google.com"));
+    }
 }

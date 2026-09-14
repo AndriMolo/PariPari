@@ -425,7 +425,7 @@ public class DettaglioSchedaFragment extends Fragment {
         viewModel.getTotaleSpese(schedaId).observe(getViewLifecycleOwner(), totale -> {
             if (binding == null) return;
             double amount = (totale != null) ? totale : 0.0;
-            binding.tvTotaleScheda.setText(String.format(Locale.getDefault(), "%.2f %s", amount, valuta != null ? valuta : "EUR"));
+            binding.tvTotaleScheda.setText(com.example.paripariapp.util.ImportoUtil.formatta(amount, valuta));
         });
 
         viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), partecipanti -> {
@@ -847,6 +847,26 @@ public class DettaglioSchedaFragment extends Fragment {
         }
         sheetBinding.tvCodiceGruppo.setText(codice);
 
+        // Genera asincronamente il QR Code con il logo PariPari al centro
+        String linkInvito = com.example.paripariapp.util.CodiceInvitoUtil.generaLinkInvito(codice);
+        sheetBinding.progressQr.setVisibility(View.VISIBLE);
+        sheetBinding.ivQrCode.setVisibility(View.INVISIBLE);
+
+        com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+            if (getContext() == null) return;
+            android.graphics.Bitmap qrBitmap = com.example.paripariapp.util.QrCodeUtil.generaQrCodeConLogo(
+                    requireContext().getApplicationContext(), linkInvito, 600);
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (isAdded() && getContext() != null && dialog.isShowing()) {
+                    sheetBinding.progressQr.setVisibility(View.GONE);
+                    if (qrBitmap != null) {
+                        sheetBinding.ivQrCode.setImageBitmap(qrBitmap);
+                        sheetBinding.ivQrCode.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+        });
+
         sheetBinding.btnCopiaCodice.setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("Codice gruppo", codice);
@@ -858,7 +878,7 @@ public class DettaglioSchedaFragment extends Fragment {
 
         sheetBinding.btnCondividiLink.setOnClickListener(v -> {
             String titoloGruppo = (titolo != null && !titolo.isEmpty()) ? titolo : (schedaCorrente != null ? schedaCorrente.getTitolo() : "Gruppo");
-            String messaggio = getString(R.string.msg_invito_condivisione, titoloGruppo, codice);
+            String messaggio = getString(R.string.msg_invito_condivisione, titoloGruppo, linkInvito, codice);
 
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");

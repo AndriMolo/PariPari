@@ -116,7 +116,7 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         boolean isCreditore = (aId != null && aId.equals(myParticipantId))
                 || (aNomePulito.equalsIgnoreCase("io") || aNomePulito.equalsIgnoreCase("me"));
 
-        String strImportoValuta = String.format(Locale.US, "%.2f %s", importo, valuta);
+        String strImportoValuta = com.example.paripariapp.util.ImportoUtil.formatta(importo, valuta);
 
         String paypalHandleToUse;
         String revolutHandleToUse;

@@ -57,6 +57,9 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.firestore)
 
+    // Generazione codici QR
+    implementation(libs.zxing.core)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)

@@ -66,7 +66,7 @@ public class StoricoSaldiAdapter extends ListAdapter<Spesa, StoricoSaldiAdapter.
         Spesa item = getItem(position);
         holder.binding.tvTitoloSaldo.setText(item.getTitolo());
         holder.binding.tvDataSaldo.setText(dateFormat.format(new Date(item.getDataSpesa())));
-        holder.binding.tvImportoSaldo.setText(String.format(Locale.getDefault(), "%.2f %s", item.getImporto(), item.getValuta()));
+        holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formatta(item.getImporto(), item.getValuta()));
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(item);

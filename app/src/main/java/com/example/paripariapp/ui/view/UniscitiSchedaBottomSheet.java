@@ -206,7 +206,15 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
 
         adapter.setMembri(preview.getMembri());
 
-        if (preview.getMembriSostituibili().isEmpty()) {
+        MembroGruppoPreview relinkTarget = cercaMembroPerRelink(preview);
+        if (relinkTarget != null && relinkTarget.isSostituibile()) {
+            // Predisposizione relink: se il profilo appartiene all'account corrente ed è libero, preselezionalo
+            membroSelezionatoPerSubentro = relinkTarget;
+            isNuovoMembroSelezionato = false;
+            aggiornaStatoNuovoMembro(false);
+            binding.btnConfermaUnione.setEnabled(true);
+            binding.btnConfermaUnione.setText(R.string.btn_unisciti);
+        } else if (preview.getMembriSostituibili().isEmpty()) {
             // Nessun membro sostituibile: preseleziona direttamente "Nuovo membro"
             binding.cardNuovoMembro.performClick();
         } else {
@@ -217,6 +225,25 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
             binding.btnConfermaUnione.setEnabled(false);
             binding.btnConfermaUnione.setText(R.string.btn_seleziona_chi_sei);
         }
+    }
+
+    /**
+     * Predisposizione modulare per il relink:
+     * Cerca tra i membri dell'anteprima se ce n'è uno collegabile in automatico.
+     */
+    @Nullable
+    private MembroGruppoPreview cercaMembroPerRelink(@Nullable FirestoreSyncManager.GruppoPreview preview) {
+        if (preview == null || preview.getMembri() == null) return null;
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return null;
+        String currentUid = currentUser.getUid();
+
+        for (MembroGruppoPreview m : preview.getMembri()) {
+            if (m.getUserId() != null && m.getUserId().equals(currentUid)) {
+                return m;
+            }
+        }
+        return null;
     }
 
     private void eseguiUnione() {
@@ -252,11 +279,7 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
                 if (!isAdded() || getContext() == null) return;
                 AppSnackbar.showFromFragment(UniscitiSchedaBottomSheet.this, getString(R.string.msg_unione_successo, titolo));
 
-                Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
-                intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, schedaId);
-                intent.putExtra(DettaglioSchedaActivity.EXTRA_TITOLO, titolo);
-                startActivity(intent);
-
+                DettaglioSchedaActivity.avvia(requireContext(), schedaId, titolo);
                 dismiss();
             }
 

@@ -21,6 +21,20 @@ public class DettaglioSchedaActivity extends AppCompatActivity {
     public static final String EXTRA_TITOLO = "extra_titolo";
     public static final String EXTRA_VALUTA = "extra_valuta";
 
+    public static void avvia(android.content.Context context, String schedaId, String titolo) {
+        avvia(context, schedaId, titolo, null);
+    }
+
+    public static void avvia(android.content.Context context, String schedaId, String titolo, String valuta) {
+        android.content.Intent intent = new android.content.Intent(context, DettaglioSchedaActivity.class);
+        intent.putExtra(EXTRA_SCHEDA_ID, schedaId);
+        intent.putExtra(EXTRA_TITOLO, titolo);
+        if (valuta != null) {
+            intent.putExtra(EXTRA_VALUTA, valuta);
+        }
+        context.startActivity(intent);
+    }
+
     private ActivityDettaglioSchedaBinding binding;
 
     @Override

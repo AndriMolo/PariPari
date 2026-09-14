@@ -93,16 +93,29 @@ public class MainActivity extends AppCompatActivity {
     private void gestisciDeepLink(Intent intent) {
         if (intent == null || intent.getData() == null) return;
         Uri uri = intent.getData();
-        String scheme = uri.getScheme();
-        String host = uri.getHost();
-
-        if (("paripari".equalsIgnoreCase(scheme) && "join".equalsIgnoreCase(host)) ||
-            ("https".equalsIgnoreCase(scheme) && "paripari.app".equalsIgnoreCase(host))) {
-            String code = uri.getQueryParameter("code");
-            if (code != null && !code.trim().isEmpty()) {
-                mostraDialogConfermaJoin(code.trim().toUpperCase(java.util.Locale.ROOT));
-            }
+        String code = com.example.paripariapp.util.CodiceInvitoUtil.estraiCodiceDaUri(uri);
+        if (code != null && !code.isEmpty()) {
+            intent.setData(null); // Consuma il deep link per evitare ri-esecuzioni su rotazione schermo
+            elaboraCodiceDeepLink(code);
         }
+    }
+
+    private void elaboraCodiceDeepLink(String code) {
+        com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+            com.example.paripariapp.data.model.Scheda schedaLocale =
+                    com.example.paripariapp.data.local.AppDatabase.getInstance(this).schedaDao().getSchedaByCodiceInvito(code);
+
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                if (schedaLocale != null) {
+                    // L'utente è già membro: apri direttamente la scheda senza mostrare dialog
+                    DettaglioSchedaActivity.avvia(MainActivity.this, schedaLocale.getId(), schedaLocale.getTitolo());
+                } else {
+                    // L'utente non è nel gruppo: apri il bottom sheet pre-compilato con ricerca automatica
+                    mostraDialogConfermaJoin(code);
+                }
+            });
+        });
     }
 
     private void mostraDialogConfermaJoin(String code) {

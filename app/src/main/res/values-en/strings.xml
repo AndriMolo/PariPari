@@ -336,7 +336,9 @@
     <string name="btn_condividi_link">Share invite</string>
     <string name="btn_copia_codice">Copy code</string>
     <string name="msg_codice_copiato">Code copied to clipboard</string>
-    <string name="msg_invito_condivisione">Join my group \"%1$s\" on PariPari!\n\nUse the invite code: %2$s</string>
+    <string name="label_inquadra_fotocamera">Scan with camera to join</string>
+    <string name="desc_qr_code">QR code with invite link</string>
+    <string name="msg_invito_condivisione">Join my group \"%1$s\" on PariPari!\n\nTap the link to join directly:\n%2$s\n\nOr enter the invite code: %3$s</string>
     <string name="dialog_titolo_conferma_unione">Join group</string>
     <string name="dialog_msg_conferma_unione">Do you want to join the group with code %1$s?</string>
     <string name="btn_unisciti">Join</string>

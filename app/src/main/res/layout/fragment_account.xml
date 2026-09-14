@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -64,7 +65,7 @@
                         android:id="@+id/tv_valuta_predefinita_valore"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="EUR"
+                        tools:text="EUR"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold" />
