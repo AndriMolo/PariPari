@@ -91,10 +91,6 @@ public class AccountViewModel extends AndroidViewModel {
         }
     }
 
-    // ====================================================================
-    // GETTERS DEI DATI
-    // ====================================================================
-
     public LiveData<FirebaseUser> getUserLiveData() {
         return userLiveData;
     }
@@ -234,10 +230,6 @@ public class AccountViewModel extends AndroidViewModel {
 
         repository.aggiornaPaymentHandlesInTuttiIGruppi(preferencesRepository.getPaypalHandle(), cleaned);
     }
-
-    // ====================================================================
-    // AZIONI DI AUTENTICAZIONE
-    // ====================================================================
 
     /**
      * Registrazione con Nome, Email e Password.

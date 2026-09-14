@@ -19,17 +19,13 @@
             android:paddingBottom="24dp"
             android:gravity="top|center_horizontal">
 
-            <!-- ========================================================= -->
-            <!-- STATO ACCOUNT: CHILD FRAGMENT (OSPITE / AUTENTICATO)     -->
-            <!-- ========================================================= -->
+            <!-- Stato Account: child fragment (ospite o autenticato) -->
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/account_status_fragment_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
-            <!-- ========================================================= -->
-            <!-- SEZIONE: PREFERENZE (RIGA ORIZZONTALE PULITA, SENZA BOX)  -->
-            <!-- ========================================================= -->
+            <!-- Sezione Preferenze -->
 
             <LinearLayout
                 android:id="@+id/row_valuta_predefinita"

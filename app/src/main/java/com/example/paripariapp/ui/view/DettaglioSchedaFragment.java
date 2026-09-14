@@ -383,8 +383,8 @@ public class DettaglioSchedaFragment extends Fragment {
             }
         }
 
-        // Listener compatibile sia con versioni Material vecchie che recenti
-        binding.chipGroupCategorie.setOnCheckedChangeListener((group, checkedId) -> {
+        binding.chipGroupCategorie.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            int checkedId = (checkedIds != null && !checkedIds.isEmpty()) ? checkedIds.get(0) : View.NO_ID;
             if (checkedId == View.NO_ID || checkedId == R.id.chip_cat_tutte) {
                 categoriaSelezionata = getString(R.string.filtro_tutte);
             } else {
@@ -737,6 +737,11 @@ public class DettaglioSchedaFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (binding != null) {
+            binding.recyclerSpese.setAdapter(null);
+            binding.recyclerSaldi.setAdapter(null);
+            binding.recyclerMembri.setAdapter(null);
+        }
         super.onDestroyView();
         binding = null;
     }

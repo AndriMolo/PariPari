@@ -33,9 +33,7 @@
             android:layout_marginTop="4dp"
             android:layout_marginBottom="16dp" />
 
-        <!-- ========================================================= -->
-        <!-- STEP 1: INSERIMENTO CODICE INVITO                         -->
-        <!-- ========================================================= -->
+        <!-- Step 1: inserimento codice invito -->
         <LinearLayout
             android:id="@+id/container_step_codice"
             android:layout_width="match_parent"
@@ -104,9 +102,7 @@
             android:layout_marginVertical="16dp"
             android:visibility="gone" />
 
-        <!-- ========================================================= -->
-        <!-- STEP 2: ANTEPRIMA SCHEDA & LISTA MEMBRI                   -->
-        <!-- ========================================================= -->
+        <!-- Step 2: anteprima scheda e lista membri -->
         <LinearLayout
             android:id="@+id/container_step_scelta"
             android:layout_width="match_parent"

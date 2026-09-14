@@ -108,7 +108,7 @@ public class AccountFragment extends Fragment {
         viewModel.getPaypalHandleLive().observe(getViewLifecycleOwner(), handle -> {
             if (binding == null) return;
             if (handle != null && !handle.trim().isEmpty()) {
-                binding.tvPaypalValore.setText("@" + handle.trim());
+                binding.tvPaypalValore.setText(getString(R.string.handle_format, handle.trim()));
             } else {
                 binding.tvPaypalValore.setText(R.string.badge_non_configurato);
             }
@@ -118,7 +118,7 @@ public class AccountFragment extends Fragment {
         viewModel.getRevolutHandleLive().observe(getViewLifecycleOwner(), handle -> {
             if (binding == null) return;
             if (handle != null && !handle.trim().isEmpty()) {
-                binding.tvRevolutValore.setText("@" + handle.trim());
+                binding.tvRevolutValore.setText(getString(R.string.handle_format, handle.trim()));
             } else {
                 binding.tvRevolutValore.setText(R.string.badge_non_configurato);
             }

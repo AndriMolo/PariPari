@@ -85,10 +85,6 @@ public class PariPariRepository {
         return INSTANCE;
     }
 
-    // ===============================================================
-    // SCHEDE (ROOM + SYNC)
-    // ===============================================================
-
     public LiveData<List<Scheda>> getAllSchede() {
         return schedaDao.getAllSchedeLive();
     }
@@ -135,10 +131,6 @@ public class PariPariRepository {
     public LiveData<Scheda> getSchedaById(String schedaId) {
         return schedaDao.getSchedaByIdLive(schedaId);
     }
-
-    // ===============================================================
-    // PARTECIPANTI (ROOM + SYNC)
-    // ===============================================================
 
     public LiveData<List<Partecipante>> getPartecipanti(String schedaId) {
         if (auth.getCurrentUser() != null && syncManager.isConnected()) {
@@ -263,10 +255,6 @@ public class PariPariRepository {
         });
     }
 
-    // ===============================================================
-    // SPESE E QUOTE (ROOM + SYNC)
-    // ===============================================================
-
     public LiveData<List<Spesa>> getSpese(String schedaId) {
         if (auth.getCurrentUser() != null && syncManager.isConnected()) {
             syncManager.attachSubcollectionListeners(schedaId);
@@ -339,10 +327,6 @@ public class PariPariRepository {
             return spesaDao.getTuttiSaldiLive();
         }
     }
-
-    // ===============================================================
-    // SALDI E PAREGGI (CALCOLO)
-    // ===============================================================
 
     public LiveData<RisultatoSaldi> getRisultatoSaldi() {
         if (!saldiSourcesInitialized) {
@@ -424,10 +408,6 @@ public class PariPariRepository {
         }
         return false;
     }
-
-    // ===============================================================
-    // CODICI INVITO & REALTIME DELEGATES
-    // ===============================================================
 
     public void assicuraCodiceInvito(Scheda scheda) {
         syncManager.assicuraCodiceInvito(scheda);

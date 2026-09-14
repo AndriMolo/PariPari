@@ -263,10 +263,6 @@ public class UserPreferencesRepository {
         }
     }
 
-    // ====================================================================
-    // GESTIONE LINGUA & LOCALE APP
-    // ====================================================================
-
     /**
      * Restituisce il codice lingua attualmente salvato ("SYSTEM", "it", "en", ecc.).
      */
@@ -395,10 +391,6 @@ public class UserPreferencesRepository {
         return Locale.forLanguageTag(lang);
     }
 
-    // ====================================================================
-    // GESTIONE TEMA APP
-    // ====================================================================
-
     public String getAppTheme() {
         return preferences.getString(KEY_APP_THEME, THEME_SYSTEM);
     }
@@ -430,10 +422,6 @@ public class UserPreferencesRepository {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
     }
-
-    // ====================================================================
-    // GESTIONE ACCOUNT PAGAMENTO (PAYPAL & REVOLUT)
-    // ====================================================================
 
     public String getPaypalHandle() {
         return preferences.getString(KEY_PAYPAL_HANDLE, "");

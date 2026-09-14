@@ -36,7 +36,6 @@ public class CodiceInvitoUtilTest {
         for (int i = 0; i < 500; i++) {
             codici.add(CodiceInvitoUtil.generaCodice());
         }
-        // Con 32^6 combinazioni (più di 1 miliardo), 500 codici devono essere tutti unici
         assertEquals(500, codici.size());
     }
 

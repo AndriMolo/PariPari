@@ -86,7 +86,7 @@
     <string name="btn_inverti">⇅ Invert</string>
     <string name="btn_converti">Convert</string>
     <string name="label_risultato">Result</string>
-    <string name="placeholder_risultato">—</string>
+    <string name="placeholder_risultato">-</string>
     <string name="tassi_bce_aggiornati">ECB rates updated: %s</string>
     <string name="error_importo_valuta">Please enter a valid amount (e.g., 10 or 12.50)</string>
     <string name="error_importo_zero">Amount must be greater than zero</string>
@@ -449,5 +449,8 @@
     <!-- Current user account identification -->
     <string name="etichetta_io">me</string>
     <string name="formato_nome_con_io">%1$s (%2$s)</string>
+
+    <string name="label_codice_6_caratteri">6-character code</string>
+    <string name="handle_format">@%s</string>
 
 </resources>

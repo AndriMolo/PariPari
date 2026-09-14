@@ -1,9 +1,6 @@
 rules_version = '2';
 
-// ===============================================================
-// Assumed Data Model
-// ===============================================================
-//
+// Data Model assumed:
 // Collection: users
 // Document ID: {userId} (matches request.auth.uid)
 // Fields:
@@ -41,8 +38,6 @@ rules_version = '2';
 // Fields:
 //   - partecipanteId: string (required)
 //   - quota: number (non-negative, required)
-//
-// ===============================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -64,18 +59,12 @@ service cloud.firestore {
       return val is string && val.size() == 3;
     }
 
-    // ===============================================================
     // Regole Users
-    // ===============================================================
-
     match /users/{userId} {
       allow read, write: if isOwner(userId);
     }
 
-    // ===============================================================
     // Regole Groups (Schede Spese)
-    // ===============================================================
-
     match /groups/{groupId} {
       allow read: if isAuthenticated();
 
