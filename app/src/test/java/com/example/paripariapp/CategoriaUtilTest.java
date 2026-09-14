@@ -29,5 +29,20 @@ public class CategoriaUtilTest {
         assertEquals("🍕", CategoriaUtil.getEmojiForCategoria(CategoriaUtil.CAT_CIBO, "Pizza"));
         assertEquals("🚗", CategoriaUtil.getEmojiForCategoria(CategoriaUtil.CAT_TRASPORTI));
         assertEquals("💳", CategoriaUtil.getEmojiForCategoria(CategoriaUtil.CAT_SALDI));
+        assertEquals("💳", CategoriaUtil.getEmojiForCategoria(CategoriaUtil.CAT_RIMBORSI));
+        assertEquals("💳", CategoriaUtil.getEmojiForCategoria("Pareggio"));
+    }
+
+    @Test
+    public void testIsCategoriaSaldi() {
+        org.junit.Assert.assertTrue(CategoriaUtil.isCategoriaSaldi("Pareggio"));
+        org.junit.Assert.assertTrue(CategoriaUtil.isCategoriaSaldi("Saldi"));
+        org.junit.Assert.assertTrue(CategoriaUtil.isCategoriaSaldi("Saldo"));
+        org.junit.Assert.assertTrue(CategoriaUtil.isCategoriaSaldi("Rimborsi"));
+        org.junit.Assert.assertTrue(CategoriaUtil.isCategoriaSaldi("Rimborso"));
+        org.junit.Assert.assertFalse(CategoriaUtil.isCategoriaSaldi("Cibo"));
+        org.junit.Assert.assertFalse(CategoriaUtil.isCategoriaSaldi("Trasporti"));
+        org.junit.Assert.assertFalse(CategoriaUtil.isCategoriaSaldi(null));
+        org.junit.Assert.assertFalse(CategoriaUtil.isCategoriaSaldi(""));
     }
 }

@@ -472,4 +472,20 @@
     <string name="label_codice_6_caratteri">6-character code</string>
     <string name="handle_format">@%s</string>
 
+    <!-- Rimborsi e Pareggi -->
+    <string name="titolo_nuovo_rimborso">New Reimbursement</string>
+    <string name="titolo_dettaglio_rimborso">Reimbursement Details</string>
+    <string name="titolo_modifica_rimborso">Edit Reimbursement</string>
+    <string name="label_descrizione_opzionale">Description (optional)</string>
+    <string name="label_chi_invia">Sender</string>
+    <string name="label_chi_riceve_soli">Receiver</string>
+    <string name="label_nessuna_descrizione">No description</string>
+    <string name="btn_salva_rimborso">Save Reimbursement</string>
+    <string name="btn_elimina_rimborso">Delete Reimbursement</string>
+    <string name="format_da_chi_pagato">Paid by: %s</string>
+    <string name="format_chi_riceve">Received by: %s</string>
+    <string name="cat_rimborsi">Reimbursements</string>
+    <string name="dialog_titolo_elimina_rimborso">Delete reimbursement</string>
+    <string name="dialog_msg_elimina_rimborso">Are you sure you want to delete this reimbursement? Balances will be recalculated automatically.</string>
+
 </resources>

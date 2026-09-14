@@ -291,21 +291,39 @@ public class DettaglioSchedaFragment extends Fragment {
             if (item == null || item.getSpesa() == null) return;
             Spesa spesa = item.getSpesa();
 
-            DettaglioSpesaFragment fragment = DettaglioSpesaFragment.newInstance(
-                    spesa.getId(),
-                    schedaId,
-                    valuta
-            );
-            getParentFragmentManager().beginTransaction()
-                    .setCustomAnimations(
-                            android.R.anim.fade_in,
-                            android.R.anim.fade_out,
-                            android.R.anim.fade_in,
-                            android.R.anim.fade_out
-                    )
-                    .replace(R.id.dettaglio_container, fragment)
-                    .addToBackStack(null)
-                    .commit();
+            if (com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesa.getCategoria())) {
+                DettaglioRimborsoFragment fragment = DettaglioRimborsoFragment.newInstance(
+                        spesa.getId(),
+                        schedaId,
+                        valuta
+                );
+                getParentFragmentManager().beginTransaction()
+                        .setCustomAnimations(
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out,
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out
+                        )
+                        .replace(R.id.dettaglio_container, fragment)
+                        .addToBackStack(null)
+                        .commit();
+            } else {
+                DettaglioSpesaFragment fragment = DettaglioSpesaFragment.newInstance(
+                        spesa.getId(),
+                        schedaId,
+                        valuta
+                );
+                getParentFragmentManager().beginTransaction()
+                        .setCustomAnimations(
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out,
+                                android.R.anim.fade_in,
+                                android.R.anim.fade_out
+                        )
+                        .replace(R.id.dettaglio_container, fragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
         });
 
         adapter.setOnSpesaLongClickListener((item, view) -> {
@@ -348,27 +366,46 @@ public class DettaglioSchedaFragment extends Fragment {
             popup.getMenu().add(0, 2, 1, R.string.btn_elimina);
             popup.setOnMenuItemClickListener(menuItem -> {
                 if (menuItem.getItemId() == 1) {
-                    ModificaSpesaFragment fragment = ModificaSpesaFragment.newInstance(
-                            spesa.getId(),
-                            schedaId,
-                            valuta
-                    );
-                    getParentFragmentManager().beginTransaction()
-                            .setCustomAnimations(
-                                    android.R.anim.fade_in,
-                                    android.R.anim.fade_out,
-                                    android.R.anim.fade_in,
-                                    android.R.anim.fade_out
-                            )
-                            .replace(R.id.dettaglio_container, fragment)
-                            .addToBackStack(null)
-                            .commit();
+                    if (com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesa.getCategoria())) {
+                        ModificaRimborsoFragment fragment = ModificaRimborsoFragment.newInstance(
+                                spesa.getId(),
+                                schedaId,
+                                valuta
+                        );
+                        getParentFragmentManager().beginTransaction()
+                                .setCustomAnimations(
+                                        android.R.anim.fade_in,
+                                        android.R.anim.fade_out,
+                                        android.R.anim.fade_in,
+                                        android.R.anim.fade_out
+                                )
+                                .replace(R.id.dettaglio_container, fragment)
+                                .addToBackStack(null)
+                                .commit();
+                    } else {
+                        ModificaSpesaFragment fragment = ModificaSpesaFragment.newInstance(
+                                spesa.getId(),
+                                schedaId,
+                                valuta
+                        );
+                        getParentFragmentManager().beginTransaction()
+                                .setCustomAnimations(
+                                        android.R.anim.fade_in,
+                                        android.R.anim.fade_out,
+                                        android.R.anim.fade_in,
+                                        android.R.anim.fade_out
+                                )
+                                .replace(R.id.dettaglio_container, fragment)
+                                .addToBackStack(null)
+                                .commit();
+                    }
                     return true;
                 } else if (menuItem.getItemId() == 2) {
+                    boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesa.getCategoria());
                     new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle(R.string.dialog_titolo_elimina_spesa)
-                            .setMessage(R.string.dialog_msg_elimina_spesa)
-                            .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
+                            .setTitle(isRimborso ? R.string.dialog_titolo_elimina_rimborso : R.string.dialog_titolo_elimina_spesa)
+                            .setMessage(isRimborso ? R.string.dialog_msg_elimina_rimborso : R.string.dialog_msg_elimina_spesa)
+                            .setPositiveButton(isRimborso ? R.string.btn_elimina_rimborso : R.string.btn_elimina, (dialog, which) -> {
                                 viewModel.eliminaSpesa(spesa.getId(), schedaId);
                             })
                             .setNegativeButton(android.R.string.cancel, null)
@@ -572,18 +609,24 @@ public class DettaglioSchedaFragment extends Fragment {
     private void applicaFiltriERaggruppa() {
         List<SpesaConDettagli> filtrate = new ArrayList<>();
         String labelTutte = getString(R.string.filtro_tutte);
+        String labelRimborsi = getString(R.string.cat_rimborsi);
+        boolean isFiltroRimborsi = categoriaSelezionata.equalsIgnoreCase(labelRimborsi);
 
         for (SpesaConDettagli scd : tutteSpeseRaw) {
             Spesa s = scd.getSpesa();
-            if (com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(s.getCategoria())) {
-                continue; // I pareggi saldi sono esclusi dall'elenco spese del gruppo
-            }
+            boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(s.getCategoria());
 
             boolean matchTesto = queryFiltroTesto.isEmpty() ||
                     s.getTitolo().toLowerCase(java.util.Locale.getDefault()).contains(queryFiltroTesto);
 
-            boolean matchCat = categoriaSelezionata.equalsIgnoreCase(labelTutte) ||
-                    categoriaSelezionata.equalsIgnoreCase(s.getCategoria());
+            boolean matchCat;
+            if (isFiltroRimborsi) {
+                matchCat = isRimborso;
+            } else if (categoriaSelezionata.equalsIgnoreCase(labelTutte)) {
+                matchCat = true;
+            } else {
+                matchCat = !isRimborso && categoriaSelezionata.equalsIgnoreCase(s.getCategoria());
+            }
 
             if (matchTesto && matchCat) {
                 filtrate.add(scd);

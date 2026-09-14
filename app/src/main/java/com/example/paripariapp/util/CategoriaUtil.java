@@ -19,6 +19,7 @@ public class CategoriaUtil {
     public static final String CAT_SALUTE = "Salute";
     public static final String CAT_ALTRO = "Altro";
     public static final String CAT_SALDI = "Saldi";
+    public static final String CAT_RIMBORSI = "Rimborsi";
 
     @NonNull
     public static String getEmojiForCategoria(@Nullable String categoria) {
@@ -35,9 +36,9 @@ public class CategoriaUtil {
             return "🧾";
         }
 
-        // 1. Saldi, Pareggi e Settlement
-        if (catClean.contains("saldi") || catClean.contains("saldo") || catClean.contains("pareggio") || catClean.contains("settlement") ||
-                titleClean.contains("saldi") || titleClean.contains("saldo") || titleClean.contains("pareggio") || titleClean.contains("pagamento")) {
+        // 1. Saldi, Pareggi, Rimborsi e Settlement
+        if (catClean.contains("saldi") || catClean.contains("saldo") || catClean.contains("pareggio") || catClean.contains("settlement") || catClean.contains("rimbors") ||
+                titleClean.contains("saldi") || titleClean.contains("saldo") || titleClean.contains("pareggio") || titleClean.contains("pagamento") || titleClean.contains("rimbors")) {
             return "💳";
         }
 
@@ -181,12 +182,14 @@ public class CategoriaUtil {
         if (categoriaStandard.equalsIgnoreCase(CAT_BAR)) return context.getString(com.example.paripariapp.R.string.cat_bar);
         if (categoriaStandard.equalsIgnoreCase(CAT_SALUTE)) return context.getString(com.example.paripariapp.R.string.cat_salute);
         if (categoriaStandard.equalsIgnoreCase(CAT_ALTRO)) return context.getString(com.example.paripariapp.R.string.cat_altro);
+        if (categoriaStandard.equalsIgnoreCase(CAT_RIMBORSI)) return context.getString(com.example.paripariapp.R.string.cat_rimborsi);
         return categoriaStandard;
     }
 
     public static boolean isCategoriaSaldi(@Nullable String categoria) {
         if (categoria == null) return false;
         String catLower = categoria.trim().toLowerCase(java.util.Locale.ROOT);
-        return catLower.equalsIgnoreCase("saldi") || catLower.equalsIgnoreCase("saldo") || catLower.contains("pareggio");
+        return catLower.equalsIgnoreCase("saldi") || catLower.equalsIgnoreCase("saldo")
+                || catLower.contains("pareggio") || catLower.contains("rimbors");
     }
 }

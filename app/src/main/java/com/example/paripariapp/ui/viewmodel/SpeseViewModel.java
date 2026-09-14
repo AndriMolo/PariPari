@@ -171,10 +171,14 @@ public class SpeseViewModel extends AndroidViewModel {
         }
     }
     public void registraPagamento(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta) {
+        registraRimborso(schedaId, daId, daNome, aId, aNome, importo, valuta, null);
+    }
+
+    public void registraRimborso(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta, @Nullable String descrizione) {
         String spesaId = UUID.randomUUID().toString();
         String pulitoDa = Partecipante.pulisciNome(daNome);
         String pulitoA = Partecipante.pulisciNome(aNome);
-        String titolo = "Pagamento da " + (pulitoDa.isEmpty() ? "Membro" : pulitoDa) + " a " + (pulitoA.isEmpty() ? "Membro" : pulitoA);
+        String titolo = "Rimborso: da " + (pulitoDa.isEmpty() ? "Membro" : pulitoDa) + " a " + (pulitoA.isEmpty() ? "Membro" : pulitoA);
 
         // 1. Spesa fittizia di pareggio
         Spesa pagamento = new Spesa(
@@ -186,7 +190,7 @@ public class SpeseViewModel extends AndroidViewModel {
                 System.currentTimeMillis(),
                 "Pareggio",
                 daId, // Chi paga realmente
-                null,
+                descrizione, // Memorizzato in scontrino_url
                 SyncStatus.PENDING_INSERT
         );
 

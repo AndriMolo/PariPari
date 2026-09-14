@@ -83,21 +83,50 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             com.example.paripariapp.util.HapticUtil.tick(group);
             isRimborso = (checkedId == R.id.btn_tipo_rimborso);
             if (isRimborso) {
+                binding.titoloSpesa.setText(R.string.titolo_nuovo_rimborso);
+                binding.azioneSalva.setText(R.string.btn_salva_rimborso);
                 binding.contenitoreDestinatario.setVisibility(View.VISIBLE);
                 binding.contenitoreCategoria.setVisibility(View.GONE);
                 binding.sezioneDivisione.setVisibility(View.GONE);
-                if (binding.campoDescrizione.getText() == null || binding.campoDescrizione.getText().toString().isEmpty()) {
-                    binding.campoDescrizione.setText("Rimborso");
+                binding.contenitoreDescrizione.setHint(getString(R.string.label_descrizione_opzionale));
+                if ("Rimborso".equals(String.valueOf(binding.campoDescrizione.getText()))) {
+                    binding.campoDescrizione.setText("");
                 }
+                aggiornaDropdownDestinatario();
             } else {
+                binding.titoloSpesa.setText(R.string.spesa_titolo);
+                binding.azioneSalva.setText(R.string.btn_salva_spesa);
                 binding.contenitoreDestinatario.setVisibility(View.GONE);
                 binding.contenitoreCategoria.setVisibility(View.VISIBLE);
                 binding.sezioneDivisione.setVisibility(View.VISIBLE);
+                binding.contenitoreDescrizione.setHint(getString(R.string.hint_descrizione_spesa));
             }
         });
 
         setupObserverPartecipanti();
         setupSalva();
+    }
+
+    private void aggiornaDropdownDestinatario() {
+        if (partecipanti == null || !isAdded()) return;
+        String paganteSelezionato = binding.menuPagante.getText() != null ? binding.menuPagante.getText().toString() : "";
+        List<String> destinatariDisponibili = new ArrayList<>();
+        for (Partecipante p : partecipanti) {
+            if (!p.getNome().equalsIgnoreCase(paganteSelezionato)) {
+                destinatariDisponibili.add(p.getNome());
+            }
+        }
+        ArrayAdapter<String> destAdapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), destinatariDisponibili);
+        binding.menuDestinatario.setAdapter(destAdapter);
+
+        String destinatarioAttuale = binding.menuDestinatario.getText() != null ? binding.menuDestinatario.getText().toString() : "";
+        if (destinatarioAttuale.equalsIgnoreCase(paganteSelezionato) || (!destinatariDisponibili.isEmpty() && !destinatariDisponibili.contains(destinatarioAttuale))) {
+            if (!destinatariDisponibili.isEmpty()) {
+                binding.menuDestinatario.setText(destinatariDisponibili.get(0), false);
+            } else {
+                binding.menuDestinatario.setText("", false);
+            }
+        }
     }
 
     private void setupObserverPartecipanti() {
@@ -111,7 +140,6 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             }
             ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
             binding.menuPagante.setAdapter(adapter);
-            binding.menuDestinatario.setAdapter(adapter);
 
             String defaultPagatoreNome = null;
             com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
@@ -128,17 +156,13 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             if (defaultPagatoreNome != null && (binding.menuPagante.getText() == null || binding.menuPagante.getText().toString().isEmpty())) {
                 binding.menuPagante.setText(defaultPagatoreNome, false);
             }
-            if (binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty()) {
-                for (String nome : nomi) {
-                    if (!nome.equals(defaultPagatoreNome)) {
-                        binding.menuDestinatario.setText(nome, false);
-                        break;
-                    }
-                }
-                if ((binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty()) && !nomi.isEmpty()) {
-                    binding.menuDestinatario.setText(nomi.get(0), false);
-                }
-            }
+
+            aggiornaDropdownDestinatario();
+
+            binding.menuPagante.setOnItemClickListener((parent, v, position, id) -> {
+                com.example.paripariapp.util.HapticUtil.tick(binding.menuPagante);
+                aggiornaDropdownDestinatario();
+            });
 
             binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
             binding.menuDestinatario.setOnClickListener(v -> binding.menuDestinatario.showDropDown());
@@ -175,8 +199,11 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 }
 
                 if (daId != null && aId != null) {
+                    String desc = binding.campoDescrizione.getText() != null ? binding.campoDescrizione.getText().toString().trim() : null;
+                    if (desc != null && desc.isEmpty()) desc = null;
+
                     SpeseViewModel speseVm = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
-                    speseVm.registraPagamento(schedaId, daId, paganteNome, aId, destinatarioNome, importo, getValutaEffettiva());
+                    speseVm.registraRimborso(schedaId, daId, paganteNome, aId, destinatarioNome, importo, getValutaEffettiva(), desc);
                     com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
                     if (getParentFragmentManager() != null) {
                         getParentFragmentManager().popBackStack();

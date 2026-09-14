@@ -472,4 +472,20 @@
     <string name="label_codice_6_caratteri">Codice a 6 caratteri</string>
     <string name="handle_format">@%s</string>
 
+    <!-- Rimborsi / Saldi -->
+    <string name="titolo_nuovo_rimborso">Nuovo Rimborso</string>
+    <string name="titolo_dettaglio_rimborso">Dettaglio Rimborso</string>
+    <string name="titolo_modifica_rimborso">Modifica Rimborso</string>
+    <string name="label_descrizione_opzionale">Descrizione (opzionale)</string>
+    <string name="label_chi_invia">Chi invia i soldi</string>
+    <string name="label_chi_riceve_soli">Chi li riceve</string>
+    <string name="label_nessuna_descrizione">Nessuna descrizione</string>
+    <string name="btn_salva_rimborso">Salva Rimborso</string>
+    <string name="btn_elimina_rimborso">Elimina Rimborso</string>
+    <string name="format_da_chi_pagato">Da chi pagato: %s</string>
+    <string name="format_chi_riceve">Chi li riceve: %s</string>
+    <string name="cat_rimborsi">Rimborsi</string>
+    <string name="dialog_titolo_elimina_rimborso">Elimina rimborso</string>
+    <string name="dialog_msg_elimina_rimborso">Sei sicuro di voler eliminare questo rimborso? I saldi verranno ricalcolati automaticamente.</string>
+
 </resources>
