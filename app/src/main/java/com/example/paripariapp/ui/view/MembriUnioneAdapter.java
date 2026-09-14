@@ -89,7 +89,7 @@ public class MembriUnioneAdapter extends RecyclerView.Adapter<MembriUnioneAdapte
 
         void bind(MembroGruppoPreview membro, boolean isSelected) {
             Context ctx = itemView.getContext();
-            String nome = membro.getNome();
+            String nome = com.example.paripariapp.data.model.Partecipante.pulisciNome(membro.getNome());
             binding.tvNomeMembro.setText(nome);
 
             // Iniziale avatar

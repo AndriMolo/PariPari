@@ -465,9 +465,18 @@ public class DettaglioSchedaFragment extends Fragment {
         Partecipante proprietario = Partecipante.trovaProprietario(schedaCorrente, partecipantiCache, currentUser);
         List<Partecipante> ordinati = Partecipante.ordinaConProprietarioInCima(schedaCorrente, partecipantiCache, currentUser);
 
+        String currentSchedaId = (schedaCorrente != null) ? schedaCorrente.getId() : null;
+        membroAdapter.setSchedaId(currentSchedaId);
+
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
+        String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, currentSchedaId);
+        if (myId != null) {
+            membroAdapter.setCurrentMyId(myId);
+        }
+
         boolean isCapogruppo = (proprietario != null && isMe(proprietario));
         membroAdapter.setCapogruppo(isCapogruppo);
-        membroAdapter.setProprietarioId(proprietario != null ? proprietario.getId() : null);
         membroAdapter.submitList(new ArrayList<>(ordinati));
     }
 
@@ -615,12 +624,17 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private boolean isMe(Partecipante p) {
         if (p == null) return false;
-        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-        if (Partecipante.isCurrentUserParticipant(p, currentUser)) {
-            return true;
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
+        String currentSchedaId = (schedaCorrente != null) ? schedaCorrente.getId() : null;
+        if (currentSchedaId != null) {
+            String mySavedId = prefs.getMyParticipantId(currentSchedaId);
+            if (mySavedId != null) {
+                return mySavedId.equals(p.getId());
+            }
         }
-        String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
-        return myId != null && myId.equals(p.getId());
+        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        return Partecipante.isCurrentUserParticipant(p, currentUser);
     }
 
     private void gestisciRimozioneMembro(Partecipante p, @Nullable androidx.appcompat.app.AlertDialog dialogToDismiss, @Nullable Runnable onMemberRemovedLocally) {

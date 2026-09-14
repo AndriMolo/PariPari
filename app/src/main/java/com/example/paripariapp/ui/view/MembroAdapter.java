@@ -46,7 +46,6 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     private OnEliminaClickListener onEliminaClickListener;
     private OnNomeModificatoListener onNomeModificatoListener;
     private boolean isCapogruppo = false;
-    private String proprietarioId = null;
     private FirebaseUser currentUser;
     private String currentMyId;
     private String editingParticipantId = null;
@@ -71,6 +70,16 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         this.onNomeModificatoListener = listener;
     }
 
+    private String schedaId;
+
+    public void setSchedaId(String schedaId) {
+        this.schedaId = schedaId;
+    }
+
+    public void setCurrentMyId(String currentMyId) {
+        this.currentMyId = currentMyId;
+    }
+
     public void setCapogruppo(boolean capogruppo) {
         if (this.isCapogruppo != capogruppo) {
             this.isCapogruppo = capogruppo;
@@ -78,17 +87,12 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         }
     }
 
-    public void setProprietarioId(String proprietarioId) {
-        if (!Objects.equals(this.proprietarioId, proprietarioId)) {
-            this.proprietarioId = proprietarioId;
-            notifyDataSetChanged();
-        }
-    }
-
     @Override
     public void submitList(@Nullable List<Partecipante> list) {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        currentMyId = Partecipante.findCurrentUserId(list, currentUser);
+        if (currentMyId == null && list != null && !list.isEmpty()) {
+            currentMyId = Partecipante.findCurrentUserId(list, currentUser);
+        }
         if (editingParticipantId != null && list != null) {
             boolean found = false;
             for (Partecipante p : list) {
@@ -117,7 +121,12 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     public void onBindViewHolder(@NonNull MembroViewHolder holder, int position) {
         Partecipante p = getItem(position);
 
-        boolean isMe = (currentMyId != null && currentMyId.equals(p.getId())) ||
+        Context context = holder.binding.getRoot().getContext();
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
+        String myId = (currentMyId != null) ? currentMyId : (schedaId != null ? prefs.getMyParticipantId(schedaId) : null);
+
+        boolean isMe = (myId != null && myId.equals(p.getId())) ||
                 Partecipante.isCurrentUserParticipant(p, currentUser);
 
         String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase() : "?";
@@ -136,21 +145,17 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             holder.binding.bottoneSalvaInline.setVisibility(View.VISIBLE);
             holder.binding.bottoneAnnullaInline.setVisibility(View.VISIBLE);
 
-            String nomeClean = p.getNome() != null ? p.getNome().trim() : "";
-            if (nomeClean.toLowerCase().endsWith(" (io)")) {
-                nomeClean = nomeClean.substring(0, nomeClean.length() - " (io)".length()).trim();
-            } else if (nomeClean.toLowerCase().endsWith(" (me)")) {
-                nomeClean = nomeClean.substring(0, nomeClean.length() - " (me)".length()).trim();
-            }
+            String nomeClean = Partecipante.pulisciNome(p.getNome());
             holder.binding.etModificaInline.setText(nomeClean);
             holder.binding.etModificaInline.setSelection(nomeClean.length());
             holder.binding.etModificaInline.requestFocus();
             holder.binding.etModificaInline.post(() -> showKeyboard(holder.binding.etModificaInline));
 
             Runnable salvaAzione = () -> {
-                String nuovoNome = holder.binding.etModificaInline.getText() != null
+                String rawNome = holder.binding.etModificaInline.getText() != null
                         ? holder.binding.etModificaInline.getText().toString().trim()
                         : "";
+                String nuovoNome = Partecipante.pulisciNome(rawNome);
                 if (nuovoNome.isEmpty()) {
                     holder.binding.tilModificaInline.setError(
                             holder.binding.getRoot().getContext().getString(R.string.error_nome_obbligatorio));
@@ -189,10 +194,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             holder.binding.bottoneSalvaInline.setVisibility(View.GONE);
             holder.binding.bottoneAnnullaInline.setVisibility(View.GONE);
 
-            String nomeDisplay = p.getNome();
-            if (isMe && !nomeDisplay.toLowerCase().endsWith("(io)") && !nomeDisplay.toLowerCase().endsWith("(me)")) {
-                nomeDisplay = nomeDisplay + " (io)";
-            }
+            String nomeDisplay = Partecipante.formattaNomePerVisualizzazione(context, p, isMe);
             holder.binding.nomePartecipante.setText(nomeDisplay);
             holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
 

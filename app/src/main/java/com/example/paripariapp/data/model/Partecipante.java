@@ -45,12 +45,42 @@ public class Partecipante {
     @ColumnInfo(name = "revolut_handle")
     private String revolutHandle;
 
+    @NonNull
+    public static String pulisciNome(@androidx.annotation.Nullable String nome) {
+        if (nome == null) return "";
+        String pulito = nome.trim();
+        while (pulito.toLowerCase().endsWith("(io)") || pulito.toLowerCase().endsWith("(me)")) {
+            if (pulito.toLowerCase().endsWith("(io)")) {
+                pulito = pulito.substring(0, pulito.length() - 4).trim();
+            } else if (pulito.toLowerCase().endsWith("(me)")) {
+                pulito = pulito.substring(0, pulito.length() - 4).trim();
+            }
+        }
+        return pulito;
+    }
+
+    /**
+     * Formatta il nome del partecipante per la visualizzazione nella UI:
+     * solo il proprietario dell'account corrente vede l'etichetta localizzata (io) / (me) di fianco al proprio nome.
+     */
+    @NonNull
+    public static String formattaNomePerVisualizzazione(@NonNull android.content.Context context,
+                                                       @NonNull Partecipante p,
+                                                       boolean isMe) {
+        String pulito = pulisciNome(p.getNome());
+        if (isMe) {
+            String etichettaIo = context.getString(com.example.paripariapp.R.string.etichetta_io);
+            return context.getString(com.example.paripariapp.R.string.formato_nome_con_io, pulito, etichettaIo);
+        }
+        return pulito;
+    }
+
     @Ignore
     public Partecipante(@NonNull String id, @NonNull String schedaId, @NonNull String nome,
                         String email, int syncStatus) {
         this.id = id;
         this.schedaId = schedaId;
-        this.nome = nome;
+        this.nome = pulisciNome(nome);
         this.email = email;
         this.syncStatus = syncStatus;
     }
@@ -59,7 +89,7 @@ public class Partecipante {
                         String email, int syncStatus, String paypalHandle, String revolutHandle) {
         this.id = id;
         this.schedaId = schedaId;
-        this.nome = nome;
+        this.nome = pulisciNome(nome);
         this.email = email;
         this.syncStatus = syncStatus;
         this.paypalHandle = paypalHandle;
@@ -71,7 +101,7 @@ public class Partecipante {
         return new Partecipante(
                 UUID.randomUUID().toString(),
                 schedaId,
-                nome,
+                pulisciNome(nome),
                 email,
                 SyncStatus.PENDING_INSERT
         );
@@ -97,11 +127,11 @@ public class Partecipante {
 
     @NonNull
     public String getNome() {
-        return nome;
+        return pulisciNome(nome);
     }
 
     public void setNome(@NonNull String nome) {
-        this.nome = nome;
+        this.nome = pulisciNome(nome);
     }
 
     public String getEmail() {
@@ -157,15 +187,15 @@ public class Partecipante {
         // 3. Corrispondenza per Display Name
         if (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
             String displayName = currentUser.getDisplayName().trim().toLowerCase();
-            String pNome = p.getNome().trim().toLowerCase();
-            if (pNome.equalsIgnoreCase(displayName) || pNome.startsWith(displayName)) {
+            String pNome = pulisciNome(p.getNome()).toLowerCase();
+            if (pNome.equalsIgnoreCase(displayName)) {
                 return true;
             }
         }
 
-        // 4. Corrispondenza per diciture "(io)", "(me)", "io", "me" (fallback)
-        String n = p.getNome().trim().toLowerCase();
-        if (n.contains("(io)") || n.contains("(me)") || n.equalsIgnoreCase("io") || n.equalsIgnoreCase("me") || n.startsWith("io ")) {
+        // 4. Se il partecipante ha nome letterale "io" o "me" (fallback per gruppi offline locali)
+        String n = pulisciNome(p.getNome()).toLowerCase();
+        if (n.equals("io") || n.equals("me")) {
             return true;
         }
 
@@ -175,18 +205,42 @@ public class Partecipante {
     /**
      * Trova l'ID del partecipante che rappresenta l'utente corrente in una lista di partecipanti.
      */
+    @androidx.annotation.Nullable
+    public static String findCurrentUserId(java.util.List<Partecipante> partecipanti,
+                                           @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+        return findCurrentUserId(partecipanti, currentUser, null, null);
+    }
 
-    public static String findCurrentUserId(java.util.List<Partecipante> partecipanti, @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+    /**
+     * Trova l'ID del partecipante associato all'account/dispositivo corrente considerando le preferenze locali.
+     */
+    @androidx.annotation.Nullable
+    public static String findCurrentUserId(@androidx.annotation.Nullable java.util.List<Partecipante> partecipanti,
+                                           @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser,
+                                           @androidx.annotation.Nullable com.example.paripariapp.data.repository.UserPreferencesRepository prefs,
+                                           @androidx.annotation.Nullable String schedaId) {
         if (partecipanti == null || partecipanti.isEmpty()) return null;
 
+        // 1. Controllo preferenze memorizzate su questo dispositivo per questa scheda
+        if (prefs != null && schedaId != null) {
+            String savedId = prefs.getMyParticipantId(schedaId);
+            if (savedId != null) {
+                for (Partecipante p : partecipanti) {
+                    if (p.getId().equals(savedId)) {
+                        return p.getId();
+                    }
+                }
+            }
+        }
+
+        // 2. Controllo per utente autenticato (email, UID, displayName)
         for (Partecipante p : partecipanti) {
             if (isCurrentUserParticipant(p, currentUser)) {
                 return p.getId();
             }
         }
 
-        // Fallback: primo partecipante della scheda
-        return partecipanti.get(0).getId();
+        return null;
     }
 
     /**

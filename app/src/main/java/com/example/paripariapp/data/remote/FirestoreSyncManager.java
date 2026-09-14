@@ -174,11 +174,11 @@ public class FirestoreSyncManager {
                 Map<String, Object> pData = new HashMap<>();
                 pData.put("nome", p.getNome());
                 pData.put("email", p.getEmail());
-                boolean isCreator = currentUser != null && !currentUser.isAnonymous()
-                        && Partecipante.isCurrentUserParticipant(p, currentUser);
-                if (isCreator) {
+                boolean isCreator = (currentUser != null && Partecipante.isCurrentUserParticipant(p, currentUser))
+                        || (scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(p.getId()));
+                if (isCreator && currentUser != null) {
                     pData.put("userId", currentUser.getUid());
-                    pData.put("isAutenticato", true);
+                    pData.put("isAutenticato", !currentUser.isAnonymous());
                     if (currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
                         pData.put("email", currentUser.getEmail().trim());
                     }
@@ -210,12 +210,14 @@ public class FirestoreSyncManager {
 
         FirebaseUser currentUser = auth.getCurrentUser();
         List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(p.getSchedaId());
-        String myPartId = Partecipante.findCurrentUserId(localParts, currentUser);
-        boolean isMe = Partecipante.isCurrentUserParticipant(p, currentUser) || (myPartId != null && myPartId.equals(p.getId()));
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
+        String myPartId = Partecipante.findCurrentUserId(localParts, currentUser, prefs, p.getSchedaId());
+        boolean isMe = (myPartId != null && myPartId.equals(p.getId())) || Partecipante.isCurrentUserParticipant(p, currentUser);
 
-        if (isMe && currentUser != null && !currentUser.isAnonymous()) {
+        if (isMe && currentUser != null) {
             data.put("userId", currentUser.getUid());
-            data.put("isAutenticato", true);
+            data.put("isAutenticato", !currentUser.isAnonymous());
             if (currentUser.getEmail() != null && !currentUser.getEmail().isEmpty()) {
                 data.put("email", currentUser.getEmail());
             }
@@ -1037,8 +1039,9 @@ public class FirestoreSyncManager {
                         }
                     }
 
+                    String mioPartId = null;
                     if (!giaPresente) {
-                        String mioPartId = UUID.randomUUID().toString();
+                        mioPartId = UUID.randomUUID().toString();
                         Partecipante mioPartecipante = new Partecipante(mioPartId, groupId, currentNome, currentEmail, SyncStatus.SYNCED);
                         partiScaricati.add(mioPartecipante);
 
@@ -1056,9 +1059,15 @@ public class FirestoreSyncManager {
                         if (currentEmail != null) patch.put("email", currentEmail);
                         patch.put("isAutenticato", currentUser != null && !currentUser.isAnonymous());
                         if (nomePersonalizzato != null && !nomePersonalizzato.trim().isEmpty()) {
-                            patch.put("nome", nomePersonalizzato.trim());
+                            patch.put("nome", Partecipante.pulisciNome(nomePersonalizzato));
                         }
                         existingDocToUpdate.getReference().update(patch);
+                    }
+
+                    String myJoinedPartId = !giaPresente ? mioPartId : (existingDocToUpdate != null ? existingDocToUpdate.getId() : null);
+                    if (myJoinedPartId != null) {
+                        com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context)
+                                .setMyParticipantId(groupId, myJoinedPartId);
                     }
 
                     partecipanteDao.insertAll(partiScaricati);

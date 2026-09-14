@@ -107,11 +107,14 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
 
         UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(requireContext());
 
+        String aNomePulito = com.example.paripariapp.data.model.Partecipante.pulisciNome(aNome);
+        String daNomePulito = com.example.paripariapp.data.model.Partecipante.pulisciNome(daNome);
+
         boolean isDebitore = (daId != null && daId.equals(myParticipantId))
-                || (daNome != null && (daNome.equalsIgnoreCase("io") || daNome.equalsIgnoreCase("me") || daNome.toLowerCase().contains("(io)")));
+                || (daNomePulito.equalsIgnoreCase("io") || daNomePulito.equalsIgnoreCase("me"));
 
         boolean isCreditore = (aId != null && aId.equals(myParticipantId))
-                || (aNome != null && (aNome.equalsIgnoreCase("io") || aNome.equalsIgnoreCase("me") || aNome.toLowerCase().contains("(io)")));
+                || (aNomePulito.equalsIgnoreCase("io") || aNomePulito.equalsIgnoreCase("me"));
 
         String strImportoValuta = String.format(Locale.US, "%.2f %s", importo, valuta);
 
@@ -121,15 +124,15 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         if (isDebitore) {
             // Se devi dare soldi tu -> Schermata "Salda il Debito"
             binding.tvTitoloPagamento.setText(R.string.titolo_salda_debito);
-            binding.tvDescrizioneSaldo.setText(getString(R.string.desc_salda_debito, strImportoValuta, aNome));
+            binding.tvDescrizioneSaldo.setText(getString(R.string.desc_salda_debito, strImportoValuta, aNomePulito));
         } else if (isCreditore) {
             // Se devono dare soldi a te -> Schermata "Richiedi Pagamento"
             binding.tvTitoloPagamento.setText(R.string.titolo_richiedi_pagamento);
-            binding.tvDescrizioneSaldo.setText(getString(R.string.desc_richiedi_pagamento, daNome, strImportoValuta));
+            binding.tvDescrizioneSaldo.setText(getString(R.string.desc_richiedi_pagamento, daNomePulito, strImportoValuta));
         } else {
             // Saldo generico tra altri partecipanti
             binding.tvTitoloPagamento.setText(R.string.titolo_bottom_sheet_pagamento);
-            binding.tvDescrizioneSaldo.setText(getString(R.string.saldi_descrizione_trasferimento, daNome, aNome) + " (" + strImportoValuta + ")");
+            binding.tvDescrizioneSaldo.setText(getString(R.string.saldi_descrizione_trasferimento, daNomePulito, aNomePulito) + " (" + strImportoValuta + ")");
         }
 
         if (!TextUtils.isEmpty(creditorePaypalHandle)) {

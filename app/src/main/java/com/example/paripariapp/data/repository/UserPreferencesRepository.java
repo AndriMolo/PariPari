@@ -142,6 +142,23 @@ public class UserPreferencesRepository {
     }
 
     /**
+     * Associa e memorizza l'ID del partecipante che rappresenta l'utente corrente per una specifica scheda.
+     */
+    public void setMyParticipantId(String schedaId, String participantId) {
+        if (schedaId == null || participantId == null) return;
+        preferences.edit().putString("my_part_" + schedaId, participantId).apply();
+    }
+
+    /**
+     * Recupera l'ID del partecipante associato all'utente corrente per una specifica scheda.
+     */
+    @androidx.annotation.Nullable
+    public String getMyParticipantId(String schedaId) {
+        if (schedaId == null) return null;
+        return preferences.getString("my_part_" + schedaId, null);
+    }
+
+    /**
      * Helper per estrarre il codice a 3 lettere da una stringa formattata (es. "USD - Dollaro USA" -> "USD").
      */
     public static String extractCurrencyCode(String displayCurrency) {

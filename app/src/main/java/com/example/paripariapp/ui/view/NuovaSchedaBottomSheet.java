@@ -68,7 +68,8 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         if (TextUtils.isEmpty(nome)) {
             nome = getString(R.string.default_nome_utente);
         }
-        return nome + " (io)";
+        String pulito = com.example.paripariapp.data.model.Partecipante.pulisciNome(nome);
+        return getString(R.string.formato_nome_con_io, pulito, getString(R.string.etichetta_io));
     }
 
     /**
@@ -147,7 +148,6 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         chipAmico.setOnCloseIconClickListener(v -> binding.chipGroupPartecipanti.removeView(chipAmico));
 
         binding.chipGroupPartecipanti.addView(chipAmico);
-        binding.etNuovoPartecipante.setText("");
     }
 
     private void creaScheda() {
@@ -176,14 +176,10 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         for (int i = 0; i < count; i++) {
             View child = binding.chipGroupPartecipanti.getChildAt(i);
             if (child instanceof Chip) {
-                String nome = ((Chip) child).getText().toString().trim();
-                if (nome.toLowerCase().endsWith(" (io)")) {
-                    nome = nome.substring(0, nome.length() - 5).trim();
-                } else if (nome.toLowerCase().endsWith(" (me)")) {
-                    nome = nome.substring(0, nome.length() - 5).trim();
-                }
-                if (!TextUtils.isEmpty(nome)) {
-                    nomiPartecipanti.add(nome);
+                String nome = ((Chip) child).getText().toString();
+                String nomePulito = com.example.paripariapp.data.model.Partecipante.pulisciNome(nome);
+                if (!TextUtils.isEmpty(nomePulito)) {
+                    nomiPartecipanti.add(nomePulito);
                 }
             }
         }

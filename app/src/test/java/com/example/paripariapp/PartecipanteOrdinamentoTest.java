@@ -107,4 +107,16 @@ public class PartecipanteOrdinamentoTest {
         assertEquals(1, ordSingolo.size());
         assertEquals("p1", ordSingolo.get(0).getId());
     }
+
+    @Test
+    public void testPulisciNome() {
+        assertEquals("Nico", Partecipante.pulisciNome("Nico (io)"));
+        assertEquals("Andri", Partecipante.pulisciNome("Andri (me)"));
+        assertEquals("Marco", Partecipante.pulisciNome("Marco (IO)"));
+        assertEquals("Giulia", Partecipante.pulisciNome("Giulia (Me)"));
+        assertEquals("Lore", Partecipante.pulisciNome("Lore"));
+        assertEquals("io", Partecipante.pulisciNome("io"));
+        assertEquals("", Partecipante.pulisciNome(null));
+        assertEquals("", Partecipante.pulisciNome("   "));
+    }
 }
