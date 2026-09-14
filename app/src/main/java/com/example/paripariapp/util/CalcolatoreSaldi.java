@@ -81,11 +81,7 @@ public class CalcolatoreSaldi {
         Map<String, Spesa> spesaMap = new HashMap<>();
         String valutaDef = valutaPredefinita != null ? valutaPredefinita : "EUR";
 
-<<<<<<< HEAD
         // 1. Aggiunge gli importi anticipati da ciascuno (+ credito) convertiti nella valuta predefinita della scheda
-=======
-        // Accredito importi anticipati da ciascun pagatore
->>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
         for (Spesa s : spese) {
             spesaMap.put(s.getId(), s);
             String pagatoreId = s.getPagatoDaId();

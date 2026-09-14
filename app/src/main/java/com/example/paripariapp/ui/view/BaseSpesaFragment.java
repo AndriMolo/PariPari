@@ -19,11 +19,8 @@ import androidx.fragment.app.Fragment;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
-<<<<<<< HEAD
 import com.example.paripariapp.util.CalcolatoreSaldi;
-=======
 import com.example.paripariapp.util.AppSnackbar;
->>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;

@@ -233,11 +233,12 @@ public class Partecipante {
             return true;
         }
 
-<<<<<<< HEAD
         if (p.getId().equals(currentUid)) {
-=======
+            return true;
+        }
+
         // 3. Corrispondenza per Display Name
-        if (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
+        if (currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
             String displayName = currentUser.getDisplayName().trim().toLowerCase(Locale.ROOT);
             String pNome = pulisciNome(p.getNome()).toLowerCase(Locale.ROOT);
             if (pNome.equalsIgnoreCase(displayName)) {
@@ -248,7 +249,6 @@ public class Partecipante {
         // 4. Se il partecipante ha nome letterale "io" o "me" (fallback per gruppi offline locali)
         String n = pulisciNome(p.getNome()).toLowerCase(Locale.ROOT);
         if (n.equals("io") || n.equals("me")) {
->>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
             return true;
         }
 

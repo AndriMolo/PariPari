@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -161,13 +162,8 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         binding.btnSegnaSaldato.setOnClickListener(v -> {
             if (schedaId != null && daId != null && aId != null) {
                 SpeseViewModel viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
-<<<<<<< HEAD
                 viewModel.registraPagamento(schedaId, daId, daNome, aId, aNome, importo, valuta);
                 Toast.makeText(requireContext(), R.string.msg_operazione_completata, Toast.LENGTH_SHORT).show();
-=======
-                viewModel.registraPagamento(schedaId, daId, aId, importo, valuta);
-                AppSnackbar.showFromFragment(InvioPagamentoBottomSheet.this, R.string.msg_operazione_completata);
->>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
                 dismiss();
             } else {
                 dismiss();

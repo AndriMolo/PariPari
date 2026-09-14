@@ -27,13 +27,9 @@ public class CategoriaUtil {
 
     @NonNull
     public static String getEmojiForCategoria(@Nullable String categoria, @Nullable String titolo) {
-<<<<<<< HEAD
-        String catClean = categoria != null ? categoria.trim().toLowerCase() : "";
-        String titleClean = titolo != null ? titolo.trim().toLowerCase() : "";
+        String catClean = categoria != null ? categoria.trim().toLowerCase(java.util.Locale.ROOT) : "";
+        String titleClean = titolo != null ? titolo.trim().toLowerCase(java.util.Locale.ROOT) : "";
         String textToAnalyze = (catClean + " " + titleClean).trim();
-=======
-        String textToAnalyze = ((categoria != null ? categoria : "") + " " + (titolo != null ? titolo : "")).trim().toLowerCase(java.util.Locale.ROOT);
->>>>>>> a35494efb78696866faa77aeae4e6b31d79d114c
 
         if (textToAnalyze.isEmpty()) {
             return "🧾";
