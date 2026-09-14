@@ -3,6 +3,7 @@ package com.example.paripariapp.ui.viewmodel;
 import android.app.Application;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
@@ -192,6 +193,10 @@ public class SpeseViewModel extends AndroidViewModel {
         repository.insertSpesaConQuote(pagamento, quote);
     }
 
+    public void recuperaAnteprimaGruppo(String codice, com.example.paripariapp.data.remote.FirestoreSyncManager.OnPreviewGruppoCallback callback) {
+        repository.recuperaAnteprimaGruppo(codice, callback);
+    }
+
     public void uniscitiAScheda(String codice, PariPariRepository.OnJoinSchedaCallback callback) {
         repository.uniscitiASchedaTramiteCodice(codice, null, callback);
     }
@@ -200,4 +205,9 @@ public class SpeseViewModel extends AndroidViewModel {
         repository.uniscitiASchedaTramiteCodice(codice, nomePersonalizzato, callback);
     }
 
+    public void uniscitiASchedaConClaim(String codice, @Nullable String claimedPartecipanteId,
+                                        @Nullable String nomePersonalizzato,
+                                        PariPariRepository.OnJoinSchedaCallback callback) {
+        repository.uniscitiASchedaTramiteCodice(codice, claimedPartecipanteId, nomePersonalizzato, callback);
+    }
 }

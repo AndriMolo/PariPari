@@ -440,13 +440,28 @@ public class PariPariRepository {
     }
 
     public interface OnJoinSchedaCallback extends FirestoreSyncManager.OnJoinSchedaCallback {}
+    public interface OnPreviewGruppoCallback extends FirestoreSyncManager.OnPreviewGruppoCallback {}
+    public static class GruppoPreview extends FirestoreSyncManager.GruppoPreview {
+        public GruppoPreview(String groupId, String titolo, String descrizione, String valutaPredefinita, List<com.example.paripariapp.data.model.MembroGruppoPreview> membri) {
+            super(groupId, titolo, descrizione, valutaPredefinita, membri);
+        }
+    }
+
+    public void recuperaAnteprimaGruppo(String codice, FirestoreSyncManager.OnPreviewGruppoCallback callback) {
+        syncManager.recuperaAnteprimaGruppo(codice, callback);
+    }
 
     public void uniscitiASchedaTramiteCodice(String codice, OnJoinSchedaCallback callback) {
-        syncManager.uniscitiASchedaTramiteCodice(codice, null, callback);
+        syncManager.uniscitiASchedaTramiteCodice(codice, null, null, callback);
     }
 
     public void uniscitiASchedaTramiteCodice(String codice, @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback) {
-        syncManager.uniscitiASchedaTramiteCodice(codice, nomePersonalizzato, callback);
+        syncManager.uniscitiASchedaTramiteCodice(codice, null, nomePersonalizzato, callback);
+    }
+
+    public void uniscitiASchedaTramiteCodice(String codice, @Nullable String claimedPartecipanteId,
+                                            @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback) {
+        syncManager.uniscitiASchedaTramiteCodice(codice, claimedPartecipanteId, nomePersonalizzato, callback);
     }
 
     public void startRealtimeSync() {

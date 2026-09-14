@@ -427,4 +427,17 @@
     <string name="badge_saldato_effettuato">✔ Saldato</string>
     <string name="msg_spesa_saldo_non_modificabile">🔒 I saldi di pareggio sono registrazioni automatiche e non possono essere modificati.</string>
 
+    <!-- Subentro e Join con Claim -->
+    <string name="dialog_unisciti_titolo">Unisciti a una Scheda</string>
+    <string name="dialog_unisciti_desc">Inserisci il codice di invito a 6 caratteri condiviso dall\'organizzatore.</string>
+    <string name="btn_cerca_scheda">Cerca Gruppo</string>
+    <string name="label_chi_sei_nel_gruppo">Chi sei in questo gruppo?</string>
+    <string name="stato_gia_registrato">Già registrato</string>
+    <string name="opzione_nuovo_membro_titolo">Aggiungiti come nuovo membro</string>
+    <string name="btn_entra_come">Entra come %s</string>
+    <string name="btn_aggiungiti_gruppo">Aggiungiti al gruppo</string>
+    <string name="btn_seleziona_chi_sei">Seleziona chi sei</string>
+    <string name="desc_utente_autenticato">Utente autenticato</string>
+    <string name="btn_conferma_unione">Conferma ed entra</string>
+
 </resources>

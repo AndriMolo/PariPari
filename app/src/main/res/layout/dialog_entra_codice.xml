@@ -70,22 +70,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end"
         android:layout_marginTop="24dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAnnulla"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/dialog_cancel" />
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="@string/dialog_cancel"
+            android:textAllCaps="false"
+            android:layout_marginEnd="6dp"
+            app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnConfermaPartecipa"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
             android:text="@string/dialog_partecipate"
-            android:layout_marginStart="8dp"
+            android:textAllCaps="false"
+            android:layout_marginStart="6dp"
             app:cornerRadius="12dp" />
     </LinearLayout>
 </LinearLayout>

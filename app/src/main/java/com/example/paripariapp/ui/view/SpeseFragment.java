@@ -250,40 +250,7 @@ public class SpeseFragment extends Fragment {
     }
 
     private void mostraDialogCodiceAccesso() {
-        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_entra_codice, binding.getRoot(), false);
-        dialog.setContentView(sheetView);
-
-        TextInputEditText etCodice = sheetView.findViewById(R.id.etCodice);
-        sheetView.findViewById(R.id.btnAnnulla).setOnClickListener(v -> dialog.dismiss());
-        sheetView.findViewById(R.id.btnConfermaPartecipa).setOnClickListener(v -> {
-            String codice = etCodice.getText() != null ? etCodice.getText().toString().trim() : "";
-            if (!codice.isEmpty()) {
-                dialog.dismiss();
-                Toast.makeText(requireContext(), R.string.msg_ricerca_gruppo, Toast.LENGTH_SHORT).show();
-                viewModel.uniscitiAScheda(codice, new PariPariRepository.OnJoinSchedaCallback() {
-                    @Override
-                    public void onSuccess(String schedaId, String titolo) {
-                        if (getContext() == null) return;
-                        Toast.makeText(requireContext(), getString(R.string.msg_unione_successo, titolo), Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
-                        intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, schedaId);
-                        intent.putExtra(DettaglioSchedaActivity.EXTRA_TITOLO, titolo);
-                        startActivity(intent);
-                    }
-
-                    @Override
-                    public void onError(String errore) {
-                        if (getContext() == null) return;
-                        Toast.makeText(requireContext(), errore, Toast.LENGTH_LONG).show();
-                    }
-                });
-            } else {
-                etCodice.setError(getString(R.string.error_codice_non_valido));
-            }
-        });
-
-        dialog.show();
+        UniscitiSchedaBottomSheet.newInstance().show(getChildFragmentManager(), "UniscitiSchedaBottomSheet");
     }
 
     @Override

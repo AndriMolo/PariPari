@@ -427,4 +427,17 @@
     <string name="badge_saldato_effettuato">✔ Settled</string>
     <string name="msg_spesa_saldo_non_modificabile">🔒 Settlement records are generated automatically and cannot be edited.</string>
 
+    <!-- Join Group and Member Takeover -->
+    <string name="dialog_unisciti_titolo">Join a Group</string>
+    <string name="dialog_unisciti_desc">Enter the 6-character invite code shared by the organizer.</string>
+    <string name="btn_cerca_scheda">Find Group</string>
+    <string name="label_chi_sei_nel_gruppo">Who are you in this group?</string>
+    <string name="stato_gia_registrato">Already registered</string>
+    <string name="opzione_nuovo_membro_titolo">Join as a new member</string>
+    <string name="btn_entra_come">Join as %s</string>
+    <string name="btn_aggiungiti_gruppo">Join group</string>
+    <string name="btn_seleziona_chi_sei">Select who you are</string>
+    <string name="desc_utente_autenticato">Authenticated user</string>
+    <string name="btn_conferma_unione">Confirm and Join</string>
+
 </resources>

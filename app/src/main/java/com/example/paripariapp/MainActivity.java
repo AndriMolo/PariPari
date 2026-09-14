@@ -107,51 +107,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void mostraDialogConfermaJoin(String code) {
-        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-        String defaultName = (currentUser != null && currentUser.getDisplayName() != null && !android.text.TextUtils.isEmpty(currentUser.getDisplayName()))
-                ? currentUser.getDisplayName().trim() : "Io";
-
-        android.widget.EditText input = new android.widget.EditText(this);
-        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        input.setHint(R.string.label_tuo_nome_nel_gruppo);
-        input.setText(defaultName);
-        if (!defaultName.isEmpty()) {
-            input.setSelection(defaultName.length());
-        }
-
-        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
-        int padding = (int) (16 * getResources().getDisplayMetrics().density);
-        container.setPadding(padding, padding / 2, padding, 0);
-        container.addView(input);
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.dialog_titolo_conferma_unione)
-                .setMessage(getString(R.string.dialog_msg_conferma_unione, code))
-                .setView(container)
-                .setPositiveButton(R.string.btn_unisciti, (dialog, which) -> {
-                    String nomeScelto = input.getText().toString().trim();
-                    if (nomeScelto.isEmpty()) nomeScelto = defaultName;
-
-                    Toast.makeText(this, R.string.msg_ricerca_gruppo, Toast.LENGTH_SHORT).show();
-                    SpeseViewModel viewModel = new ViewModelProvider(this).get(SpeseViewModel.class);
-                    viewModel.uniscitiASchedaConNome(code, nomeScelto, new PariPariRepository.OnJoinSchedaCallback() {
-                        @Override
-                        public void onSuccess(String schedaId, String titolo) {
-                            Toast.makeText(MainActivity.this, getString(R.string.msg_unione_successo, titolo), Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(MainActivity.this, DettaglioSchedaActivity.class);
-                            intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, schedaId);
-                            intent.putExtra(DettaglioSchedaActivity.EXTRA_TITOLO, titolo);
-                            startActivity(intent);
-                        }
-
-                        @Override
-                        public void onError(String errore) {
-                            Toast.makeText(MainActivity.this, errore, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                })
-                .setNegativeButton(R.string.action_annulla, null)
-                .show();
+        com.example.paripariapp.ui.view.UniscitiSchedaBottomSheet.newInstance(code)
+                .show(getSupportFragmentManager(), "UniscitiSchedaBottomSheet");
     }
 
     private boolean loadFragment(Fragment fragment) {

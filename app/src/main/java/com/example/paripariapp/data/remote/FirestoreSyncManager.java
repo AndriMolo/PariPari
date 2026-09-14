@@ -12,6 +12,7 @@ import com.example.paripariapp.data.local.AppDatabase;
 import com.example.paripariapp.data.local.PartecipanteDao;
 import com.example.paripariapp.data.local.SchedaDao;
 import com.example.paripariapp.data.local.SpesaDao;
+import com.example.paripariapp.data.model.MembroGruppoPreview;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
@@ -46,6 +47,51 @@ public class FirestoreSyncManager {
 
     public interface OnJoinSchedaCallback {
         void onSuccess(String schedaId, String titolo);
+        void onError(String errore);
+    }
+
+    public static class GruppoPreview {
+        private final String groupId;
+        private final String titolo;
+        private final String descrizione;
+        private final String valutaPredefinita;
+        private final List<MembroGruppoPreview> membri;
+
+        public GruppoPreview(String groupId, String titolo, String descrizione, String valutaPredefinita, List<MembroGruppoPreview> membri) {
+            this.groupId = groupId;
+            this.titolo = titolo;
+            this.descrizione = descrizione;
+            this.valutaPredefinita = valutaPredefinita;
+            this.membri = membri != null ? membri : new ArrayList<>();
+        }
+
+        public String getGroupId() { return groupId; }
+        public String getTitolo() { return titolo; }
+        public String getDescrizione() { return descrizione; }
+        public String getValutaPredefinita() { return valutaPredefinita; }
+        public List<MembroGruppoPreview> getMembri() { return membri; }
+
+        public List<MembroGruppoPreview> getMembriSostituibili() {
+            List<MembroGruppoPreview> sostituibili = new ArrayList<>();
+            for (MembroGruppoPreview m : membri) {
+                if (m.isSostituibile()) {
+                    sostituibili.add(m);
+                }
+            }
+            return sostituibili;
+        }
+
+        public List<Partecipante> getPartecipantiDisponibili() {
+            List<Partecipante> list = new ArrayList<>();
+            for (MembroGruppoPreview m : getMembriSostituibili()) {
+                list.add(new Partecipante(m.getId(), m.getSchedaId(), m.getNome(), m.getEmail(), SyncStatus.SYNCED));
+            }
+            return list;
+        }
+    }
+
+    public interface OnPreviewGruppoCallback {
+        void onPreviewLoaded(GruppoPreview preview);
         void onError(String errore);
     }
 
@@ -121,11 +167,23 @@ public class FirestoreSyncManager {
         batch.set(ref, data);
 
         if (partecipanti != null) {
+            FirebaseUser currentUser = auth.getCurrentUser();
             for (Partecipante p : partecipanti) {
                 DocumentReference pRef = ref.collection("participants").document(p.getId());
                 Map<String, Object> pData = new HashMap<>();
                 pData.put("nome", p.getNome());
                 pData.put("email", p.getEmail());
+                boolean isCreator = currentUser != null && !currentUser.isAnonymous()
+                        && Partecipante.isCurrentUserParticipant(p, currentUser);
+                if (isCreator) {
+                    pData.put("userId", currentUser.getUid());
+                    pData.put("isAutenticato", true);
+                    if (currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
+                        pData.put("email", currentUser.getEmail().trim());
+                    }
+                } else {
+                    pData.put("isAutenticato", false);
+                }
                 batch.set(pRef, pData);
             }
         }
@@ -154,11 +212,14 @@ public class FirestoreSyncManager {
         String myPartId = Partecipante.findCurrentUserId(localParts, currentUser);
         boolean isMe = Partecipante.isCurrentUserParticipant(p, currentUser) || (myPartId != null && myPartId.equals(p.getId()));
 
-        if (isMe) {
+        if (isMe && currentUser != null && !currentUser.isAnonymous()) {
             data.put("userId", currentUser.getUid());
+            data.put("isAutenticato", true);
             if (currentUser.getEmail() != null && !currentUser.getEmail().isEmpty()) {
                 data.put("email", currentUser.getEmail());
             }
+        } else {
+            data.put("isAutenticato", false);
         }
 
         firestore.collection("groups").document(p.getSchedaId())
@@ -656,6 +717,38 @@ public class FirestoreSyncManager {
     // CODICI INVITO & JOIN GRUPPO
     // ===============================================================
 
+    private interface AuthSessionCallback {
+        void onAuthenticated(@NonNull FirebaseUser user);
+        void onError(@NonNull String errorMessage);
+    }
+
+    private void ensureAuthenticatedSession(@NonNull AuthSessionCallback callback) {
+        FirebaseUser current = auth.getCurrentUser();
+        if (current != null) {
+            callback.onAuthenticated(current);
+            return;
+        }
+
+        if (!networkMonitor.isConnected()) {
+            callback.onError("Nessuna connessione a internet");
+            return;
+        }
+
+        auth.signInAnonymously().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && auth.getCurrentUser() != null) {
+                Log.d(TAG, "Accesso anonimo on-demand completato: " + auth.getCurrentUser().getUid());
+                callback.onAuthenticated(auth.getCurrentUser());
+            } else {
+                Exception e = task.getException();
+                String err = (e != null && e.getLocalizedMessage() != null)
+                        ? e.getLocalizedMessage()
+                        : "Impossibile autenticare la sessione ospite";
+                Log.w(TAG, "Accesso anonimo on-demand non riuscito: " + err);
+                callback.onError("Errore autenticazione ospite: " + err);
+            }
+        });
+    }
+
     public void assicuraCodiceInvito(Scheda scheda) {
         if (scheda == null) return;
         if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
@@ -671,7 +764,118 @@ public class FirestoreSyncManager {
         }
     }
 
-    public void uniscitiASchedaTramiteCodice(String codice, @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback) {
+    public void recuperaAnteprimaGruppo(String codice, OnPreviewGruppoCallback callback) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        String cleanCode = CodiceInvitoUtil.normalizzaCodice(codice);
+
+        if (cleanCode == null || cleanCode.length() != 6) {
+            mainHandler.post(() -> callback.onError("Formato codice non valido (deve essere di 6 caratteri alfanumerici)"));
+            return;
+        }
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Scheda locale = schedaDao.getSchedaByCodiceInvito(cleanCode);
+            if (locale != null) {
+                mainHandler.post(() -> callback.onError("Sei già membro di questo gruppo (" + locale.getTitolo() + ")"));
+                return;
+            }
+
+            if (!networkMonitor.isConnected()) {
+                mainHandler.post(() -> callback.onError("Nessuna connessione a internet"));
+                return;
+            }
+
+            ensureAuthenticatedSession(new AuthSessionCallback() {
+                @Override
+                public void onAuthenticated(@NonNull FirebaseUser user) {
+                    eseguiRicercaAnteprima(cleanCode, callback, mainHandler);
+                }
+
+                @Override
+                public void onError(@NonNull String errorMessage) {
+                    mainHandler.post(() -> callback.onError(errorMessage));
+                }
+            });
+        });
+    }
+
+    private void eseguiRicercaAnteprima(String cleanCode, OnPreviewGruppoCallback callback, Handler mainHandler) {
+        firestore.collection("groups").whereEqualTo("codiceInvito", cleanCode).limit(1).get()
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, querySnapshot -> {
+                    if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                        elaboraAnteprimaGruppo(querySnapshot.getDocuments().get(0), callback, mainHandler);
+                    } else {
+                        firestore.collection("groups").document(cleanCode).get()
+                                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, docSnapshot -> {
+                                    if (docSnapshot != null && docSnapshot.exists()) {
+                                        elaboraAnteprimaGruppo(docSnapshot, callback, mainHandler);
+                                    } else {
+                                        mainHandler.post(() -> callback.onError("Nessun gruppo trovato con il codice inserito"));
+                                    }
+                                })
+                                .addOnFailureListener(e ->
+                                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                                );
+                    }
+                })
+                .addOnFailureListener(e ->
+                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                );
+    }
+
+    private void elaboraAnteprimaGruppo(DocumentSnapshot groupDoc, OnPreviewGruppoCallback callback, Handler mainHandler) {
+        String groupId = groupDoc.getId();
+        String titolo = groupDoc.getString("titolo");
+        String desc = groupDoc.getString("descrizione");
+        String valuta = groupDoc.getString("valutaPredefinita");
+
+        FirebaseUser currentUser = auth.getCurrentUser();
+        String currentUid = currentUser != null ? currentUser.getUid() : null;
+
+        groupDoc.getReference().collection("participants").get()
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
+                    List<MembroGruppoPreview> membri = new ArrayList<>();
+                    if (pSnaps != null) {
+                        for (DocumentSnapshot pDoc : pSnaps.getDocuments()) {
+                            String pNome = pDoc.getString("nome");
+                            String pUserId = pDoc.getString("userId");
+                            String pEmail = pDoc.getString("email");
+                            Boolean isAutenticatoDoc = pDoc.getBoolean("isAutenticato");
+
+                            boolean isAutenticato = Boolean.TRUE.equals(isAutenticatoDoc)
+                                    || (pUserId != null && !pUserId.trim().isEmpty())
+                                    || (pEmail != null && !pEmail.trim().isEmpty() && pEmail.contains("@"));
+
+                            if (pNome != null && !pNome.trim().isEmpty()) {
+                                membri.add(new MembroGruppoPreview(
+                                        pDoc.getId(),
+                                        groupId,
+                                        pNome.trim(),
+                                        pEmail,
+                                        pUserId,
+                                        isAutenticato
+                                ));
+                            }
+                        }
+                    }
+
+                    GruppoPreview preview = new GruppoPreview(
+                            groupId,
+                            titolo != null ? titolo : "Gruppo",
+                            desc != null ? desc : "",
+                            valuta != null ? valuta : "EUR",
+                            membri
+                    );
+
+                    mainHandler.post(() -> callback.onPreviewLoaded(preview));
+                })
+                .addOnFailureListener(e ->
+                        mainHandler.post(() -> callback.onError("Impossibile recuperare i membri del gruppo: " + e.getLocalizedMessage()))
+                );
+    }
+
+    public void uniscitiASchedaTramiteCodice(String codice, @Nullable String claimedPartecipanteId,
+                                            @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback) {
         Handler mainHandler = new Handler(Looper.getMainLooper());
         String cleanCode = CodiceInvitoUtil.normalizzaCodice(codice);
 
@@ -687,36 +891,61 @@ public class FirestoreSyncManager {
                 return;
             }
 
-            if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) {
-                mainHandler.post(() -> callback.onError("Connessione a internet necessaria per cercare il gruppo"));
+            if (!networkMonitor.isConnected()) {
+                mainHandler.post(() -> callback.onError("Nessuna connessione a internet"));
                 return;
             }
 
-            firestore.collection("groups").whereEqualTo("codiceInvito", cleanCode).limit(1).get()
-                    .addOnSuccessListener(AppDatabase.databaseWriteExecutor, querySnapshot -> {
-                        if (querySnapshot != null && !querySnapshot.isEmpty()) {
-                            elaboraJoinGruppo(querySnapshot.getDocuments().get(0), cleanCode, nomePersonalizzato, callback, mainHandler);
-                        } else {
-                            firestore.collection("groups").document(cleanCode).get()
-                                    .addOnSuccessListener(AppDatabase.databaseWriteExecutor, docSnapshot -> {
-                                        if (docSnapshot != null && docSnapshot.exists()) {
-                                            elaboraJoinGruppo(docSnapshot, cleanCode, nomePersonalizzato, callback, mainHandler);
-                                        } else {
-                                            mainHandler.post(() -> callback.onError("Nessun gruppo trovato con il codice inserito"));
-                                        }
-                                    })
-                                    .addOnFailureListener(e ->
-                                            mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
-                                    );
-                        }
-                    })
-                    .addOnFailureListener(e ->
-                            mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
-                    );
+            ensureAuthenticatedSession(new AuthSessionCallback() {
+                @Override
+                public void onAuthenticated(@NonNull FirebaseUser user) {
+                    eseguiJoinGruppo(cleanCode, claimedPartecipanteId, nomePersonalizzato, callback, mainHandler);
+                }
+
+                @Override
+                public void onError(@NonNull String errorMessage) {
+                    mainHandler.post(() -> callback.onError(errorMessage));
+                }
+            });
         });
     }
 
-    private void elaboraJoinGruppo(DocumentSnapshot groupDoc, String cleanCode, @Nullable String nomePersonalizzato,
+    private void eseguiJoinGruppo(String cleanCode, @Nullable String claimedPartecipanteId,
+                                 @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback, Handler mainHandler) {
+        firestore.collection("groups").whereEqualTo("codiceInvito", cleanCode).limit(1).get()
+                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, querySnapshot -> {
+                    if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                        elaboraJoinGruppo(querySnapshot.getDocuments().get(0), cleanCode, claimedPartecipanteId, nomePersonalizzato, callback, mainHandler);
+                    } else {
+                        firestore.collection("groups").document(cleanCode).get()
+                                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, docSnapshot -> {
+                                    if (docSnapshot != null && docSnapshot.exists()) {
+                                        elaboraJoinGruppo(docSnapshot, cleanCode, claimedPartecipanteId, nomePersonalizzato, callback, mainHandler);
+                                    } else {
+                                        mainHandler.post(() -> callback.onError("Nessun gruppo trovato con il codice inserito"));
+                                    }
+                                })
+                                .addOnFailureListener(e ->
+                                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                                );
+                    }
+                })
+                .addOnFailureListener(e ->
+                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                );
+    }
+
+    public void uniscitiASchedaTramiteCodice(String codice, @Nullable String nomePersonalizzato, OnJoinSchedaCallback callback) {
+        uniscitiASchedaTramiteCodice(codice, null, nomePersonalizzato, callback);
+    }
+
+    public void uniscitiASchedaTramiteCodice(String codice, OnJoinSchedaCallback callback) {
+        uniscitiASchedaTramiteCodice(codice, null, null, callback);
+    }
+
+    private void elaboraJoinGruppo(DocumentSnapshot groupDoc, String cleanCode,
+                                  @Nullable String claimedPartecipanteId,
+                                  @Nullable String nomePersonalizzato,
                                   OnJoinSchedaCallback callback, Handler mainHandler) {
         String groupId = groupDoc.getId();
         String titolo = groupDoc.getString("titolo");
@@ -763,17 +992,18 @@ public class FirestoreSyncManager {
                             String pEmail = pDoc.getString("email");
                             String pUserId = pDoc.getString("userId");
 
-                            boolean isMatch = (currentUid != null && currentUid.equals(pUserId))
+                            boolean isClaimTarget = (claimedPartecipanteId != null && claimedPartecipanteId.equals(pDoc.getId()));
+                            boolean isUserMatch = (currentUid != null && currentUid.equals(pUserId))
                                     || (currentEmail != null && currentEmail.equalsIgnoreCase(pEmail));
 
-                            if (isMatch) {
+                            if (isClaimTarget || isUserMatch) {
                                 giaPresente = true;
-                                if (currentUid != null && pUserId == null) {
-                                    existingDocToUpdate = pDoc;
-                                }
-                            }
-
-                            if (pNome != null) {
+                                existingDocToUpdate = pDoc;
+                                String finalName = (nomePersonalizzato != null && !nomePersonalizzato.trim().isEmpty())
+                                        ? nomePersonalizzato.trim()
+                                        : (pNome != null ? pNome : currentNome);
+                                partiScaricati.add(new Partecipante(pDoc.getId(), groupId, finalName, currentEmail, SyncStatus.SYNCED));
+                            } else if (pNome != null) {
                                 partiScaricati.add(new Partecipante(pDoc.getId(), groupId, pNome, pEmail, SyncStatus.SYNCED));
                             }
                         }
@@ -788,6 +1018,7 @@ public class FirestoreSyncManager {
                         myData.put("nome", currentNome);
                         myData.put("email", currentEmail);
                         myData.put("userId", currentUid);
+                        myData.put("isAutenticato", currentUser != null && !currentUser.isAnonymous());
 
                         groupDoc.getReference().collection("participants").document(mioPartId)
                                 .set(myData);
@@ -795,6 +1026,10 @@ public class FirestoreSyncManager {
                         Map<String, Object> patch = new HashMap<>();
                         patch.put("userId", currentUid);
                         if (currentEmail != null) patch.put("email", currentEmail);
+                        patch.put("isAutenticato", currentUser != null && !currentUser.isAnonymous());
+                        if (nomePersonalizzato != null && !nomePersonalizzato.trim().isEmpty()) {
+                            patch.put("nome", nomePersonalizzato.trim());
+                        }
                         existingDocToUpdate.getReference().update(patch);
                     }
 
