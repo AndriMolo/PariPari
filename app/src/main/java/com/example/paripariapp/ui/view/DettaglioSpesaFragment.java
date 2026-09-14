@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -67,6 +66,8 @@ public class DettaglioSpesaFragment extends Fragment {
             schedaId = getArguments().getString(ARG_SCHEDA_ID);
             valutaGruppo = getArguments().getString(ARG_VALUTA);
         }
+        setEnterTransition(new com.google.android.material.transition.MaterialSharedAxis(com.google.android.material.transition.MaterialSharedAxis.Z, true));
+        setReturnTransition(new com.google.android.material.transition.MaterialSharedAxis(com.google.android.material.transition.MaterialSharedAxis.Z, false));
     }
 
     @Nullable
@@ -157,7 +158,6 @@ public class DettaglioSpesaFragment extends Fragment {
                         .setMessage(R.string.dialog_msg_elimina_spesa)
                         .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
                             viewModel.eliminaSpesa(spesa.getId(), schedaId);
-                            Toast.makeText(requireContext(), R.string.msg_spesa_eliminata, Toast.LENGTH_SHORT).show();
                             if (getParentFragmentManager() != null) {
                                 getParentFragmentManager().popBackStack();
                             }

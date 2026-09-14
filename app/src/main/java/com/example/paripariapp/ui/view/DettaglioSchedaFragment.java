@@ -370,7 +370,6 @@ public class DettaglioSchedaFragment extends Fragment {
                             .setMessage(R.string.dialog_msg_elimina_spesa)
                             .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
                                 viewModel.eliminaSpesa(spesa.getId(), schedaId);
-                                Toast.makeText(requireContext(), R.string.msg_spesa_eliminata, Toast.LENGTH_SHORT).show();
                             })
                             .setNegativeButton(android.R.string.cancel, null)
                             .show();

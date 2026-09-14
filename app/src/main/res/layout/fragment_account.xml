@@ -222,6 +222,13 @@
                 android:paddingHorizontal="4dp"
                 android:layout_marginBottom="4dp">
 
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_paypal"
+                    android:contentDescription="@null" />
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -275,6 +282,13 @@
                 android:paddingVertical="14dp"
                 android:paddingHorizontal="4dp"
                 android:layout_marginBottom="28dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_revolut"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:layout_width="0dp"

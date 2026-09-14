@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +17,7 @@ import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.databinding.FragmentNuovaSpesaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
-import com.example.paripariapp.util.AppSnackbar;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +41,13 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         return fragment;
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setEnterTransition(new com.google.android.material.transition.MaterialSharedAxis(com.google.android.material.transition.MaterialSharedAxis.Z, true));
+        setReturnTransition(new com.google.android.material.transition.MaterialSharedAxis(com.google.android.material.transition.MaterialSharedAxis.Z, false));
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -55,11 +61,14 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(DettaglioSchedaViewModel.class);
 
+        com.example.paripariapp.util.KeyboardUtil.showKeyboard(binding.campoDescrizione);
+
         initCommonViews(
                 binding.toolbarNuovaSpesa,
                 binding.campoDescrizione,
                 binding.campoImporto,
                 binding.campoValuta,
+                binding.campoData,
                 binding.menuPagante,
                 binding.menuCategoria,
                 binding.toggleGruppoDivisione,
@@ -71,6 +80,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
         binding.toggleTipoOperazione.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return;
+            com.example.paripariapp.util.HapticUtil.tick(group);
             isRimborso = (checkedId == R.id.btn_tipo_rimborso);
             if (isRimborso) {
                 binding.contenitoreDestinatario.setVisibility(View.VISIBLE);
@@ -103,13 +113,31 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             binding.menuPagante.setAdapter(adapter);
             binding.menuDestinatario.setAdapter(adapter);
 
-            if (!nomi.isEmpty() && (binding.menuPagante.getText() == null || binding.menuPagante.getText().toString().isEmpty())) {
-                binding.menuPagante.setText(nomi.get(0), false);
+            String defaultPagatoreNome = null;
+            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            for (Partecipante p : lista) {
+                if (Partecipante.isCurrentUserParticipant(p, currentUser)) {
+                    defaultPagatoreNome = p.getNome();
+                    break;
+                }
             }
-            if (nomi.size() > 1 && (binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty())) {
-                binding.menuDestinatario.setText(nomi.get(1), false);
-            } else if (!nomi.isEmpty() && (binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty())) {
-                binding.menuDestinatario.setText(nomi.get(0), false);
+            if (defaultPagatoreNome == null && !nomi.isEmpty()) {
+                defaultPagatoreNome = nomi.get(0);
+            }
+
+            if (defaultPagatoreNome != null && (binding.menuPagante.getText() == null || binding.menuPagante.getText().toString().isEmpty())) {
+                binding.menuPagante.setText(defaultPagatoreNome, false);
+            }
+            if (binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty()) {
+                for (String nome : nomi) {
+                    if (!nome.equals(defaultPagatoreNome)) {
+                        binding.menuDestinatario.setText(nome, false);
+                        break;
+                    }
+                }
+                if ((binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty()) && !nomi.isEmpty()) {
+                    binding.menuDestinatario.setText(nomi.get(0), false);
+                }
             }
 
             binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
@@ -124,7 +152,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         binding.azioneSalva.setOnClickListener(v -> {
             double importo = getImportoTotale();
             if (importo <= 0) {
-                binding.campoImporto.setError("Inserisci un importo valido");
+                binding.campoImporto.setError(getString(R.string.error_importo_spesa));
                 return;
             }
 
@@ -133,8 +161,10 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 String destinatarioNome = binding.menuDestinatario.getText() != null ? binding.menuDestinatario.getText().toString() : "";
 
                 if (paganteNome.equals(destinatarioNome)) {
-                    Toast.makeText(requireContext(), "Il mittente e il destinatario non possono coincidere", Toast.LENGTH_SHORT).show();
+                    binding.contenitoreDestinatario.setError(getString(R.string.errore_mittente_destinatario_uguali));
                     return;
+                } else {
+                    binding.contenitoreDestinatario.setError(null);
                 }
 
                 String daId = null;
@@ -147,7 +177,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 if (daId != null && aId != null) {
                     SpeseViewModel speseVm = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
                     speseVm.registraPagamento(schedaId, daId, paganteNome, aId, destinatarioNome, importo, getValutaEffettiva());
-                    Toast.makeText(requireContext(), R.string.msg_operazione_completata, Toast.LENGTH_SHORT).show();
+                    com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
                     if (getParentFragmentManager() != null) {
                         getParentFragmentManager().popBackStack();
                     }
@@ -163,7 +193,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                         dati.titolo,
                         dati.importo,
                         getValutaEffettiva(),
-                        System.currentTimeMillis(),
+                        dati.timestamp,
                         dati.categoria,
                         dati.pagatoreId,
                         null,
@@ -171,7 +201,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 );
 
                 viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
-                Toast.makeText(requireContext(), R.string.msg_spesa_aggiunta, Toast.LENGTH_SHORT).show();
+                com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
 
                 if (getParentFragmentManager() != null) {
                     getParentFragmentManager().popBackStack();

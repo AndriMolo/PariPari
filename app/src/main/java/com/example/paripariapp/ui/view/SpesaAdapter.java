@@ -152,7 +152,7 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             // Titolo e Importo
             binding.tvTitoloSpesa.setText(spesa.getTitolo());
             binding.tvImportoSpesa.setText(
-                    context.getString(R.string.spesa_formato_importo, spesa.getImporto(), spesa.getValuta())
+                    com.example.paripariapp.util.ImportoUtil.formatta(spesa.getImporto(), spesa.getValuta())
             );
 
             // Pagatore e Data

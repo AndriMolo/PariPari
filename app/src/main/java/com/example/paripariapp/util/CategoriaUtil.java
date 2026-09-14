@@ -119,6 +119,71 @@ public class CategoriaUtil {
         return "🧾";
     }
 
+    /**
+     * Riconosce intelligentemente la categoria più probabile a partire dal testo/titolo inserito dall'utente
+     * (es. "Pizza con amici" -> Cibo, "Spritz" -> Bar & Aperitivi, "Esselunga" -> Spesa, "Benzina" -> Trasporti).
+     */
+    @Nullable
+    public static String indovinaCategoriaDaTitolo(@Nullable String titolo) {
+        if (titolo == null) return null;
+        String t = titolo.trim().toLowerCase(java.util.Locale.ROOT);
+        if (t.isEmpty()) return null;
+
+        if (t.contains("pizza") || t.contains("pizzeria") || t.contains("sushi") || t.contains("ristorante")
+                || t.contains("pranzo") || t.contains("cena") || t.contains("mcdonald") || t.contains("burger")
+                || t.contains("panino") || t.contains("kebab") || t.contains("poke")) {
+            return CAT_CIBO;
+        }
+        if (t.contains("birra") || t.contains("beer") || t.contains("pub") || t.contains("cocktail")
+                || t.contains("aperitivo") || t.contains("spritz") || t.contains("drink") || t.contains("caffè")
+                || t.contains("colazione") || t.contains("bar")) {
+            return CAT_BAR;
+        }
+        if (t.contains("spesa") || t.contains("supermercato") || t.contains("conad") || t.contains("coop")
+                || t.contains("esselunga") || t.contains("lidl") || t.contains("carrefour") || t.contains("alimentari")) {
+            return CAT_SPESA;
+        }
+        if (t.contains("benzina") || t.contains("gasolio") || t.contains("diesel") || t.contains("carburante")
+                || t.contains("treno") || t.contains("trenitalia") || t.contains("italo") || t.contains("volo")
+                || t.contains("aereo") || t.contains("ryanair") || t.contains("easyjet") || t.contains("taxi")
+                || t.contains("uber") || t.contains("pedaggio") || t.contains("telepass") || t.contains("parcheggio")) {
+            return CAT_TRASPORTI;
+        }
+        if (t.contains("hotel") || t.contains("airbnb") || t.contains("b&b") || t.contains("ostello")
+                || t.contains("booking") || t.contains("alloggio") || t.contains("casa vacanze")) {
+            return CAT_ALLOGGIO;
+        }
+        if (t.contains("cinema") || t.contains("film") || t.contains("concerto") || t.contains("teatro")
+                || t.contains("museo") || t.contains("partita") || t.contains("calcetto") || t.contains("padel")
+                || t.contains("palestra") || t.contains("bowling") || t.contains("escape room") || t.contains("stadio")) {
+            return CAT_SVAGO;
+        }
+        if (t.contains("zara") || t.contains("h&m") || t.contains("amazon") || t.contains("shopping")
+                || t.contains("vestiti") || t.contains("scarpe") || t.contains("regalo") || t.contains("compleanno")) {
+            return CAT_SHOPPING;
+        }
+        if (t.contains("farmacia") || t.contains("medico") || t.contains("visita") || t.contains("medicine")
+                || t.contains("dentista") || t.contains("tamponi")) {
+            return CAT_SALUTE;
+        }
+        return null;
+    }
+
+    @Nullable
+    public static String getNomeLocalizzatoCategoria(@NonNull android.content.Context context, @Nullable String categoriaStandard) {
+        if (categoriaStandard == null) return null;
+        if (categoriaStandard.equalsIgnoreCase(CAT_CIBO)) return context.getString(com.example.paripariapp.R.string.cat_cibo);
+        if (categoriaStandard.equalsIgnoreCase(CAT_SPESA)) return context.getString(com.example.paripariapp.R.string.cat_spesa);
+        if (categoriaStandard.equalsIgnoreCase(CAT_TRASPORTI)) return context.getString(com.example.paripariapp.R.string.cat_trasporti);
+        if (categoriaStandard.equalsIgnoreCase(CAT_ALLOGGIO)) return context.getString(com.example.paripariapp.R.string.cat_alloggio);
+        if (categoriaStandard.equalsIgnoreCase(CAT_SVAGO)) return context.getString(com.example.paripariapp.R.string.cat_svago);
+        if (categoriaStandard.equalsIgnoreCase(CAT_SHOPPING)) return context.getString(com.example.paripariapp.R.string.cat_shopping);
+        if (categoriaStandard.equalsIgnoreCase(CAT_BAR)) return context.getString(com.example.paripariapp.R.string.cat_bar);
+        if (categoriaStandard.equalsIgnoreCase(CAT_SALUTE)) return context.getString(com.example.paripariapp.R.string.cat_salute);
+        if (categoriaStandard.equalsIgnoreCase(CAT_ALTRO)) return context.getString(com.example.paripariapp.R.string.cat_altro);
+        return categoriaStandard;
+    }
+
     public static boolean isCategoriaSaldi(@Nullable String categoria) {
         if (categoria == null) return false;
         String catLower = categoria.trim().toLowerCase(java.util.Locale.ROOT);

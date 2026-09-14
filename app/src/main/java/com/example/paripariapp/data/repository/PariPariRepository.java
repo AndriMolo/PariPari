@@ -468,7 +468,9 @@ public class PariPariRepository {
             return false;
         }
 
-        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, "EUR", application);
+        Scheda scheda = schedaDao.getSchedaById(schedaId);
+        String valuta = (scheda != null && scheda.getValutaPredefinita() != null) ? scheda.getValutaPredefinita() : "EUR";
+        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta, application);
         FirebaseUser currentUser = auth.getCurrentUser();
         String mioId = Partecipante.findCurrentUserId(parti, currentUser);
         if (mioId != null && trasferimenti != null) {

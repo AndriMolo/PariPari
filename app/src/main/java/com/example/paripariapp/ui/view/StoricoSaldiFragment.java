@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -105,7 +104,8 @@ public class StoricoSaldiFragment extends Fragment {
     private void setupFiltriScheda() {
         if (schedaId == null) {
             binding.scrollFiltriScheda.setVisibility(View.VISIBLE);
-            binding.chipGroupSchede.setOnCheckedChangeListener((group, checkedId) -> {
+            binding.chipGroupSchede.setOnCheckedStateChangeListener((group, checkedIds) -> {
+                int checkedId = (checkedIds != null && !checkedIds.isEmpty()) ? checkedIds.get(0) : View.NO_ID;
                 if (checkedId == View.NO_ID || checkedId == R.id.chip_tutti_gruppi) {
                     schedaFiltroId = null;
                 } else {

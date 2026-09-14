@@ -26,6 +26,11 @@ public class DecimalDigitsInputFilter implements InputFilter {
                 + replacement
                 + dest.subSequence(dend, dest.length()).toString();
 
+        // Consenti espressioni matematiche per il calcolo inline (es. 12 + 5, 20 - 4)
+        if (CalcolatriceEspressioniUtil.contieneOperatori(newVal) || replacement.matches("[+\\-*xX/ ]")) {
+            return null;
+        }
+
         Matcher matcher = pattern.matcher(newVal);
         if (!matcher.matches()) {
             return "";

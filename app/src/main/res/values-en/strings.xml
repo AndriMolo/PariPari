@@ -245,6 +245,8 @@
     <string name="spesa_salva">Save expense</string>
     <string name="spesa_errore_somma_quote">Total shares (%1$.2f) do not match total amount (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Select at least one member for this expense</string>
+    <string name="errore_mittente_destinatario_uguali">Sender and recipient cannot be the same</string>
+    <string name="label_data_spesa">Date</string>
 
     <!-- Gestione Membri -->
     <string name="dettaglio_rinomina_partecipante">Rename member</string>
@@ -453,7 +455,6 @@
     <string name="formato_nome_con_io">%1$s (%2$s)</string>
     <string name="label_totale_spesa">Expense Total</string>
     <string name="titolo_partecipanti_quote">Participants and Shares</string>
-    <string name="le_mie_spese_formato">My expenses: %d (%s)</string>
     <string name="titolo_dettaglio_spesa">Expense Details</string>
     <string name="label_speso_da_me">Spent by me</string>
     <string name="titolo_annulla_pareggio">Cancel Settlement</string>

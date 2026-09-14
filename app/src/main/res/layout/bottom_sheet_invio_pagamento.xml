@@ -68,6 +68,13 @@
                 android:gravity="center_vertical"
                 android:layout_marginBottom="6dp">
 
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_paypal"
+                    android:contentDescription="@null" />
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -154,6 +161,13 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_revolut"
+                    android:contentDescription="@null" />
 
                 <TextView
                     android:layout_width="0dp"

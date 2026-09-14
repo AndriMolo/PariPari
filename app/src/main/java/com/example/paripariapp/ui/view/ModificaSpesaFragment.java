@@ -66,6 +66,8 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         if (getArguments() != null) {
             spesaId = getArguments().getString(ARG_SPESA_ID);
         }
+        setEnterTransition(new com.google.android.material.transition.MaterialSharedAxis(com.google.android.material.transition.MaterialSharedAxis.Z, true));
+        setReturnTransition(new com.google.android.material.transition.MaterialSharedAxis(com.google.android.material.transition.MaterialSharedAxis.Z, false));
     }
 
     @Nullable
@@ -86,6 +88,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
                 binding.campoDescrizione,
                 binding.campoImporto,
                 binding.campoValuta,
+                binding.campoData,
                 binding.menuPagante,
                 binding.menuCategoria,
                 binding.toggleGruppoDivisione,
@@ -109,7 +112,6 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
                     .setMessage(R.string.dialog_msg_elimina_spesa)
                     .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
                         viewModel.eliminaSpesa(spesaId, schedaId);
-                        AppSnackbar.showFromFragment(this, R.string.msg_spesa_eliminata);
                         if (getParentFragmentManager() != null) {
                             getParentFragmentManager().popBackStack();
                         }
@@ -159,6 +161,10 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         binding.campoImporto.setText(String.format(Locale.US, "%.2f", spesaCorrente.getImporto()));
         this.valuta = spesaCorrente.getValuta() != null ? spesaCorrente.getValuta() : getValutaEffettiva();
         binding.campoValuta.setText(this.valuta);
+
+        if (spesaCorrente.getDataSpesa() > 0) {
+            impostaData(spesaCorrente.getDataSpesa());
+        }
 
         // Verifica presenza di partecipanti assenti
         Set<String> activeParticipantIds = new HashSet<>();
@@ -245,6 +251,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         binding.campoDescrizione.setEnabled(false);
         binding.campoImporto.setEnabled(false);
         binding.campoValuta.setEnabled(false);
+        binding.campoData.setEnabled(false);
         binding.menuPagante.setEnabled(false);
         binding.menuCategoria.setEnabled(false);
 
@@ -292,7 +299,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
                     dati.titolo,
                     dati.importo,
                     getValutaEffettiva(),
-                    spesaCorrente != null ? spesaCorrente.getDataSpesa() : System.currentTimeMillis(),
+                    dati.timestamp,
                     dati.categoria,
                     dati.pagatoreId,
                     spesaCorrente != null ? spesaCorrente.getScontrinoUrl() : null,
@@ -300,7 +307,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
             );
 
             viewModel.aggiornaSpesaConQuote(spesaAggiornata, nuoveQuote);
-            AppSnackbar.showFromFragment(this, R.string.msg_spesa_aggiornata);
+            com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
 
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();

@@ -245,6 +245,8 @@
     <string name="spesa_salva">Salva spesa</string>
     <string name="spesa_errore_somma_quote">La somma delle quote (%1$.2f) non corrisponde all\'importo totale (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Seleziona almeno un partecipante per la spesa</string>
+    <string name="errore_mittente_destinatario_uguali">Il mittente e il destinatario non possono coincidere</string>
+    <string name="label_data_spesa">Data</string>
 
     <!-- Modifica Spesa & Stato Pagamenti -->
     <string name="spesa_modifica_titolo">Modifica Spesa</string>
@@ -453,7 +455,6 @@
     <string name="formato_nome_con_io">%1$s (%2$s)</string>
     <string name="label_totale_spesa">Totale spesa</string>
     <string name="titolo_partecipanti_quote">Partecipanti e quote</string>
-    <string name="le_mie_spese_formato">Le mie spese: %d (%s)</string>
     <string name="titolo_dettaglio_spesa">Dettaglio Spesa</string>
     <string name="label_speso_da_me">Speso da me</string>
     <string name="titolo_annulla_pareggio">Annulla pareggio</string>

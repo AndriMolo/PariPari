@@ -57,6 +57,8 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         aggiornaValutaUI();
         setupInitialChip();
         setupListeners();
+
+        com.example.paripariapp.util.KeyboardUtil.showKeyboard(binding.etNomeScheda);
     }
 
     private String getNomeCreatoreFormat() {
@@ -148,6 +150,7 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         chipAmico.setOnCloseIconClickListener(v -> binding.chipGroupPartecipanti.removeView(chipAmico));
 
         binding.chipGroupPartecipanti.addView(chipAmico);
+        com.example.paripariapp.util.HapticUtil.tick(binding.chipGroupPartecipanti);
     }
 
     private void creaScheda() {
@@ -185,6 +188,7 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         }
 
         String valutaFinale = selectedCurrencyCode != null ? selectedCurrencyCode : viewModel.getDefaultCurrency();
+        com.example.paripariapp.util.HapticUtil.confirm(binding.btnCreaScheda);
         viewModel.creaScheda(nomeScheda, valutaFinale, nomiPartecipanti);
         dismiss();
     }

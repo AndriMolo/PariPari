@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -161,9 +160,9 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         // Pulsante Segna come saldato
         binding.btnSegnaSaldato.setOnClickListener(v -> {
             if (schedaId != null && daId != null && aId != null) {
+                com.example.paripariapp.util.HapticUtil.confirm(binding.btnSegnaSaldato);
                 SpeseViewModel viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
                 viewModel.registraPagamento(schedaId, daId, daNome, aId, aNome, importo, valuta);
-                Toast.makeText(requireContext(), R.string.msg_operazione_completata, Toast.LENGTH_SHORT).show();
                 dismiss();
             } else {
                 dismiss();
@@ -244,6 +243,7 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         if (clipboard != null) {
             clipboard.setPrimaryClip(clip);
             if (binding != null) {
+                com.example.paripariapp.util.HapticUtil.confirm(binding.getRoot());
                 AppSnackbar.show(binding.getRoot(), R.string.msg_link_copiato);
             }
         }

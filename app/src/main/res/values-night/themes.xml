@@ -48,6 +48,7 @@
         <item name="colorSurfaceContainerHighest">@color/md_theme_surfaceContainerHighest</item>
         <item name="navigationIconTint">?attr/colorOnSurface</item>
         <item name="snackbarStyle">@style/Widget.PariPari.Snackbar</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.PariPari.BottomSheetDialog</item>
     </style>
 
     <style name="Theme.PariPariApp" parent="AppTheme" />

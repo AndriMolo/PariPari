@@ -19,16 +19,22 @@ import androidx.fragment.app.Fragment;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
-import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.AppSnackbar;
+import com.example.paripariapp.util.CalcolatoreSaldi;
+import com.example.paripariapp.util.CalcolatriceEspressioniUtil;
+import com.example.paripariapp.util.CategoriaUtil;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
+import com.example.paripariapp.util.HapticUtil;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,11 +77,14 @@ public abstract class BaseSpesaFragment extends Fragment {
     protected TextInputEditText campoDescrizione;
     protected TextInputEditText campoImporto;
     protected TextInputEditText campoValuta;
+    protected TextInputEditText campoData;
     protected AutoCompleteTextView menuPagante;
     protected AutoCompleteTextView menuCategoria;
     protected MaterialButtonToggleGroup toggleGruppoDivisione;
     protected LinearLayout layoutElencoQuote;
     protected View azioneSalva;
+
+    protected long dataSelezionataTimestamp = System.currentTimeMillis();
 
     public static class DatiFormValidi {
         public final String titolo;
@@ -84,6 +93,25 @@ public abstract class BaseSpesaFragment extends Fragment {
         public final String categoria;
         public final List<Partecipante> partecipantiInclusi;
         public final List<SpesaPartecipante> quoteCalcolate;
+        public final long timestamp;
+
+        public DatiFormValidi(
+                String titolo,
+                double importo,
+                String pagatoreId,
+                String categoria,
+                List<Partecipante> partecipantiInclusi,
+                List<SpesaPartecipante> quoteCalcolate,
+                long timestamp
+        ) {
+            this.titolo = titolo;
+            this.importo = importo;
+            this.pagatoreId = pagatoreId;
+            this.categoria = categoria;
+            this.partecipantiInclusi = partecipantiInclusi;
+            this.quoteCalcolate = quoteCalcolate;
+            this.timestamp = timestamp;
+        }
 
         public DatiFormValidi(
                 String titolo,
@@ -93,12 +121,7 @@ public abstract class BaseSpesaFragment extends Fragment {
                 List<Partecipante> partecipantiInclusi,
                 List<SpesaPartecipante> quoteCalcolate
         ) {
-            this.titolo = titolo;
-            this.importo = importo;
-            this.pagatoreId = pagatoreId;
-            this.categoria = categoria;
-            this.partecipantiInclusi = partecipantiInclusi;
-            this.quoteCalcolate = quoteCalcolate;
+            this(titolo, importo, pagatoreId, categoria, partecipantiInclusi, quoteCalcolate, System.currentTimeMillis());
         }
     }
 
@@ -119,6 +142,7 @@ public abstract class BaseSpesaFragment extends Fragment {
             @NonNull TextInputEditText campoDescrizione,
             @NonNull TextInputEditText campoImporto,
             @NonNull TextInputEditText campoValuta,
+            @Nullable TextInputEditText campoData,
             @NonNull AutoCompleteTextView menuPagante,
             @NonNull AutoCompleteTextView menuCategoria,
             @NonNull MaterialButtonToggleGroup toggleGruppoDivisione,
@@ -129,6 +153,7 @@ public abstract class BaseSpesaFragment extends Fragment {
         this.campoDescrizione = campoDescrizione;
         this.campoImporto = campoImporto;
         this.campoValuta = campoValuta;
+        this.campoData = campoData;
         this.menuPagante = menuPagante;
         this.menuCategoria = menuCategoria;
         this.toggleGruppoDivisione = toggleGruppoDivisione;
@@ -159,6 +184,37 @@ public abstract class BaseSpesaFragment extends Fragment {
             sheet.show(getParentFragmentManager(), "selettore_valuta_spesa");
         });
 
+        if (this.campoData != null) {
+            impostaData(dataSelezionataTimestamp);
+            this.campoData.setFocusable(false);
+            this.campoData.setClickable(true);
+            this.campoData.setOnClickListener(v -> apriSelettoreData());
+        }
+
+        // Auto-switch intelligente categoria in base al titolo digitato
+        campoDescrizione.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String test = s != null ? s.toString() : "";
+                String indovinataStd = CategoriaUtil.indovinaCategoriaDaTitolo(test);
+                if (indovinataStd != null && menuCategoria != null && getContext() != null) {
+                    String indovinata = CategoriaUtil.getNomeLocalizzatoCategoria(requireContext(), indovinataStd);
+                    String corrente = menuCategoria.getText() != null ? menuCategoria.getText().toString() : "";
+                    String altroLoc = getString(R.string.cat_altro);
+                    if (corrente.isEmpty() || corrente.equalsIgnoreCase(altroLoc) || corrente.equalsIgnoreCase(CategoriaUtil.CAT_ALTRO) || corrente.equalsIgnoreCase("Other")) {
+                        menuCategoria.setText(indovinata, false);
+                        HapticUtil.tick(menuCategoria);
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
         campoImporto.setFilters(FILTRO_DUE_DECIMALI);
         campoImporto.addTextChangedListener(new TextWatcher() {
             @Override
@@ -177,8 +233,48 @@ public abstract class BaseSpesaFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
+        // Calcolatore inline al termine della digitazione/cambio focus
+        campoImporto.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                valutaEspressioneImportoSeNecessario();
+            }
+        });
+
         setupCategorieDropdown();
         setupToggleDivisione();
+    }
+
+    public void impostaData(long timestamp) {
+        this.dataSelezionataTimestamp = timestamp;
+        if (campoData != null) {
+            campoData.setText(DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(new Date(timestamp)));
+        }
+    }
+
+    protected void apriSelettoreData() {
+        MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText(R.string.label_data_spesa)
+                .setSelection(dataSelezionataTimestamp)
+                .build();
+        datePicker.addOnPositiveButtonClickListener(selection -> {
+            if (selection != null) {
+                impostaData(selection);
+                HapticUtil.tick(campoData);
+            }
+        });
+        datePicker.show(getParentFragmentManager(), "date_picker_spesa");
+    }
+
+    protected void valutaEspressioneImportoSeNecessario() {
+        if (campoImporto == null) return;
+        String raw = campoImporto.getText() != null ? campoImporto.getText().toString().trim() : "";
+        if (CalcolatriceEspressioniUtil.contieneOperatori(raw)) {
+            Double calcolato = CalcolatriceEspressioniUtil.valuta(raw);
+            if (calcolato != null) {
+                campoImporto.setText(String.format(Locale.US, "%.2f", calcolato));
+                HapticUtil.confirm(campoImporto);
+            }
+        }
     }
 
     @NonNull
@@ -201,6 +297,7 @@ public abstract class BaseSpesaFragment extends Fragment {
         if (toggleGruppoDivisione == null) return;
         toggleGruppoDivisione.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return;
+            HapticUtil.tick(group);
             if (checkedId == R.id.btn_divisione_equa) {
                 cambiaTipoDivisione(SpesaUiHelper.TipoDivisione.EQUA);
             } else if (checkedId == R.id.btn_divisione_percentuale) {
@@ -528,8 +625,15 @@ public abstract class BaseSpesaFragment extends Fragment {
 
         double importo;
         try {
-            importo = Double.parseDouble(importoStr);
-            if (importo <= 0) throw new NumberFormatException();
+            if (CalcolatriceEspressioniUtil.contieneOperatori(importoStr)) {
+                Double res = CalcolatriceEspressioniUtil.valuta(importoStr);
+                if (res == null || res <= 0) throw new NumberFormatException();
+                importo = res;
+                campoImporto.setText(String.format(Locale.US, "%.2f", importo));
+            } else {
+                importo = Double.parseDouble(importoStr);
+                if (importo <= 0) throw new NumberFormatException();
+            }
         } catch (Exception e) {
             campoImporto.setError(getString(R.string.error_importo_spesa));
             return null;
@@ -566,7 +670,7 @@ public abstract class BaseSpesaFragment extends Fragment {
             quoteCalcolate = SpesaUiHelper.calcolaDivisionePerImporto(targetSpesaId, importo, partecipantiInclusi, partecipanti, importoValuesMap, syncStatus);
         }
 
-        return new DatiFormValidi(titolo, importo, pagatoreId, categoria, partecipantiInclusi, quoteCalcolate);
+        return new DatiFormValidi(titolo, importo, pagatoreId, categoria, partecipantiInclusi, quoteCalcolate, dataSelezionataTimestamp);
     }
 
     @Override
@@ -581,6 +685,7 @@ public abstract class BaseSpesaFragment extends Fragment {
         campoDescrizione = null;
         campoImporto = null;
         campoValuta = null;
+        campoData = null;
         menuPagante = null;
         menuCategoria = null;
         toggleGruppoDivisione = null;
