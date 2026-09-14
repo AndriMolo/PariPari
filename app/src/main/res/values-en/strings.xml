@@ -57,7 +57,7 @@
     <string name="nome_gruppo_default">Group</string>
 
     <!-- Spese Fragment & Unisciti Gruppo -->
-    <string name="titolo_spese">Your Groups</string>
+    <string name="titolo_spese">Groups</string>
     <string name="btn_entra_testo">Join with code</string>
     <string name="dialog_entra">Join a Group</string>
     <string name="dialog_titolo">Enter the alphanumeric invite code to sync expenses with your friends.</string>
