@@ -10,12 +10,15 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import android.text.TextUtils;
+
 import com.example.paripariapp.data.repository.PariPariRepository;
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -367,6 +370,89 @@ public class AccountViewModel extends AndroidViewModel {
                         String err = task.getException() != null ? task.getException().getLocalizedMessage() : "Credenziali non valide";
                         errorMessage.setValue(err);
                     }
+                });
+    }
+
+    /**
+     * Accesso tramite Google Sign-In con token ID.
+     * Se l'utente è attualmente anonimo, esegue l'account linking per preservare i gruppi/spese ospiti.
+     */
+    public void accediConGoogle(String idToken) {
+        if (idToken == null || idToken.isEmpty()) {
+            errorMessage.setValue("Token Google non valido");
+            return;
+        }
+        isLoading.setValue(true);
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        FirebaseUser current = auth.getCurrentUser();
+
+        if (current != null && current.isAnonymous()) {
+            current.linkWithCredential(credential)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            FirebaseUser user = task.getResult().getUser();
+                            handleGoogleUserSuccess(user);
+                        } else {
+                            // Se il link fallisce (es. credenziale Google già registrata in passato),
+                            // esegui accesso diretto con la credenziale Google
+                            signInWithGoogleCredentialDirectly(credential);
+                        }
+                    });
+        } else {
+            signInWithGoogleCredentialDirectly(credential);
+        }
+    }
+
+    private void signInWithGoogleCredentialDirectly(AuthCredential credential) {
+        auth.signInWithCredential(credential)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        FirebaseUser user = task.getResult().getUser();
+                        handleGoogleUserSuccess(user);
+                    } else {
+                        isLoading.setValue(false);
+                        String err = task.getException() != null ? task.getException().getLocalizedMessage() : "Accesso con Google non riuscito";
+                        errorMessage.setValue(err);
+                    }
+                });
+    }
+
+    private void handleGoogleUserSuccess(FirebaseUser user) {
+        if (user == null) {
+            isLoading.setValue(false);
+            return;
+        }
+        String nome = user.getDisplayName();
+        if (TextUtils.isEmpty(nome)) {
+            nome = getApplication().getString(com.example.paripariapp.R.string.default_nome_utente);
+        }
+        String email = user.getEmail() != null ? user.getEmail() : "";
+
+        final String finalNome = nome;
+        firestore.collection("users").document(user.getUid())
+                .get()
+                .addOnCompleteListener(docTask -> {
+                    Map<String, Object> userData = new HashMap<>();
+                    if (!docTask.isSuccessful() || docTask.getResult() == null || !docTask.getResult().exists()) {
+                        userData.put("nome", finalNome);
+                        userData.put("email", email);
+                        userData.put("createdAt", FieldValue.serverTimestamp());
+                        userData.put("updatedAt", FieldValue.serverTimestamp());
+                        firestore.collection("users").document(user.getUid()).set(userData);
+                    } else {
+                        userData.put("updatedAt", FieldValue.serverTimestamp());
+                        if (user.getDisplayName() != null) {
+                            userData.put("nome", user.getDisplayName());
+                        }
+                        firestore.collection("users").document(user.getUid()).update(userData);
+                    }
+
+                    isLoading.setValue(false);
+                    userLiveData.setValue(user);
+                    isGuestMode.setValue(false);
+                    isEmailVerifiedLive.setValue(user.isEmailVerified());
+                    repository.aggiornaNomeUtenteInTuttiIGruppi(finalNome);
+                    successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_login_google_ok));
                 });
     }
 

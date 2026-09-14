@@ -108,6 +108,9 @@
     <string name="hint_password">Password</string>
     <string name="btn_crea_account">Create Account</string>
     <string name="btn_accedi">Log In</string>
+    <string name="btn_accedi_google">Sign in with Google</string>
+    <string name="btn_continua_google">Continue with Google</string>
+    <string name="label_oppure">or</string>
     <string name="switch_to_login">Already have an account? Log in</string>
     <string name="switch_to_register">Don\'t have an account? Sign up</string>
     <string name="btn_logout">Log Out</string>
@@ -121,6 +124,7 @@
     <string name="error_password_minima">Password must be at least 6 characters</string>
     <string name="msg_registrazione_ok">Account created successfully!</string>
     <string name="msg_login_ok">Logged in successfully!</string>
+    <string name="msg_login_google_ok">Successfully signed in with Google!</string>
     <string name="msg_logout_ok">Logged out. You are now in guest mode.</string>
 
     <!-- Preferenze Account -->

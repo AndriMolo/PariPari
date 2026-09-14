@@ -12,7 +12,13 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.util.Log;
+
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -22,6 +28,13 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentAccountGuestBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.example.paripariapp.util.AppSnackbar;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -30,9 +43,11 @@ import com.google.firebase.auth.FirebaseUser;
 /**
  * Child fragment dedicato alla gestione dell'utente non autenticato (Ospite).
  * Include la modifica del nome locale, il form di registrazione e di accesso,
- * e il flusso di recupero password.
+ * il flusso di recupero password e l'accesso rapido con Google.
  */
 public class AccountGuestFragment extends Fragment {
+
+    private static final String TAG = "AccountGuestFragment";
 
     private FragmentAccountGuestBinding binding;
     private AccountViewModel viewModel;
@@ -40,6 +55,36 @@ public class AccountGuestFragment extends Fragment {
     // true = registrazione (con Nome), false = accesso (solo Email e Password)
     private boolean isRegisterMode = true;
     private OnBackPressedCallback backCallback;
+
+    private ActivityResultLauncher<Intent> googleSignInLauncher;
+    private GoogleSignInClient googleSignInClient;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        try {
+                            GoogleSignInAccount account = task.getResult(ApiException.class);
+                            if (account != null && account.getIdToken() != null) {
+                                viewModel.accediConGoogle(account.getIdToken());
+                            } else {
+                                AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), "Impossibile recuperare le credenziali Google");
+                            }
+                        } catch (ApiException e) {
+                            Log.w(TAG, "Accesso con Google fallito: code=" + e.getStatusCode(), e);
+                            if (e.getStatusCode() != GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                                String msg = e.getLocalizedMessage() != null ? e.getLocalizedMessage() : "Errore Google Sign-In (" + e.getStatusCode() + ")";
+                                AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), msg);
+                            }
+                        }
+                    }
+                }
+        );
+    }
 
     @Nullable
     @Override
@@ -55,10 +100,29 @@ public class AccountGuestFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
 
+        setupGoogleSignIn();
         setupBackPressHandler();
         setupObservers();
         setupListeners();
         updateFormModeUI();
+    }
+
+    private void setupGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .requestProfile()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
+    }
+
+    private void avviaAccessoGoogle() {
+        if (googleSignInClient == null) return;
+        googleSignInClient.signOut().addOnCompleteListener(task -> {
+            if (googleSignInLauncher != null) {
+                googleSignInLauncher.launch(googleSignInClient.getSignInIntent());
+            }
+        });
     }
 
     private void setupBackPressHandler() {
@@ -90,6 +154,10 @@ public class AccountGuestFragment extends Fragment {
             binding.btnSubmitAuth.setEnabled(!isLoading);
             binding.btnSwitchAuthMode.setEnabled(!isLoading);
             binding.btnChiudiAuth.setEnabled(!isLoading);
+            binding.btnMostraRegistrazione.setEnabled(!isLoading);
+            binding.btnMostraLogin.setEnabled(!isLoading);
+            binding.btnGoogleSigninInitial.setEnabled(!isLoading);
+            binding.btnGoogleSigninForm.setEnabled(!isLoading);
         });
 
         // Messaggi di errore
@@ -120,6 +188,10 @@ public class AccountGuestFragment extends Fragment {
 
         // Chiusura form
         binding.btnChiudiAuth.setOnClickListener(v -> chiudiFormAuth());
+
+        // Accesso Google (sia iniziale sia dentro il form)
+        binding.btnGoogleSigninInitial.setOnClickListener(v -> avviaAccessoGoogle());
+        binding.btnGoogleSigninForm.setOnClickListener(v -> avviaAccessoGoogle());
 
         // Toggle Registrati / Accedi all'interno del form
         binding.btnSwitchAuthMode.setOnClickListener(v -> {

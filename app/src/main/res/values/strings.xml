@@ -108,6 +108,9 @@
     <string name="hint_password">Password</string>
     <string name="btn_crea_account">Crea Account</string>
     <string name="btn_accedi">Accedi</string>
+    <string name="btn_accedi_google">Accedi con Google</string>
+    <string name="btn_continua_google">Continua con Google</string>
+    <string name="label_oppure">oppure</string>
     <string name="switch_to_login">Hai già un account? Accedi</string>
     <string name="switch_to_register">Non hai un account? Registrati</string>
     <string name="btn_logout">Disconnetti</string>
@@ -121,6 +124,7 @@
     <string name="error_password_minima">La password deve avere almeno 6 caratteri</string>
     <string name="msg_registrazione_ok">Account creato con successo!</string>
     <string name="msg_login_ok">Accesso effettuato con successo!</string>
+    <string name="msg_login_google_ok">Accesso con Google completato con successo!</string>
     <string name="msg_logout_ok">Disconnesso. Sei ora in modalità ospite.</string>
 
     <!-- Preferenze Account -->
