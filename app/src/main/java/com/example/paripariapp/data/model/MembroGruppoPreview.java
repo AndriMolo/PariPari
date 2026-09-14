@@ -7,8 +7,6 @@ import java.io.Serializable;
 
 /**
  * Modello leggero per rappresentare un partecipante nell'anteprima di accesso a una scheda.
- * Distingue chiaramente tra membri già autenticati (non sostituibili)
- * e membri anonimi/offline (disponibili per il subentro).
  */
 public class MembroGruppoPreview implements Serializable {
 
@@ -22,6 +20,10 @@ public class MembroGruppoPreview implements Serializable {
     private final String email;
     @Nullable
     private final String userId;
+    @Nullable
+    private final String previousUserId;
+    @NonNull
+    private final String stato;
     private final boolean isAutenticato;
 
     public MembroGruppoPreview(@NonNull String id,
@@ -29,12 +31,16 @@ public class MembroGruppoPreview implements Serializable {
                                @NonNull String nome,
                                @Nullable String email,
                                @Nullable String userId,
+                               @Nullable String previousUserId,
+                               @Nullable String stato,
                                boolean isAutenticato) {
         this.id = id;
         this.schedaId = schedaId;
         this.nome = nome;
         this.email = email;
         this.userId = userId;
+        this.previousUserId = previousUserId;
+        this.stato = stato != null ? stato : Partecipante.STATO_ATTIVO;
         this.isAutenticato = isAutenticato;
     }
 
@@ -63,14 +69,31 @@ public class MembroGruppoPreview implements Serializable {
         return userId;
     }
 
+    @Nullable
+    public String getPreviousUserId() {
+        return previousUserId;
+    }
+
+    @NonNull
+    public String getStato() {
+        return stato;
+    }
+
     public boolean isAutenticato() {
         return isAutenticato;
     }
 
     /**
-     * Un membro è sostituibile (claimable) se non è associato ad un account autenticato.
+     * Un membro è sostituibile (claimable) se non è associato ad un account autenticato o se è uscito.
      */
     public boolean isSostituibile() {
-        return !isAutenticato;
+        return userId == null || userId.trim().isEmpty() || Partecipante.STATO_USCITO.equalsIgnoreCase(stato);
+    }
+
+    /**
+     * Verifica se questo profilo corrisponde al precedente profilo dell'utente corrente per il re-link automatico.
+     */
+    public boolean isMyPreviousProfile(@Nullable String currentUid) {
+        return currentUid != null && currentUid.equals(previousUserId);
     }
 }

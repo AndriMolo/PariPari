@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
+import com.example.paripariapp.util.CalcolatoreSaldi;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
@@ -141,6 +142,22 @@ public abstract class BaseSpesaFragment extends Fragment {
         });
 
         campoValuta.setText(getValutaEffettiva());
+        campoValuta.setFocusable(false);
+        campoValuta.setClickable(true);
+        campoValuta.setOnClickListener(v -> {
+            SelettoreValutaBottomSheet sheet = SelettoreValutaBottomSheet.newInstance(getValutaEffettiva());
+            sheet.setOnCurrencySelectedListener(currencyFull -> {
+                String nuovaValuta = com.example.paripariapp.data.repository.UserPreferencesRepository.extractCurrencyCode(currencyFull);
+                valuta = nuovaValuta;
+                campoValuta.setText(valuta);
+                if (tipoDivisione == SpesaUiHelper.TipoDivisione.EQUA) {
+                    ricalcolaQuoteEqua();
+                } else if (tipoDivisione == SpesaUiHelper.TipoDivisione.PER_PARTI) {
+                    aggiornaImportiSuCambioTotale();
+                }
+            });
+            sheet.show(getParentFragmentManager(), "selettore_valuta_spesa");
+        });
 
         campoImporto.setFilters(FILTRO_DUE_DECIMALI);
         campoImporto.addTextChangedListener(new TextWatcher() {

@@ -1,6 +1,7 @@
 package com.example.paripariapp.data.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
@@ -16,9 +17,11 @@ import java.util.UUID;
         tableName = "partecipanti",
         indices = {@Index("scheda_id")}
 )
-
-
 public class Partecipante {
+
+    public static final String STATO_ATTIVO = "ATTIVO";
+    public static final String STATO_USCITO = "USCITO";
+    public static final String STATO_OSPITE = "OSPITE";
 
     @PrimaryKey
     @NonNull
@@ -45,8 +48,18 @@ public class Partecipante {
     @ColumnInfo(name = "revolut_handle")
     private String revolutHandle;
 
+    @ColumnInfo(name = "user_id")
+    private String userId;
+
+    @ColumnInfo(name = "previous_user_id")
+    private String previousUserId;
+
     @NonNull
-    public static String pulisciNome(@androidx.annotation.Nullable String nome) {
+    @ColumnInfo(name = "stato", defaultValue = STATO_ATTIVO)
+    private String stato = STATO_ATTIVO;
+
+    @NonNull
+    public static String pulisciNome(@Nullable String nome) {
         if (nome == null) return "";
         String pulito = nome.trim();
         while (pulito.toLowerCase().endsWith("(io)") || pulito.toLowerCase().endsWith("(me)")) {
@@ -59,10 +72,6 @@ public class Partecipante {
         return pulito;
     }
 
-    /**
-     * Formatta il nome del partecipante per la visualizzazione nella UI:
-     * solo il proprietario dell'account corrente vede l'etichetta localizzata (io) / (me) di fianco al proprio nome.
-     */
     @NonNull
     public static String formattaNomePerVisualizzazione(@NonNull android.content.Context context,
                                                        @NonNull Partecipante p,
@@ -83,10 +92,12 @@ public class Partecipante {
         this.nome = pulisciNome(nome);
         this.email = email;
         this.syncStatus = syncStatus;
+        this.stato = STATO_ATTIVO;
     }
 
     public Partecipante(@NonNull String id, @NonNull String schedaId, @NonNull String nome,
-                        String email, int syncStatus, String paypalHandle, String revolutHandle) {
+                        String email, int syncStatus, String paypalHandle, String revolutHandle,
+                        String userId, String previousUserId, String stato) {
         this.id = id;
         this.schedaId = schedaId;
         this.nome = pulisciNome(nome);
@@ -94,6 +105,9 @@ public class Partecipante {
         this.syncStatus = syncStatus;
         this.paypalHandle = paypalHandle;
         this.revolutHandle = revolutHandle;
+        this.userId = userId;
+        this.previousUserId = previousUserId;
+        this.stato = stato != null ? stato : STATO_ATTIVO;
     }
 
     /** Factory method per creare un nuovo partecipante */
@@ -103,7 +117,12 @@ public class Partecipante {
                 schedaId,
                 pulisciNome(nome),
                 email,
-                SyncStatus.PENDING_INSERT
+                SyncStatus.PENDING_INSERT,
+                null,
+                null,
+                null,
+                null,
+                STATO_ATTIVO
         );
     }
 
@@ -166,62 +185,71 @@ public class Partecipante {
         this.revolutHandle = revolutHandle;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getPreviousUserId() {
+        return previousUserId;
+    }
+
+    public void setPreviousUserId(String previousUserId) {
+        this.previousUserId = previousUserId;
+    }
+
+    @NonNull
+    public String getStato() {
+        return stato;
+    }
+
+    public void setStato(@NonNull String stato) {
+        this.stato = stato;
+    }
+
+    public boolean isAttivo() {
+        return !STATO_USCITO.equalsIgnoreCase(stato);
+    }
+
+    public boolean isAutenticato() {
+        return userId != null && !userId.trim().isEmpty();
+    }
+
     /**
      * Riconosce se un Partecipante corrisponde all'utente corrente autenticato.
+     * Basato esclusivamente su UID (userId) o ID, senza alcun controllo email.
      */
-    public static boolean isCurrentUserParticipant(Partecipante p, @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
-        if (p == null) return false;
+    public static boolean isCurrentUserParticipant(Partecipante p, @Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+        if (p == null || currentUser == null) return false;
+        String currentUid = currentUser.getUid();
 
-        // 1. Corrispondenza per Email
-        if (currentUser != null && currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
-            if (p.getEmail() != null && p.getEmail().trim().equalsIgnoreCase(currentUser.getEmail().trim())) {
-                return true;
-            }
-        }
-
-        // 2. Corrispondenza per ID / UID
-        if (currentUser != null && p.getId().equals(currentUser.getUid())) {
+        if (p.getUserId() != null && p.getUserId().equals(currentUid)) {
             return true;
         }
 
-        // 3. Corrispondenza per Display Name
-        if (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty()) {
-            String displayName = currentUser.getDisplayName().trim().toLowerCase();
-            String pNome = pulisciNome(p.getNome()).toLowerCase();
-            if (pNome.equalsIgnoreCase(displayName)) {
-                return true;
-            }
-        }
-
-        // 4. Se il partecipante ha nome letterale "io" o "me" (fallback per gruppi offline locali)
-        String n = pulisciNome(p.getNome()).toLowerCase();
-        if (n.equals("io") || n.equals("me")) {
+        if (p.getId().equals(currentUid)) {
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Trova l'ID del partecipante che rappresenta l'utente corrente in una lista di partecipanti.
-     */
-    @androidx.annotation.Nullable
+    @Nullable
     public static String findCurrentUserId(java.util.List<Partecipante> partecipanti,
-                                           @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
+                                           @Nullable com.google.firebase.auth.FirebaseUser currentUser) {
         return findCurrentUserId(partecipanti, currentUser, null, null);
     }
 
-    /**
-     * Trova l'ID del partecipante associato all'account/dispositivo corrente considerando le preferenze locali.
-     */
-    @androidx.annotation.Nullable
-    public static String findCurrentUserId(@androidx.annotation.Nullable java.util.List<Partecipante> partecipanti,
-                                           @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser,
-                                           @androidx.annotation.Nullable com.example.paripariapp.data.repository.UserPreferencesRepository prefs,
-                                           @androidx.annotation.Nullable String schedaId) {
-        if (partecipanti == null || partecipanti.isEmpty()) return null;
+    @Nullable
+    public static String findCurrentUserId(@Nullable java.util.List<Partecipante> partecipanti,
+                                           @Nullable com.google.firebase.auth.FirebaseUser currentUser,
+                                           @Nullable com.example.paripariapp.data.repository.UserPreferencesRepository prefs,
+                                           @Nullable String schedaId) {
+        if (partecipanti == null || partecipanti.isEmpty() || currentUser == null) return null;
 
-        // 1. Controllo preferenze memorizzate su questo dispositivo per questa scheda
         if (prefs != null && schedaId != null) {
             String savedId = prefs.getMyParticipantId(schedaId);
             if (savedId != null) {
@@ -233,7 +261,6 @@ public class Partecipante {
             }
         }
 
-        // 2. Controllo per utente autenticato (email, UID, displayName)
         for (Partecipante p : partecipanti) {
             if (isCurrentUserParticipant(p, currentUser)) {
                 return p.getId();
@@ -243,62 +270,51 @@ public class Partecipante {
         return null;
     }
 
-    /**
-     * Identifica il partecipante proprietario/capogruppo della scheda.
-     */
     public static Partecipante trovaProprietario(
-            @androidx.annotation.Nullable Scheda scheda,
-            @androidx.annotation.Nullable java.util.List<Partecipante> partecipanti,
-            @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
-        if (partecipanti == null || partecipanti.isEmpty()) return null;
+            @Nullable Scheda scheda,
+            @Nullable java.util.List<Partecipante> partecipanti,
+            @Nullable com.google.firebase.auth.FirebaseUser currentUser
+    ) {
+        if (scheda == null || partecipanti == null || partecipanti.isEmpty()) return null;
 
-        String creatoreId = (scheda != null) ? scheda.getCreatoreId() : null;
-
-        if (creatoreId != null && !creatoreId.trim().isEmpty()) {
-            // 1. Corrispondenza diretta per ID Partecipante
+        String creatoreId = scheda.getCreatoreId();
+        if (creatoreId != null && !creatoreId.isEmpty()) {
             for (Partecipante p : partecipanti) {
                 if (p.getId().equals(creatoreId)) {
                     return p;
                 }
             }
+        }
 
-            // 2. Corrispondenza se creatoreId corrisponde all'UID dell'utente autenticato
-            if (currentUser != null && creatoreId.equals(currentUser.getUid())) {
-                for (Partecipante p : partecipanti) {
-                    if (isCurrentUserParticipant(p, currentUser)) {
-                        return p;
-                    }
+        if (currentUser != null) {
+            for (Partecipante p : partecipanti) {
+                if (isCurrentUserParticipant(p, currentUser)) {
+                    return p;
                 }
             }
         }
 
-        // 3. Fallback: primo partecipante della scheda
         return partecipanti.get(0);
     }
 
-    /**
-     * Riordina la lista posizionando il proprietario della scheda sempre al primo posto (in cima).
-     */
+    @NonNull
     public static java.util.List<Partecipante> ordinaConProprietarioInCima(
-            @androidx.annotation.Nullable Scheda scheda,
-            @androidx.annotation.Nullable java.util.List<Partecipante> partecipanti,
-            @androidx.annotation.Nullable com.google.firebase.auth.FirebaseUser currentUser) {
-        if (partecipanti == null || partecipanti.size() <= 1) {
-            return partecipanti != null ? new java.util.ArrayList<>(partecipanti) : new java.util.ArrayList<>();
-        }
-
-        Partecipante proprietario = trovaProprietario(scheda, partecipanti, currentUser);
-        if (proprietario == null) {
-            return new java.util.ArrayList<>(partecipanti);
-        }
-
+            @Nullable Scheda scheda,
+            @NonNull java.util.List<Partecipante> partecipanti,
+            @Nullable com.google.firebase.auth.FirebaseUser currentUser
+    ) {
         java.util.List<Partecipante> ordinati = new java.util.ArrayList<>();
-        ordinati.add(proprietario);
+        Partecipante proprietario = trovaProprietario(scheda, partecipanti, currentUser);
 
-        for (Partecipante p : partecipanti) {
-            if (!p.getId().equals(proprietario.getId())) {
-                ordinati.add(p);
+        if (proprietario != null) {
+            ordinati.add(proprietario);
+            for (Partecipante p : partecipanti) {
+                if (!p.getId().equals(proprietario.getId())) {
+                    ordinati.add(p);
+                }
             }
+        } else {
+            ordinati.addAll(partecipanti);
         }
 
         return ordinati;

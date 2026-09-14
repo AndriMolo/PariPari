@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_modifica_spesa"
+        android:title="@string/btn_modifica"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_elimina_spesa"
+        android:title="@string/btn_elimina"
+        app:showAsAction="never" />
+</menu>

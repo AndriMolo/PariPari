@@ -23,10 +23,10 @@ public class GruppoPreviewAndClaimTest {
     @Test
     public void testMembroGruppoPreview_classificazioneAutenticatoVsSostituibile() {
         MembroGruppoPreview autenticato = new MembroGruppoPreview(
-                "p-real", "scheda-1", "Mario Creatore", "mario@email.com", "uid-123", true
+                "p-real", "scheda-1", "Mario Creatore", "mario@email.com", "uid-123", null, "ATTIVO", true
         );
         MembroGruppoPreview anonimo = new MembroGruppoPreview(
-                "p-offline", "scheda-1", "Giulia", null, null, false
+                "p-offline", "scheda-1", "Giulia", null, null, null, "ATTIVO", false
         );
 
         assertTrue(autenticato.isAutenticato());
@@ -39,9 +39,9 @@ public class GruppoPreviewAndClaimTest {
     @Test
     public void testGruppoPreview_costruzioneEFiltraggio() {
         List<MembroGruppoPreview> membri = new ArrayList<>();
-        membri.add(new MembroGruppoPreview("p1", "scheda-123", "Mario", "mario@email.com", "uid-1", true));
-        membri.add(new MembroGruppoPreview("p2", "scheda-123", "Giulia", null, null, false));
-        membri.add(new MembroGruppoPreview("p3", "scheda-123", "Luca", null, null, false));
+        membri.add(new MembroGruppoPreview("p1", "scheda-123", "Mario", "mario@email.com", "uid-1", null, "ATTIVO", true));
+        membri.add(new MembroGruppoPreview("p2", "scheda-123", "Giulia", null, null, null, "ATTIVO", false));
+        membri.add(new MembroGruppoPreview("p3", "scheda-123", "Luca", null, null, null, "ATTIVO", false));
 
         FirestoreSyncManager.GruppoPreview preview = new FirestoreSyncManager.GruppoPreview(
                 "scheda-123",
@@ -80,7 +80,6 @@ public class GruppoPreviewAndClaimTest {
 
     @Test
     public void testClaimPartecipante_mantieneIntegritaSpeseEQuote() {
-        // Simulazione: Un partecipante offline "Marco" ha registrato una spesa
         String offlinePartecipanteId = UUID.randomUUID().toString();
         String schedaId = "scheda-test";
 
@@ -92,7 +91,6 @@ public class GruppoPreviewAndClaimTest {
                 SyncStatus.SYNCED
         );
 
-        // Spesa pagata da "Marco"
         Spesa spesa = Spesa.createNew(
                 schedaId,
                 "Cena",
@@ -103,7 +101,6 @@ public class GruppoPreviewAndClaimTest {
                 null
         );
 
-        // Quota per "Marco"
         SpesaPartecipante quota = new SpesaPartecipante(
                 spesa.getId(),
                 offlinePartecipanteId,
@@ -111,17 +108,15 @@ public class GruppoPreviewAndClaimTest {
                 SyncStatus.SYNCED
         );
 
-        // Subentro dell'utente loggato (email utente e ID identico preservato)
         String userEmail = "marco.rossi@email.com";
         Partecipante partecipanteClaimed = new Partecipante(
-                partecipanteOffline.getId(), // L'ID DEVE rimanere identico!
+                partecipanteOffline.getId(),
                 partecipanteOffline.getSchedaId(),
                 partecipanteOffline.getNome(),
                 userEmail,
                 SyncStatus.SYNCED
         );
 
-        // Verifiche
         assertEquals(offlinePartecipanteId, partecipanteClaimed.getId());
         assertEquals(userEmail, partecipanteClaimed.getEmail());
         assertEquals(spesa.getPagatoDaId(), partecipanteClaimed.getId());

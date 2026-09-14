@@ -181,11 +181,56 @@ public class PariPariRepository {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             syncManager.detachSubcollectionListeners(schedaId);
 
-            spesaDao.deleteQuoteBySchedaId(schedaId);
-            spesaDao.deleteBySchedaId(schedaId);
-            partecipanteDao.deleteBySchedaId(schedaId);
-            schedaDao.deleteById(schedaId);
+            // 1. Prima nel DB locale (Room): gestiamo lo stato, il creatore o eventuale cancellazione se vuoto
+            Scheda scheda = schedaDao.getSchedaById(schedaId);
+            List<Partecipante> partecipanti = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
 
+            if (scheda != null && partecipanti != null) {
+                boolean eraCreatore = (scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(partecipanteId));
+
+                Partecipante pUscito = partecipanteDao.getPartecipanteById(partecipanteId);
+                if (pUscito != null) {
+                    pUscito.setStato(Partecipante.STATO_USCITO);
+                    pUscito.setPreviousUserId(auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null);
+                    pUscito.setUserId(null);
+                    pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                    partecipanteDao.update(pUscito);
+                }
+
+                if (eraCreatore) {
+                    String nuovoCreatoreId = null;
+                    // Cerca un altro utente autenticato
+                    for (Partecipante p : partecipanti) {
+                        if (!p.getId().equals(partecipanteId) && p.isAttivo() && p.isAutenticato()) {
+                            nuovoCreatoreId = p.getId();
+                            break;
+                        }
+                    }
+                    if (nuovoCreatoreId == null) {
+                        // Cerca qualsiasi altro partecipante attivo
+                        for (Partecipante p : partecipanti) {
+                            if (!p.getId().equals(partecipanteId) && p.isAttivo()) {
+                                nuovoCreatoreId = p.getId();
+                                break;
+                            }
+                        }
+                    }
+
+                    if (nuovoCreatoreId != null) {
+                        scheda.setCreatoreId(nuovoCreatoreId);
+                        scheda.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                        schedaDao.update(scheda);
+                    } else {
+                        // Nessun altro utente rimasto -> cancella definitivamente la scheda
+                        spesaDao.deleteQuoteBySchedaId(schedaId);
+                        spesaDao.deleteBySchedaId(schedaId);
+                        partecipanteDao.deleteBySchedaId(schedaId);
+                        schedaDao.deleteById(schedaId);
+                    }
+                }
+            }
+
+            // 2. Poi su Firestore
             if (auth.getCurrentUser() != null && syncManager.isConnected()) {
                 syncManager.esciDalGruppo(schedaId, partecipanteId);
             }
@@ -282,7 +327,34 @@ public class PariPariRepository {
     }
 
     public LiveData<Double> getTotaleSpeseByScheda(String schedaId) {
-        return spesaDao.getTotaleSpeseBySchedaLive(schedaId);
+        MediatorLiveData<Double> totaleLiveData = new MediatorLiveData<>();
+        LiveData<Scheda> schedaLive = schedaDao.getSchedaByIdLive(schedaId);
+        LiveData<List<Spesa>> speseLive = spesaDao.getSpeseBySchedaLive(schedaId);
+
+        Runnable recalculate = () -> {
+            AppDatabase.databaseWriteExecutor.execute(() -> {
+                Scheda scheda = schedaLive.getValue();
+                List<Spesa> spese = speseLive.getValue();
+                if (scheda == null || spese == null) {
+                    totaleLiveData.postValue(0.0);
+                    return;
+                }
+                String valutaScheda = scheda.getValutaPredefinita() != null ? scheda.getValutaPredefinita() : "EUR";
+                double totaleConvertito = 0.0;
+                for (Spesa s : spese) {
+                    if (s != null && !com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(s.getCategoria())) {
+                        String valutaSpesa = s.getValuta();
+                        totaleConvertito += CalcolatoreSaldi.convertiValuta(s.getImporto(), valutaSpesa, valutaScheda, application);
+                    }
+                }
+                totaleLiveData.postValue(totaleConvertito);
+            });
+        };
+
+        totaleLiveData.addSource(schedaLive, s -> recalculate.run());
+        totaleLiveData.addSource(speseLive, sp -> recalculate.run());
+
+        return totaleLiveData;
     }
 
     public LiveData<Spesa> getSpesaById(String spesaId) {
@@ -381,7 +453,7 @@ public class PariPariRepository {
                     continue;
                 }
 
-                List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta);
+                List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta, application);
 
                 String mioId = Partecipante.findCurrentUserId(parti, currentUser);
 
@@ -412,7 +484,7 @@ public class PariPariRepository {
             return false;
         }
 
-        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, "EUR");
+        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, "EUR", application);
         FirebaseUser currentUser = auth.getCurrentUser();
         String mioId = Partecipante.findCurrentUserId(parti, currentUser);
         if (mioId != null && trasferimenti != null) {

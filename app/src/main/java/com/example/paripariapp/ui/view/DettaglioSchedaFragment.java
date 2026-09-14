@@ -160,8 +160,17 @@ public class DettaglioSchedaFragment extends Fragment {
         binding.recyclerBilanciMembri.setAdapter(bilancioMembroAdapter);
 
         binding.btnStoricoSaldiScheda.setOnClickListener(v -> {
-            StoricoSaldiBottomSheet sheet = StoricoSaldiBottomSheet.newInstance(schedaId);
-            sheet.show(getChildFragmentManager(), "storico_saldi_scheda");
+            StoricoSaldiFragment fragment = StoricoSaldiFragment.newInstance(schedaId);
+            getParentFragmentManager().beginTransaction()
+                    .setCustomAnimations(
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out,
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out
+                    )
+                    .replace(R.id.dettaglio_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
         });
 
         saldoAdapter.setOnItemClickListener(item -> {
@@ -201,12 +210,14 @@ public class DettaglioSchedaFragment extends Fragment {
                     partecipantiCache,
                     speseCache,
                     quoteCache,
-                    valuta != null ? valuta : "EUR"
+                    valuta != null ? valuta : "EUR",
+                    requireContext()
             );
 
             // Filtra i trasferimenti per mostrare solo quelli in cui l'utente corrente deve pagare o ricevere
             com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-            String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+            com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
+            String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
             List<TrasferimentoSaldo> mieiTrasferimenti = new ArrayList<>();
 
             if (myId != null && trasferimenti != null) {
@@ -215,8 +226,6 @@ public class DettaglioSchedaFragment extends Fragment {
                         mieiTrasferimenti.add(t);
                     }
                 }
-            } else if (trasferimenti != null) {
-                mieiTrasferimenti.addAll(trasferimenti);
             }
 
             saldoAdapter.submitList(mieiTrasferimenti);
@@ -225,7 +234,8 @@ public class DettaglioSchedaFragment extends Fragment {
                     partecipantiCache,
                     speseCache,
                     quoteCache,
-                    valuta != null ? valuta : "EUR"
+                    valuta != null ? valuta : "EUR",
+                    requireContext()
             );
             if (bilancioMembroAdapter != null) {
                 bilancioMembroAdapter.submitList(bilanciMembri);
@@ -280,16 +290,27 @@ public class DettaglioSchedaFragment extends Fragment {
             if (item == null || item.getSpesa() == null) return;
             Spesa spesa = item.getSpesa();
 
-            if (com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesa.getCategoria())) {
-                new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(R.string.badge_saldato_effettuato)
-                        .setMessage(R.string.msg_spesa_saldo_non_modificabile)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-                return;
-            }
+            DettaglioSpesaFragment fragment = DettaglioSpesaFragment.newInstance(
+                    spesa.getId(),
+                    schedaId,
+                    valuta
+            );
+            getParentFragmentManager().beginTransaction()
+                    .setCustomAnimations(
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out,
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out
+                    )
+                    .replace(R.id.dettaglio_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
-            // Costruisce il set degli ID dei partecipanti attualmente attivi nella scheda
+        adapter.setOnSpesaLongClickListener((item, view) -> {
+            if (item == null || item.getSpesa() == null) return;
+            Spesa spesa = item.getSpesa();
+
             java.util.Set<String> activeIds = new java.util.HashSet<>();
             if (partecipantiCache != null) {
                 for (Partecipante p : partecipantiCache) {
@@ -298,13 +319,9 @@ public class DettaglioSchedaFragment extends Fragment {
             }
 
             boolean haMembroAssente = false;
-
-            // 1. Verifica il pagatore
             if (spesa.getPagatoDaId() != null && !activeIds.contains(spesa.getPagatoDaId())) {
                 haMembroAssente = true;
             }
-
-            // 2. Verifica i partecipanti presenti nelle quote di questa spesa
             if (!haMembroAssente && quoteCache != null) {
                 for (SpesaPartecipante q : quoteCache) {
                     if (q.getSpesaId().equals(spesa.getId())) {
@@ -322,24 +339,47 @@ public class DettaglioSchedaFragment extends Fragment {
                         .setMessage(R.string.dialog_msg_spesa_membro_assente)
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
-            } else {
-                ModificaSpesaFragment fragment = ModificaSpesaFragment.newInstance(
-                        spesa.getId(),
-                        schedaId,
-                        valuta
-                );
-                getParentFragmentManager().beginTransaction()
-                        .setCustomAnimations(
-                                android.R.anim.fade_in,
-                                android.R.anim.fade_out,
-                                android.R.anim.fade_in,
-                                android.R.anim.fade_out
-                        )
-                        .replace(R.id.dettaglio_container, fragment)
-                        .addToBackStack(null)
-                        .commit();
+                return;
             }
+
+            android.widget.PopupMenu popup = new android.widget.PopupMenu(requireContext(), view);
+            popup.getMenu().add(0, 1, 0, R.string.btn_modifica);
+            popup.getMenu().add(0, 2, 1, R.string.btn_elimina);
+            popup.setOnMenuItemClickListener(menuItem -> {
+                if (menuItem.getItemId() == 1) {
+                    ModificaSpesaFragment fragment = ModificaSpesaFragment.newInstance(
+                            spesa.getId(),
+                            schedaId,
+                            valuta
+                    );
+                    getParentFragmentManager().beginTransaction()
+                            .setCustomAnimations(
+                                    android.R.anim.fade_in,
+                                    android.R.anim.fade_out,
+                                    android.R.anim.fade_in,
+                                    android.R.anim.fade_out
+                            )
+                            .replace(R.id.dettaglio_container, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                    return true;
+                } else if (menuItem.getItemId() == 2) {
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.dialog_titolo_elimina_spesa)
+                            .setMessage(R.string.dialog_msg_elimina_spesa)
+                            .setPositiveButton(R.string.btn_elimina, (dialog, which) -> {
+                                viewModel.eliminaSpesa(spesa.getId(), schedaId);
+                                Toast.makeText(requireContext(), R.string.msg_spesa_eliminata, Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show();
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
         });
+
         binding.recyclerSpese.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSpese.setAdapter(adapter);
     }
@@ -410,6 +450,32 @@ public class DettaglioSchedaFragment extends Fragment {
             for (SpesaConDettagli item : this.tutteSpeseRaw) {
                 this.speseCache.add(item.getSpesa());
             }
+
+            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
+            String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
+
+            double mieSpeseTotale = 0.0;
+            String valutaScheda = valuta != null ? valuta : "EUR";
+            if (myId != null) {
+                for (SpesaConDettagli scd : this.tutteSpeseRaw) {
+                    if (scd.getSpesa() != null && !com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(scd.getSpesa().getCategoria())) {
+                        String spesaId = scd.getSpesa().getId();
+                        String valutaSpesa = scd.getSpesa().getValuta() != null ? scd.getSpesa().getValuta() : valutaScheda;
+                        if (quoteCache != null) {
+                            for (SpesaPartecipante q : quoteCache) {
+                                if (q.getSpesaId().equals(spesaId) && q.getPartecipanteId().equals(myId)) {
+                                    double quotaConvertita = CalcolatoreSaldi.convertiValuta(q.getQuota(), valutaSpesa, valutaScheda, requireContext());
+                                    mieSpeseTotale += quotaConvertita;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            String valutaCorrente = valuta != null ? valuta : "EUR";
+            binding.tvMieSpese.setText(String.format(Locale.getDefault(), "%.2f %s", mieSpeseTotale, valutaCorrente));
 
             applicaFiltriERaggruppa();
             aggiornaSaldi();

@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 
 /**
  * Utility per gestire le icone e gli emoji dinamici associati alle categorie ed ai titoli delle spese.
+ * Supporta categorie in italiano e inglese (bilingue) oltre all'analisi intelligente del titolo.
  */
 public class CategoriaUtil {
 
@@ -26,98 +27,94 @@ public class CategoriaUtil {
 
     @NonNull
     public static String getEmojiForCategoria(@Nullable String categoria, @Nullable String titolo) {
-        String textToAnalyze = ((categoria != null ? categoria : "") + " " + (titolo != null ? titolo : "")).trim().toLowerCase();
+        String catClean = categoria != null ? categoria.trim().toLowerCase() : "";
+        String titleClean = titolo != null ? titolo.trim().toLowerCase() : "";
+        String textToAnalyze = (catClean + " " + titleClean).trim();
 
         if (textToAnalyze.isEmpty()) {
             return "🧾";
         }
 
-        // 1. Saldi e Pareggi
-        if (textToAnalyze.contains("saldi") || textToAnalyze.contains("saldo") || textToAnalyze.contains("pareggio") || textToAnalyze.contains("pagamento")) {
+        // 1. Saldi, Pareggi e Settlement
+        if (catClean.contains("saldi") || catClean.contains("saldo") || catClean.contains("pareggio") || catClean.contains("settlement") ||
+                titleClean.contains("saldi") || titleClean.contains("saldo") || titleClean.contains("pareggio") || titleClean.contains("pagamento")) {
             return "💳";
         }
 
-        // 2. Cibo, Pizzeria, Ristorante, Cena, Pranzo
-        if (textToAnalyze.contains("pizza") || textToAnalyze.contains("pizzeria")) {
-            return "🍕";
-        }
-        if (textToAnalyze.contains("sushi") || textToAnalyze.contains("giapponese") || textToAnalyze.contains("ramen")) {
-            return "🍣";
-        }
-        if (textToAnalyze.contains("hamburger") || textToAnalyze.contains("fast food") || textToAnalyze.contains("mcdonald") || textToAnalyze.contains("burger")) {
-            return "🍔";
-        }
-        if (textToAnalyze.contains("cibo") || textToAnalyze.contains("ristorante") || textToAnalyze.contains("cena") || textToAnalyze.contains("pranzo") || textToAnalyze.contains("trattoria") || textToAnalyze.contains("osteria") || textToAnalyze.contains("food")) {
+        // 2. Cibo & Ristoranti (Cibo, Food, Restaurant, Dining)
+        if (catClean.contains("cibo") || catClean.contains("food") || catClean.contains("ristorante") || catClean.contains("restaurant") || catClean.contains("dining")) {
+            if (titleClean.contains("pizza") || titleClean.contains("pizzeria")) return "🍕";
+            if (titleClean.contains("sushi") || titleClean.contains("giapponese") || titleClean.contains("ramen")) return "🍣";
+            if (titleClean.contains("hamburger") || titleClean.contains("fast food") || titleClean.contains("mcdonald") || titleClean.contains("burger")) return "🍔";
             return "🍽️";
         }
 
-        // 3. Bar, Birra, Aperitivo, Caffè, Drink
-        if (textToAnalyze.contains("birra") || textToAnalyze.contains("pub") || textToAnalyze.contains("beer")) {
-            return "🍺";
-        }
-        if (textToAnalyze.contains("aperitivo") || textToAnalyze.contains("cocktail") || textToAnalyze.contains("drink") || textToAnalyze.contains("bar") || textToAnalyze.contains("spritz")) {
+        // 3. Bar & Aperitivi (Bar, Drinks)
+        if (catClean.contains("bar") || catClean.contains("aperitivi") || catClean.contains("aperitivo") || catClean.contains("drink")) {
+            if (titleClean.contains("birra") || titleClean.contains("pub") || titleClean.contains("beer")) return "🍺";
+            if (titleClean.contains("caffè") || titleClean.contains("coffee") || titleClean.contains("colazione") || titleClean.contains("espresso")) return "☕";
             return "🍹";
         }
-        if (textToAnalyze.contains("caffè") || textToAnalyze.contains("colazione") || textToAnalyze.contains("espresso") || textToAnalyze.contains("coffee")) {
-            return "☕";
-        }
 
-        // 4. Spesa, Supermercato, Minimarket
-        if (textToAnalyze.contains("spesa") || textToAnalyze.contains("supermercato") || textToAnalyze.contains("conad") || textToAnalyze.contains("esselunga") || textToAnalyze.contains("coop") || textToAnalyze.contains("lidl") || textToAnalyze.contains("eurospin") || textToAnalyze.contains("carrefour") || textToAnalyze.contains("market")) {
+        // 4. Spesa & Supermercato (Spesa, Groceries, Supermarket, Market)
+        if (catClean.contains("spesa") || catClean.contains("groceries") || catClean.contains("supermercato") || catClean.contains("market")) {
             return "🛒";
         }
 
-        // 5. Trasporti, Taxi, Volo, Treno, Auto, Benzina, Carburante
-        if (textToAnalyze.contains("volo") || textToAnalyze.contains("aereo") || textToAnalyze.contains("ryanair") || textToAnalyze.contains("easyjet") || textToAnalyze.contains("flight")) {
-            return "✈️";
-        }
-        if (textToAnalyze.contains("treno") || textToAnalyze.contains("metro") || textToAnalyze.contains("biglietto") || textToAnalyze.contains("trenitalia") || textToAnalyze.contains("italo") || textToAnalyze.contains("train")) {
-            return "🚊";
-        }
-        if (textToAnalyze.contains("taxi") || textToAnalyze.contains("uber")) {
-            return "🚕";
-        }
-        if (textToAnalyze.contains("benzina") || textToAnalyze.contains("carburante") || textToAnalyze.contains("diesel") || textToAnalyze.contains("gasolio") || textToAnalyze.contains("distributore") || textToAnalyze.contains("eni") || textToAnalyze.contains("q8")) {
-            return "⛽";
-        }
-        if (textToAnalyze.contains("trasporti") || textToAnalyze.contains("auto") || textToAnalyze.contains("parcheggio") || textToAnalyze.contains("pedaggio") || textToAnalyze.contains("autostrada")) {
+        // 5. Trasporti (Trasporti, Transport, Travel, Car)
+        if (catClean.contains("trasporti") || catClean.contains("transport") || catClean.contains("travel") || catClean.contains("auto") || catClean.contains("car")) {
+            if (titleClean.contains("volo") || titleClean.contains("aereo") || titleClean.contains("ryanair") || titleClean.contains("easyjet") || titleClean.contains("flight")) return "✈️";
+            if (titleClean.contains("treno") || titleClean.contains("metro") || titleClean.contains("biglietto") || titleClean.contains("trenitalia") || titleClean.contains("italo") || titleClean.contains("train")) return "🚊";
+            if (titleClean.contains("taxi") || titleClean.contains("uber")) return "🚕";
+            if (titleClean.contains("benzina") || titleClean.contains("carburante") || titleClean.contains("diesel") || titleClean.contains("gasolio") || titleClean.contains("gas") || titleClean.contains("eni") || titleClean.contains("q8")) return "⛽";
             return "🚗";
         }
 
-        // 6. Alloggio, Hotel, Airbnb, Casa, Affitto
-        if (textToAnalyze.contains("alloggio") || textToAnalyze.contains("hotel") || textToAnalyze.contains("airbnb") || textToAnalyze.contains("b&b") || textToAnalyze.contains("ostello") || textToAnalyze.contains("resort") || textToAnalyze.contains("booking")) {
-            return "🏨";
-        }
-        if (textToAnalyze.contains("casa") || textToAnalyze.contains("affitto") || textToAnalyze.contains("bolletta") || textToAnalyze.contains("luce") || textToAnalyze.contains("gas") || textToAnalyze.contains("wifi")) {
+        // 6. Alloggio (Alloggio, Accommodation, Hotel, Home, Stay)
+        if (catClean.contains("alloggio") || catClean.contains("accommodation") || catClean.contains("hotel") || catClean.contains("casa") || catClean.contains("home") || catClean.contains("stay")) {
+            if (titleClean.contains("hotel") || titleClean.contains("airbnb") || titleClean.contains("b&b") || titleClean.contains("ostello") || titleClean.contains("resort") || titleClean.contains("booking")) return "🏨";
             return "🏠";
         }
 
-        // 7. Svago, Cinema, Musica, Gaming, Giochi, Sport
-        if (textToAnalyze.contains("gaming") || textToAnalyze.contains("gioco") || textToAnalyze.contains("playstation") || textToAnalyze.contains("xbox") || textToAnalyze.contains("steam") || textToAnalyze.contains("nintendo") || textToAnalyze.contains("svago") || textToAnalyze.contains("game")) {
-            return "🎮";
-        }
-        if (textToAnalyze.contains("cinema") || textToAnalyze.contains("film") || textToAnalyze.contains("popcorn") || textToAnalyze.contains("netflix") || textToAnalyze.contains("prime")) {
-            return "🍿";
-        }
-        if (textToAnalyze.contains("concerto") || textToAnalyze.contains("musica") || textToAnalyze.contains("evento") || textToAnalyze.contains("ticket") || textToAnalyze.contains("spotify")) {
+        // 7. Svago (Svago, Leisure, Entertainment, Fun)
+        if (catClean.contains("svago") || catClean.contains("leisure") || catClean.contains("intrattenimento") || catClean.contains("entertainment") || catClean.contains("fun")) {
+            if (titleClean.contains("gaming") || titleClean.contains("gioco") || titleClean.contains("playstation") || titleClean.contains("xbox") || titleClean.contains("steam") || titleClean.contains("nintendo") || titleClean.contains("game")) return "🎮";
+            if (titleClean.contains("cinema") || titleClean.contains("film") || titleClean.contains("popcorn") || titleClean.contains("netflix") || titleClean.contains("prime")) return "🍿";
+            if (titleClean.contains("concerto") || titleClean.contains("musica") || titleClean.contains("evento") || titleClean.contains("ticket") || titleClean.contains("spotify")) return "🎟️";
+            if (titleClean.contains("sport") || titleClean.contains("calcetto") || titleClean.contains("palestra") || titleClean.contains("padel") || titleClean.contains("tennis")) return "⚽";
             return "🎟️";
         }
-        if (textToAnalyze.contains("sport") || textToAnalyze.contains("calcetto") || textToAnalyze.contains("palestra") || textToAnalyze.contains("padel") || textToAnalyze.contains("tennis")) {
-            return "⚽";
-        }
 
-        // 8. Shopping, Abbigliamento, Regali
-        if (textToAnalyze.contains("regalo") || textToAnalyze.contains("compleanno") || textToAnalyze.contains("gift")) {
-            return "🎁";
-        }
-        if (textToAnalyze.contains("shopping") || textToAnalyze.contains("abbigliamento") || textToAnalyze.contains("vestiti") || textToAnalyze.contains("negozio") || textToAnalyze.contains("amazon") || textToAnalyze.contains("zara")) {
+        // 8. Shopping (Shopping, Clothes)
+        if (catClean.contains("shopping") || catClean.contains("abbigliamento") || catClean.contains("clothes")) {
+            if (titleClean.contains("regalo") || titleClean.contains("compleanno") || titleClean.contains("gift")) return "🎁";
             return "🛍️";
         }
 
-        // 9. Salute, Farmacia, Medico
-        if (textToAnalyze.contains("farmacia") || textToAnalyze.contains("medico") || textToAnalyze.contains("medicina") || textToAnalyze.contains("dottore") || textToAnalyze.contains("salute")) {
+        // 9. Salute (Salute, Health, Pharmacy)
+        if (catClean.contains("salute") || catClean.contains("health") || catClean.contains("farmacia") || catClean.contains("pharmacy")) {
             return "💊";
         }
+
+        // 10. Altro / Other / General
+        if (catClean.contains("altro") || catClean.contains("other") || catClean.contains("generale") || catClean.contains("general")) {
+            return "🧾";
+        }
+
+        // Analisi globale di fallback basata su parole chiave nel titolo e categoria
+        if (textToAnalyze.contains("pizza")) return "🍕";
+        if (textToAnalyze.contains("sushi")) return "🍣";
+        if (textToAnalyze.contains("birra") || textToAnalyze.contains("pub") || textToAnalyze.contains("beer")) return "🍺";
+        if (textToAnalyze.contains("aperitivo") || textToAnalyze.contains("cocktail") || textToAnalyze.contains("drink")) return "🍹";
+        if (textToAnalyze.contains("caffè") || textToAnalyze.contains("colazione") || textToAnalyze.contains("coffee")) return "☕";
+        if (textToAnalyze.contains("spesa") || textToAnalyze.contains("groceries") || textToAnalyze.contains("supermercato")) return "🛒";
+        if (textToAnalyze.contains("volo") || textToAnalyze.contains("aereo") || textToAnalyze.contains("flight")) return "✈️";
+        if (textToAnalyze.contains("treno") || textToAnalyze.contains("train")) return "🚊";
+        if (textToAnalyze.contains("benzina") || textToAnalyze.contains("carburante") || textToAnalyze.contains("gas")) return "⛽";
+        if (textToAnalyze.contains("hotel") || textToAnalyze.contains("airbnb")) return "🏨";
+        if (textToAnalyze.contains("cinema") || textToAnalyze.contains("film")) return "🍿";
+        if (textToAnalyze.contains("shopping") || textToAnalyze.contains("amazon") || textToAnalyze.contains("zara")) return "🛍️";
+        if (textToAnalyze.contains("farmacia") || textToAnalyze.contains("medico") || textToAnalyze.contains("pharmacy")) return "💊";
 
         return "🧾";
     }

@@ -34,6 +34,34 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Tricount-style Toggle Bar: Spesa vs Rimborso -->
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/toggle_tipo_operazione"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:singleSelection="true"
+                app:selectionRequired="true"
+                app:checkedButton="@+id/btn_tipo_spesa">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_tipo_spesa"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tipo_spesa" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_tipo_rimborso"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tipo_rimborso" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
             <TextView
                 android:id="@+id/titolo_spesa"
                 android:layout_width="match_parent"
@@ -108,8 +136,9 @@
                                 android:id="@+id/campo_valuta"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:enabled="false"
-                                android:inputType="textCapCharacters" />
+                                android:clickable="true"
+                                android:focusable="false"
+                                android:inputType="none" />
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
@@ -123,6 +152,23 @@
 
                         <AutoCompleteTextView
                             android:id="@+id/menu_pagante"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- A chi / Ricevuto da (per Rimborsi) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/contenitore_destinatario"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/label_ricevuto_da"
+                        android:visibility="gone">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/menu_destinatario"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none" />
@@ -145,82 +191,63 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/spesa_divisione"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textStyle="bold" />
-
-            <com.google.android.material.card.MaterialCardView
+            <!-- Sezione Divisione (nascosta per Rimborso) -->
+            <LinearLayout
+                android:id="@+id/sezione_divisione"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="1dp"
-                app:strokeColor="?attr/colorSurfaceVariant">
+                android:orientation="vertical">
 
-                <LinearLayout
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/toggle_gruppo_divisione"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginTop="20dp"
+                    app:checkedButton="@+id/btn_divisione_equa"
+                    app:singleSelection="true">
 
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/toggle_gruppo_divisione"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_divisione_equa"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        app:singleSelection="true"
-                        app:selectionRequired="true">
+                        android:layout_weight="1"
+                        android:text="@string/divisione_equa" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_divisione_equa"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/divisione_equa"
-                            app:icon="@drawable/ic_split_equal" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_divisione_percentuale"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/divisione_percentuale"
-                            app:icon="@drawable/ic_split_percent" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_divisione_parti"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/divisione_parti"
-                            app:icon="@drawable/ic_split_amount" />
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
-
-                    <LinearLayout
-                        android:id="@+id/layout_elenco_quote"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_divisione_percentuale"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                        android:layout_weight="1"
+                        android:text="@string/divisione_percentuale" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_divisione_parti"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/divisione_parti" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <LinearLayout
+                    android:id="@+id/layout_elenco_quote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/azione_salva"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="24dp"
+                android:text="@string/btn_salva_spesa"
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/azione_salva"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="20dp"
-        android:text="@string/spesa_salva"
-        app:icon="@drawable/ic_check_circle" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

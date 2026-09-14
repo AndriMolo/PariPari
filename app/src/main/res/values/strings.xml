@@ -448,5 +448,21 @@
     <!-- Identificazione account utente corrente -->
     <string name="etichetta_io">io</string>
     <string name="formato_nome_con_io">%1$s (%2$s)</string>
+    <string name="label_totale_spesa">Totale spesa</string>
+    <string name="titolo_partecipanti_quote">Partecipanti e quote</string>
+    <string name="le_mie_spese_formato">Le mie spese: %d (%s)</string>
+    <string name="titolo_dettaglio_spesa">Dettaglio Spesa</string>
+    <string name="label_speso_da_me">Speso da me</string>
+    <string name="titolo_annulla_pareggio">Annulla pareggio</string>
+    <string name="msg_conferma_annulla_pareggio">Vuoi annullare questo pagamento registrato per errore? I saldi verranno ricalcolati automaticamente.</string>
+    <string name="btn_annulla_pareggio">Annulla pareggio</string>
+    <string name="storico_pagamento_inviato">a %s</string>
+    <string name="storico_pagamento_ricevuto">da %s</string>
+    <string name="badge_inviato">inviato</string>
+    <string name="badge_ricevuto">ricevuto</string>
+    <string name="tipo_spesa">Spesa</string>
+    <string name="tipo_rimborso">Rimborso</string>
+    <string name="label_ricevuto_da">A chi</string>
+    <string name="msg_saldi_rimozione_solo_spese">Per modificare o rimuovere un rimborso, utilizza la schermata Spese del gruppo.</string>
 
 </resources>

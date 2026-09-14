@@ -29,10 +29,19 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
         void onSpesaClick(SpesaConDettagli item);
     }
 
+    public interface OnSpesaLongClickListener {
+        void onSpesaLongClick(SpesaConDettagli item, View view);
+    }
+
     private OnSpesaClickListener onSpesaClickListener;
+    private OnSpesaLongClickListener onSpesaLongClickListener;
 
     public void setOnSpesaClickListener(OnSpesaClickListener listener) {
         this.onSpesaClickListener = listener;
+    }
+
+    public void setOnSpesaLongClickListener(OnSpesaLongClickListener listener) {
+        this.onSpesaLongClickListener = listener;
     }
 
     public SpesaAdapter() {
@@ -89,7 +98,7 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
         if (holder instanceof HeaderViewHolder) {
             ((HeaderViewHolder) holder).bind(item.getHeaderTitle());
         } else if (holder instanceof SpesaViewHolder) {
-            ((SpesaViewHolder) holder).bind(item.getSpesa(), onSpesaClickListener);
+            ((SpesaViewHolder) holder).bind(item.getSpesa(), onSpesaClickListener, onSpesaLongClickListener);
         }
     }
 
@@ -117,7 +126,7 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
         private static final java.time.format.DateTimeFormatter DATE_FORMATTER =
                 java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
-        public void bind(SpesaConDettagli item, OnSpesaClickListener listener) {
+        public void bind(SpesaConDettagli item, OnSpesaClickListener listener, OnSpesaLongClickListener longListener) {
             Spesa spesa = item.getSpesa();
             Context context = binding.getRoot().getContext();
 
@@ -125,6 +134,14 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
                 if (listener != null) {
                     listener.onSpesaClick(item);
                 }
+            });
+
+            binding.getRoot().setOnLongClickListener(v -> {
+                if (longListener != null) {
+                    longListener.onSpesaLongClick(item, v);
+                    return true;
+                }
+                return false;
             });
 
             // Emoji dinamico per Categoria

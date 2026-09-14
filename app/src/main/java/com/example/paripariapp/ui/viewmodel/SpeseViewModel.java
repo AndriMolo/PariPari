@@ -170,19 +170,22 @@ public class SpeseViewModel extends AndroidViewModel {
             repository.insertScheda(scheda, null);
         }
     }
-    public void registraPagamento(String schedaId, String daPartecipanteId, String aPartecipanteId, double importo, String valuta) {
+    public void registraPagamento(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta) {
         String spesaId = UUID.randomUUID().toString();
+        String pulitoDa = Partecipante.pulisciNome(daNome);
+        String pulitoA = Partecipante.pulisciNome(aNome);
+        String titolo = "Pagamento da " + (pulitoDa.isEmpty() ? "Membro" : pulitoDa) + " a " + (pulitoA.isEmpty() ? "Membro" : pulitoA);
 
         // 1. Spesa fittizia di pareggio
         Spesa pagamento = new Spesa(
                 spesaId,
                 schedaId,
-                "Pareggio conti",
+                titolo,
                 importo,
                 valuta != null ? valuta : "EUR",
                 System.currentTimeMillis(),
                 "Pareggio",
-                daPartecipanteId, // Chi paga realmente
+                daId, // Chi paga realmente
                 null,
                 SyncStatus.PENDING_INSERT
         );
@@ -191,12 +194,16 @@ public class SpeseViewModel extends AndroidViewModel {
         List<SpesaPartecipante> quote = new ArrayList<>();
         quote.add(new SpesaPartecipante(
                 spesaId,
-                aPartecipanteId, // Chi riceve il denaro
+                aId, // Chi riceve il denaro
                 importo,
                 SyncStatus.PENDING_INSERT
         ));
 
         repository.insertSpesaConQuote(pagamento, quote);
+    }
+
+    public void eliminaSpesa(String spesaId, String schedaId) {
+        repository.deleteSpesa(spesaId, schedaId);
     }
 
     public void recuperaAnteprimaGruppo(String codice, com.example.paripariapp.data.remote.FirestoreSyncManager.OnPreviewGruppoCallback callback) {

@@ -1,9 +1,14 @@
 package com.example.paripariapp.util;
 
+import android.content.Context;
+
+import androidx.annotation.Nullable;
+
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.TrasferimentoSaldo;
+import com.example.paripariapp.data.repository.CurrencyRepository;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -32,10 +37,33 @@ public class CalcolatoreSaldi {
         public String getValuta() { return valuta; }
     }
 
+    public static double convertiValuta(double importo, String valutaOrigine, String valutaDestinazione, @Nullable Context context) {
+        if (valutaOrigine == null || valutaDestinazione == null || valutaOrigine.equalsIgnoreCase(valutaDestinazione)) {
+            return importo;
+        }
+        if (context == null) {
+            return importo;
+        }
+        CurrencyRepository repo = CurrencyRepository.getInstance(context.getApplicationContext());
+        double rateOrigine = repo.getRate(valutaOrigine);
+        double rateDestinazione = repo.getRate(valutaDestinazione);
+        return (importo / rateOrigine) * rateDestinazione;
+    }
+
     public static Map<String, Double> calcolaMapBilanci(
             List<Partecipante> partecipanti,
             List<Spesa> spese,
             List<SpesaPartecipante> quote
+    ) {
+        return calcolaMapBilanci(partecipanti, spese, quote, "EUR", null);
+    }
+
+    public static Map<String, Double> calcolaMapBilanci(
+            List<Partecipante> partecipanti,
+            List<Spesa> spese,
+            List<SpesaPartecipante> quote,
+            String valutaPredefinita,
+            @Nullable Context context
     ) {
         Map<String, Double> bilanci = new HashMap<>();
         if (partecipanti == null || partecipanti.isEmpty()) {
@@ -51,14 +79,17 @@ public class CalcolatoreSaldi {
         }
 
         Map<String, Spesa> spesaMap = new HashMap<>();
+        String valutaDef = valutaPredefinita != null ? valutaPredefinita : "EUR";
 
-        // 1. Aggiunge gli importi anticipati da ciascuno (+ credito)
+        // 1. Aggiunge gli importi anticipati da ciascuno (+ credito) convertiti nella valuta predefinita della scheda
         for (Spesa s : spese) {
             spesaMap.put(s.getId(), s);
             String pagatoreId = s.getPagatoDaId();
+            String valutaSpesa = s.getValuta() != null ? s.getValuta() : valutaDef;
+            double importoConv = convertiValuta(s.getImporto(), valutaSpesa, valutaDef, context);
             if (bilanci.containsKey(pagatoreId)) {
                 Double curr = bilanci.get(pagatoreId);
-                bilanci.put(pagatoreId, (curr != null ? curr : 0.0) + s.getImporto());
+                bilanci.put(pagatoreId, (curr != null ? curr : 0.0) + importoConv);
             }
         }
 
@@ -66,24 +97,29 @@ public class CalcolatoreSaldi {
         if (quote != null && !quote.isEmpty()) {
             for (SpesaPartecipante q : quote) {
                 String debitoreId = q.getPartecipanteId();
-                double quotaResidua = q.getQuota() - q.getQuotaPagata();
+                Spesa s = spesaMap.get(q.getSpesaId());
+                String valutaSpesa = (s != null && s.getValuta() != null) ? s.getValuta() : valutaDef;
+
+                double quotaResiduaConv = convertiValuta(q.getQuota() - q.getQuotaPagata(), valutaSpesa, valutaDef, context);
                 if (bilanci.containsKey(debitoreId)) {
                     Double curr = bilanci.get(debitoreId);
-                    bilanci.put(debitoreId, (curr != null ? curr : 0.0) - quotaResidua);
+                    bilanci.put(debitoreId, (curr != null ? curr : 0.0) - quotaResiduaConv);
                 }
-                Spesa s = spesaMap.get(q.getSpesaId());
                 if (s != null && q.getQuotaPagata() > 0) {
                     String pagatoreId = s.getPagatoDaId();
+                    double quotaPagataConv = convertiValuta(q.getQuotaPagata(), valutaSpesa, valutaDef, context);
                     if (bilanci.containsKey(pagatoreId)) {
                         Double curr = bilanci.get(pagatoreId);
-                        bilanci.put(pagatoreId, (curr != null ? curr : 0.0) - q.getQuotaPagata());
+                        bilanci.put(pagatoreId, (curr != null ? curr : 0.0) - quotaPagataConv);
                     }
                 }
             }
         } else {
             // Divisione equa di default se non sono presenti quote esplicite
             for (Spesa s : spese) {
-                double quotaEqua = s.getImporto() / partecipanti.size();
+                String valutaSpesa = s.getValuta() != null ? s.getValuta() : valutaDef;
+                double importoConv = convertiValuta(s.getImporto(), valutaSpesa, valutaDef, context);
+                double quotaEqua = importoConv / partecipanti.size();
                 for (Partecipante p : partecipanti) {
                     Double curr = bilanci.get(p.getId());
                     bilanci.put(p.getId(), (curr != null ? curr : 0.0) - quotaEqua);
@@ -100,12 +136,22 @@ public class CalcolatoreSaldi {
             List<SpesaPartecipante> quote,
             String valutaPredefinita
     ) {
+        return calcolaListaBilanciMembri(partecipanti, spese, quote, valutaPredefinita, null);
+    }
+
+    public static List<BilancioMembro> calcolaListaBilanciMembri(
+            List<Partecipante> partecipanti,
+            List<Spesa> spese,
+            List<SpesaPartecipante> quote,
+            String valutaPredefinita,
+            @Nullable Context context
+    ) {
         List<BilancioMembro> lista = new ArrayList<>();
         if (partecipanti == null || partecipanti.isEmpty()) {
             return lista;
         }
 
-        Map<String, Double> mapBilanci = calcolaMapBilanci(partecipanti, spese, quote);
+        Map<String, Double> mapBilanci = calcolaMapBilanci(partecipanti, spese, quote, valutaPredefinita, context);
 
         for (Partecipante p : partecipanti) {
             Double val = mapBilanci.get(p.getId());
@@ -123,6 +169,16 @@ public class CalcolatoreSaldi {
             List<SpesaPartecipante> quote,
             String valutaPredefinita
     ) {
+        return calcolaTrasferimenti(partecipanti, spese, quote, valutaPredefinita, null);
+    }
+
+    public static List<TrasferimentoSaldo> calcolaTrasferimenti(
+            List<Partecipante> partecipanti,
+            List<Spesa> spese,
+            List<SpesaPartecipante> quote,
+            String valutaPredefinita,
+            @Nullable Context context
+    ) {
         List<TrasferimentoSaldo> trasferimenti = new ArrayList<>();
         if (partecipanti == null || partecipanti.isEmpty() || spese == null || spese.isEmpty()) {
             return trasferimenti;
@@ -133,7 +189,7 @@ public class CalcolatoreSaldi {
             nomiMap.put(p.getId(), p.getNome());
         }
 
-        Map<String, Double> bilanci = calcolaMapBilanci(partecipanti, spese, quote);
+        Map<String, Double> bilanci = calcolaMapBilanci(partecipanti, spese, quote, valutaPredefinita, context);
 
         // 3. Separa debitori e creditori
         List<Map.Entry<String, Double>> debitori = new ArrayList<>();

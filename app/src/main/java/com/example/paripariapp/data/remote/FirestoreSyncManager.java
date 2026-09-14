@@ -585,7 +585,7 @@ public class FirestoreSyncManager {
                                     }
                                     break;
                                 case REMOVED:
-                                    partecipanteDao.deleteById(pId);
+                                    // Manteniamo il record in Room per evitare che le spese passate mostrino "unknown"
                                     break;
                             }
                         }
@@ -856,6 +856,10 @@ public class FirestoreSyncManager {
                                     || (pUserId != null && !pUserId.trim().isEmpty())
                                     || (pEmail != null && !pEmail.trim().isEmpty() && pEmail.contains("@"));
 
+                            String pPreviousUserId = pDoc.getString("previousUserId");
+                            String pStato = pDoc.getString("stato");
+                            if (pStato == null) pStato = Partecipante.STATO_ATTIVO;
+
                             if (pNome != null && !pNome.trim().isEmpty()) {
                                 membri.add(new MembroGruppoPreview(
                                         pDoc.getId(),
@@ -863,6 +867,8 @@ public class FirestoreSyncManager {
                                         pNome.trim(),
                                         pEmail,
                                         pUserId,
+                                        pPreviousUserId,
+                                        pStato,
                                         isAutenticato
                                 ));
                             }

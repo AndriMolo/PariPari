@@ -22,6 +22,9 @@ public interface PartecipanteDao {
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     LiveData<List<Partecipante>> getPartecipantiBySchedaLive(String schedaId);
 
+    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato != 'USCITO') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
+    LiveData<List<Partecipante>> getPartecipantiAttiviBySchedaLive(String schedaId);
+
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     List<Partecipante> getPartecipantiBySchedaSync(String schedaId);
 

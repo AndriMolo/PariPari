@@ -17,20 +17,20 @@ import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.databinding.FragmentNuovaSpesaBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Schermata a schermo intero (Fragment) per la creazione di una nuova spesa.
- * Estende BaseSpesaFragment per condividere la gestione delle 3 modalità di divisione,
- * dell'auto-bilanciamento in tempo reale e della validazione.
+ * Schermata a schermo intero (Fragment) per la creazione di una nuova spesa o rimborso (Tricount-style).
  */
 public class NuovaSpesaFragment extends BaseSpesaFragment {
 
     private FragmentNuovaSpesaBinding binding;
     private DettaglioSchedaViewModel viewModel;
+    private boolean isRimborso = false;
 
     public static NuovaSpesaFragment newInstance(String schedaId, String valuta) {
         NuovaSpesaFragment fragment = new NuovaSpesaFragment();
@@ -68,6 +68,23 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
         binding.toggleGruppoDivisione.check(R.id.btn_divisione_equa);
 
+        binding.toggleTipoOperazione.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return;
+            isRimborso = (checkedId == R.id.btn_tipo_rimborso);
+            if (isRimborso) {
+                binding.contenitoreDestinatario.setVisibility(View.VISIBLE);
+                binding.contenitoreCategoria.setVisibility(View.GONE);
+                binding.sezioneDivisione.setVisibility(View.GONE);
+                if (binding.campoDescrizione.getText() == null || binding.campoDescrizione.getText().toString().isEmpty()) {
+                    binding.campoDescrizione.setText("Rimborso");
+                }
+            } else {
+                binding.contenitoreDestinatario.setVisibility(View.GONE);
+                binding.contenitoreCategoria.setVisibility(View.VISIBLE);
+                binding.sezioneDivisione.setVisibility(View.VISIBLE);
+            }
+        });
+
         setupObserverPartecipanti();
         setupSalva();
     }
@@ -83,10 +100,19 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             }
             ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
             binding.menuPagante.setAdapter(adapter);
+            binding.menuDestinatario.setAdapter(adapter);
+
             if (!nomi.isEmpty() && (binding.menuPagante.getText() == null || binding.menuPagante.getText().toString().isEmpty())) {
                 binding.menuPagante.setText(nomi.get(0), false);
             }
+            if (nomi.size() > 1 && (binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty())) {
+                binding.menuDestinatario.setText(nomi.get(1), false);
+            } else if (!nomi.isEmpty() && (binding.menuDestinatario.getText() == null || binding.menuDestinatario.getText().toString().isEmpty())) {
+                binding.menuDestinatario.setText(nomi.get(0), false);
+            }
+
             binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
+            binding.menuDestinatario.setOnClickListener(v -> binding.menuDestinatario.showDropDown());
 
             popolaRighePartecipantiComuni(lista, null, null, 0.0);
             cambiaTipoDivisione(tipoDivisione);
@@ -95,28 +121,60 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
     private void setupSalva() {
         binding.azioneSalva.setOnClickListener(v -> {
-            String spesaId = UUID.randomUUID().toString();
-            DatiFormValidi dati = validaEdEstraiDatiForm(spesaId, SyncStatus.PENDING_INSERT);
-            if (dati == null) return;
+            double importo = getImportoTotale();
+            if (importo <= 0) {
+                binding.campoImporto.setError("Inserisci un importo valido");
+                return;
+            }
 
-            Spesa spesa = new Spesa(
-                    spesaId,
-                    schedaId,
-                    dati.titolo,
-                    dati.importo,
-                    getValutaEffettiva(),
-                    System.currentTimeMillis(),
-                    dati.categoria,
-                    dati.pagatoreId,
-                    null,
-                    SyncStatus.PENDING_INSERT
-            );
+            if (isRimborso) {
+                String paganteNome = binding.menuPagante.getText() != null ? binding.menuPagante.getText().toString() : "";
+                String destinatarioNome = binding.menuDestinatario.getText() != null ? binding.menuDestinatario.getText().toString() : "";
 
-            viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
-            Toast.makeText(requireContext(), R.string.msg_spesa_aggiunta, Toast.LENGTH_SHORT).show();
+                if (paganteNome.equals(destinatarioNome)) {
+                    Toast.makeText(requireContext(), "Il mittente e il destinatario non possono coincidere", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-            if (getParentFragmentManager() != null) {
-                getParentFragmentManager().popBackStack();
+                String daId = null;
+                String aId = null;
+                for (Partecipante p : partecipanti) {
+                    if (p.getNome().equalsIgnoreCase(paganteNome)) daId = p.getId();
+                    if (p.getNome().equalsIgnoreCase(destinatarioNome)) aId = p.getId();
+                }
+
+                if (daId != null && aId != null) {
+                    SpeseViewModel speseVm = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
+                    speseVm.registraPagamento(schedaId, daId, paganteNome, aId, destinatarioNome, importo, getValutaEffettiva());
+                    Toast.makeText(requireContext(), R.string.msg_operazione_completata, Toast.LENGTH_SHORT).show();
+                    if (getParentFragmentManager() != null) {
+                        getParentFragmentManager().popBackStack();
+                    }
+                }
+            } else {
+                String spesaId = UUID.randomUUID().toString();
+                DatiFormValidi dati = validaEdEstraiDatiForm(spesaId, SyncStatus.PENDING_INSERT);
+                if (dati == null) return;
+
+                Spesa spesa = new Spesa(
+                        spesaId,
+                        schedaId,
+                        dati.titolo,
+                        dati.importo,
+                        getValutaEffettiva(),
+                        System.currentTimeMillis(),
+                        dati.categoria,
+                        dati.pagatoreId,
+                        null,
+                        SyncStatus.PENDING_INSERT
+                );
+
+                viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
+                Toast.makeText(requireContext(), R.string.msg_spesa_aggiunta, Toast.LENGTH_SHORT).show();
+
+                if (getParentFragmentManager() != null) {
+                    getParentFragmentManager().popBackStack();
+                }
             }
         });
     }

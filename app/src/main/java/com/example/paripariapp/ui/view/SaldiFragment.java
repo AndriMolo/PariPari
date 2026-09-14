@@ -46,8 +46,17 @@ public class SaldiFragment extends Fragment {
         binding.recyclerBilanci.setAdapter(adapter);
 
         binding.btnStoricoSaldi.setOnClickListener(v -> {
-            StoricoSaldiBottomSheet sheet = StoricoSaldiBottomSheet.newInstance(null);
-            sheet.show(getChildFragmentManager(), "storico_saldi_global");
+            StoricoSaldiFragment fragment = StoricoSaldiFragment.newInstance(null);
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out,
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out
+                    )
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
         });
 
         adapter.setOnItemClickListener(item -> {

@@ -18,10 +18,11 @@
         android:padding="16dp">
 
         <ImageView
+            android:id="@+id/iv_icona_saldo"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_check_circle"
-            app:tint="@color/credit_green"
+            app:tint="?attr/colorPrimary"
             android:contentDescription="@null" />
 
         <LinearLayout
@@ -32,12 +33,22 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/tv_gruppo_saldo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                android:textColor="?attr/colorPrimary"
+                android:textStyle="bold"
+                tools:text="Vacanza Madrid" />
+
+            <TextView
                 android:id="@+id/tv_titolo_saldo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                 android:textStyle="bold"
-                tools:text="Saldo: Mario → Luigi" />
+                tools:text="A Mario Rossi" />
 
             <TextView
                 android:id="@+id/tv_data_saldo"
@@ -62,15 +73,14 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                 android:textStyle="bold"
-                android:textColor="@color/credit_green"
                 tools:text="15,00 €" />
 
             <TextView
+                android:id="@+id/tv_badge_tipo_saldo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/badge_saldato_effettuato"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                android:textColor="@color/credit_green"
                 android:textStyle="bold"
                 android:layout_marginTop="2dp" />
 

@@ -161,7 +161,7 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         binding.btnSegnaSaldato.setOnClickListener(v -> {
             if (schedaId != null && daId != null && aId != null) {
                 SpeseViewModel viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
-                viewModel.registraPagamento(schedaId, daId, aId, importo, valuta);
+                viewModel.registraPagamento(schedaId, daId, daNome, aId, aNome, importo, valuta);
                 Toast.makeText(requireContext(), R.string.msg_operazione_completata, Toast.LENGTH_SHORT).show();
                 dismiss();
             } else {

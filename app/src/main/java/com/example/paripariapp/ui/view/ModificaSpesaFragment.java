@@ -157,7 +157,8 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
 
         binding.campoDescrizione.setText(spesaCorrente.getTitolo());
         binding.campoImporto.setText(String.format(Locale.US, "%.2f", spesaCorrente.getImporto()));
-        binding.campoValuta.setText(spesaCorrente.getValuta() != null ? spesaCorrente.getValuta() : getValutaEffettiva());
+        this.valuta = spesaCorrente.getValuta() != null ? spesaCorrente.getValuta() : getValutaEffettiva();
+        binding.campoValuta.setText(this.valuta);
 
         // Verifica presenza di partecipanti assenti
         Set<String> activeParticipantIds = new HashSet<>();
