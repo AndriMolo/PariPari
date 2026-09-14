@@ -5,6 +5,7 @@
     <item
         android:id="@+id/action_cerca"
         android:icon="@drawable/ic_search"
+        app:iconTint="?attr/colorOnSurface"
         android:title="@string/hint_ricerca_spese"
         app:showAsAction="always|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView" />

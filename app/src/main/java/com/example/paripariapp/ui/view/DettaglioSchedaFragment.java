@@ -347,6 +347,13 @@ public class DettaglioSchedaFragment extends Fragment {
     private void setupRicercaEFiltri() {
         MenuItem searchItem = binding.toolbarDettaglio.getMenu().findItem(R.id.action_cerca);
         if (searchItem != null) {
+            if (searchItem.getIcon() != null) {
+                int colorOnSurface = com.google.android.material.color.MaterialColors.getColor(
+                        binding.toolbarDettaglio, com.google.android.material.R.attr.colorOnSurface);
+                android.graphics.drawable.Drawable tintedIcon = androidx.core.graphics.drawable.DrawableCompat.wrap(searchItem.getIcon().mutate());
+                androidx.core.graphics.drawable.DrawableCompat.setTint(tintedIcon, colorOnSurface);
+                searchItem.setIcon(tintedIcon);
+            }
             SearchView searchView = (SearchView) searchItem.getActionView();
             if (searchView != null) {
                 searchView.setQueryHint(getString(R.string.hint_ricerca_spese));
