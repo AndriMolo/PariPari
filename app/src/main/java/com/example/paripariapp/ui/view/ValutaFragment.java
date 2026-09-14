@@ -7,8 +7,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,7 +17,6 @@ import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.databinding.FragmentValutaBinding;
 import com.example.paripariapp.ui.viewmodel.ValutaViewModel;
 
-import java.util.List;
 
 /**
  * Fragment della pagina "Conversione Valuta".

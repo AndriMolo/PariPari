@@ -24,8 +24,6 @@ import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseUser;
 
 /**

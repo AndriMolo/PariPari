@@ -18,7 +18,6 @@ import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.SyncStatus;
-import com.example.paripariapp.data.repository.CurrencyRepository;
 import com.example.paripariapp.databinding.FragmentModificaRimborsoBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;

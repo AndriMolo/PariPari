@@ -198,7 +198,7 @@ public class DettaglioRimborsoFragment extends Fragment {
         Spesa spesa = spesaCorrente.getSpesa();
 
         // 1. Badge Categoria
-        binding.tvCategoriaDettaglio.setText("💳 " + getString(R.string.cat_rimborsi));
+        binding.tvCategoriaDettaglio.setText(getString(R.string.format_categoria_rimborso, getString(R.string.cat_rimborsi)));
 
         // 2. Titolo
         binding.tvTitoloDettaglio.setText(spesa.getTitolo());

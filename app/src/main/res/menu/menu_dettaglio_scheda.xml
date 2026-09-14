@@ -7,7 +7,7 @@
         android:icon="@drawable/ic_search"
         app:iconTint="?attr/colorOnSurface"
         android:title="@string/hint_ricerca_spese"
-        app:showAsAction="always|collapseActionView"
+        app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView" />
 
     <item

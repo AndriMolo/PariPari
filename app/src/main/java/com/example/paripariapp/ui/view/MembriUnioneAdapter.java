@@ -49,10 +49,16 @@ public class MembriUnioneAdapter extends ListAdapter<MembroGruppoPreview, Membri
 
     private final OnMembroSelectedListener listener;
     private int selectedPosition = RecyclerView.NO_POSITION;
+    @Nullable
+    private String currentUid;
 
     public MembriUnioneAdapter(OnMembroSelectedListener listener) {
         super(DIFF_CALLBACK);
         this.listener = listener;
+    }
+
+    public void setCurrentUid(@Nullable String currentUid) {
+        this.currentUid = currentUid;
     }
 
     public void setMembri(List<MembroGruppoPreview> nuoviMembri) {
@@ -65,6 +71,20 @@ public class MembriUnioneAdapter extends ListAdapter<MembroGruppoPreview, Membri
             int oldPos = selectedPosition;
             selectedPosition = RecyclerView.NO_POSITION;
             notifyItemChanged(oldPos);
+        }
+    }
+
+    public void selectMemberById(@Nullable String id) {
+        if (id == null) return;
+        for (int i = 0; i < getItemCount(); i++) {
+            MembroGruppoPreview m = getItem(i);
+            if (m != null && id.equals(m.getId())) {
+                int prev = selectedPosition;
+                selectedPosition = i;
+                if (prev != RecyclerView.NO_POSITION) notifyItemChanged(prev);
+                notifyItemChanged(selectedPosition);
+                break;
+            }
         }
     }
 
@@ -123,7 +143,7 @@ public class MembriUnioneAdapter extends ListAdapter<MembroGruppoPreview, Membri
                 int pos = getBindingAdapterPosition();
                 if (pos != RecyclerView.NO_POSITION && pos < getItemCount()) {
                     MembroGruppoPreview m = getItem(pos);
-                    if (m != null && m.isSostituibile()) {
+                    if (m != null && m.isSelezionabileDa(currentUid)) {
                         int prevPos = selectedPosition;
                         selectedPosition = pos;
                         if (prevPos != RecyclerView.NO_POSITION) notifyItemChanged(prevPos);
@@ -145,7 +165,35 @@ public class MembriUnioneAdapter extends ListAdapter<MembroGruppoPreview, Membri
             String initial = (!nome.isEmpty()) ? String.valueOf(nome.charAt(0)).toUpperCase(Locale.getDefault()) : "?";
             binding.tvAvatarInitial.setText(initial);
 
-            if (!membro.isSostituibile()) {
+            boolean isMine = membro.isMyProfile(currentUid);
+
+            if (isMine) {
+                // Il profilo dell'utente: evidenziato e pienamente selezionabile
+                binding.cardMembro.setAlpha(1.0f);
+                binding.cardMembro.setClickable(true);
+                binding.cardMembro.setFocusable(true);
+
+                binding.containerAvatar.setBackgroundResource(R.drawable.bg_circle_avatar);
+                binding.tvAvatarInitial.setTextColor(colorOnPrimaryContainer);
+                binding.tvNomeMembro.setTextColor(colorOnSurface);
+                binding.tvStatoMembro.setVisibility(View.VISIBLE);
+                binding.tvStatoMembro.setText(R.string.stato_tuo_profilo);
+                binding.tvStatoMembro.setTextColor(colorPrimary);
+
+                binding.ivLockedStatus.setVisibility(View.GONE);
+                binding.rbSelezioneMembro.setVisibility(View.VISIBLE);
+                binding.rbSelezioneMembro.setChecked(isSelected);
+
+                if (isSelected) {
+                    binding.cardMembro.setStrokeWidth(strokeWidthPx2);
+                    binding.cardMembro.setStrokeColor(colorPrimary);
+                    binding.cardMembro.setCardBackgroundColor(colorSurfaceVariant);
+                } else {
+                    binding.cardMembro.setStrokeWidth(strokeWidthPx1);
+                    binding.cardMembro.setStrokeColor(colorPrimary);
+                    binding.cardMembro.setCardBackgroundColor(colorSurface);
+                }
+            } else if (!membro.isSostituibile()) {
                 // Membro già autenticato / bloccato: stile grigio attenuato, non cliccabile
                 binding.cardMembro.setAlpha(0.38f);
                 binding.cardMembro.setClickable(false);
@@ -160,6 +208,7 @@ public class MembriUnioneAdapter extends ListAdapter<MembroGruppoPreview, Membri
 
                 binding.tvStatoMembro.setVisibility(View.VISIBLE);
                 binding.tvStatoMembro.setText(R.string.stato_gia_registrato);
+                binding.tvStatoMembro.setTextColor(colorOutline);
 
                 binding.ivLockedStatus.setVisibility(View.VISIBLE);
                 binding.rbSelezioneMembro.setVisibility(View.GONE);

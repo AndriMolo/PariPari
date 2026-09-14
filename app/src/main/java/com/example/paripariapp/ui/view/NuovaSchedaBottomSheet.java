@@ -91,7 +91,7 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         if (binding == null || selectedCurrencyCode == null) return;
         String flag = com.example.paripariapp.data.repository.UserPreferencesRepository.getCurrencyFlag(selectedCurrencyCode);
         String displayItem = com.example.paripariapp.data.repository.UserPreferencesRepository.getDisplayItemForCode(selectedCurrencyCode);
-        binding.etValutaScheda.setText(flag + " " + displayItem);
+        binding.etValutaScheda.setText(getString(R.string.format_categoria_con_emoji, flag, displayItem));
     }
 
     private void mostraSelettoreValuta() {

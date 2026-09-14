@@ -20,7 +20,7 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.util.AppSnackbar;
-import com.example.paripariapp.util.CalcolatoreSaldi;
+import com.example.paripariapp.util.ImportoUtil;
 import com.example.paripariapp.util.CalcolatriceEspressioniUtil;
 import com.example.paripariapp.util.CategoriaUtil;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
@@ -383,7 +383,7 @@ public abstract class BaseSpesaFragment extends Fragment {
             if (tv == null) continue;
 
             if (cb != null && cb.isChecked()) {
-                tv.setText(String.format(Locale.getDefault(), "%.2f %s", quotaSingola, valutaStr));
+                tv.setText(ImportoUtil.formatta(quotaSingola, valutaStr));
                 if (getContext() != null) {
                     tv.setTextColor(requireContext().getColor(R.color.md_theme_primary));
                 }
@@ -408,7 +408,7 @@ public abstract class BaseSpesaFragment extends Fragment {
                 et.setText(String.format(Locale.US, "%.1f", val != null ? val : 0.0));
                 et.setEnabled(true);
             } else {
-                et.setText("0.0");
+                et.setText(String.format(Locale.US, "%.1f", 0.0));
                 et.setEnabled(false);
             }
         }
@@ -427,7 +427,7 @@ public abstract class BaseSpesaFragment extends Fragment {
                 et.setText(String.format(Locale.US, "%.2f", val != null ? val : 0.0));
                 et.setEnabled(true);
             } else {
-                et.setText("0.00");
+                et.setText(String.format(Locale.US, "%.2f", 0.0));
                 et.setEnabled(false);
             }
         }

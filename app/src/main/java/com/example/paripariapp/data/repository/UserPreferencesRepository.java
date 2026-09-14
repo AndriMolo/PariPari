@@ -515,6 +515,11 @@ public class UserPreferencesRepository {
     public static String generateRevolutLink(String handle, double importo, String valuta) {
         String clean = cleanRevolutHandle(handle);
         if (clean.isEmpty()) return "";
-        return "https://revolut.me/" + clean;
+        if (importo <= 0) {
+            return "https://revolut.me/" + clean;
+        }
+        String formattedAmount = String.format(Locale.US, "%.2f", importo);
+        String code = (valuta != null && !valuta.trim().isEmpty()) ? valuta.trim().toUpperCase(Locale.ROOT) : "EUR";
+        return "https://revolut.me/" + clean + "?amount=" + formattedAmount + "&currency=" + code;
     }
 }

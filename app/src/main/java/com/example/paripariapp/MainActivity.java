@@ -3,8 +3,6 @@ package com.example.paripariapp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
-
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -12,17 +10,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProvider;
 
-import com.example.paripariapp.data.repository.PariPariRepository;
 import com.example.paripariapp.databinding.ActivityMainBinding;
 import com.example.paripariapp.ui.view.AccountFragment;
 import com.example.paripariapp.ui.view.DettaglioSchedaActivity;
 import com.example.paripariapp.ui.view.SaldiFragment;
 import com.example.paripariapp.ui.view.SpeseFragment;
 import com.example.paripariapp.ui.view.ValutaFragment;
-import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**
  * Activity principale dell'app PariPari.

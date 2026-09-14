@@ -91,9 +91,24 @@ public class MembroGruppoPreview implements Serializable {
     }
 
     /**
+     * Verifica se questo profilo corrisponde all'utente corrente tramite match rigoroso ed esclusivo su userId o previousUserId.
+     */
+    public boolean isMyProfile(@Nullable String currentUid) {
+        if (currentUid == null || currentUid.trim().isEmpty()) return false;
+        return currentUid.equals(userId) || currentUid.equals(previousUserId);
+    }
+
+    /**
      * Verifica se questo profilo corrisponde al precedente profilo dell'utente corrente per il re-link automatico.
      */
     public boolean isMyPreviousProfile(@Nullable String currentUid) {
         return currentUid != null && currentUid.equals(previousUserId);
+    }
+
+    /**
+     * Determina se l'utente può selezionare questo membro: o è libero/sostituibile, oppure appartiene già all'utente stesso.
+     */
+    public boolean isSelezionabileDa(@Nullable String currentUid) {
+        return isSostituibile() || isMyProfile(currentUid);
     }
 }

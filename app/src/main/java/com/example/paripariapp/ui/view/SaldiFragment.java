@@ -14,11 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.BilancioPersonaItem;
 import com.example.paripariapp.databinding.FragmentSaldiBinding;
+import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class SaldiFragment extends Fragment {
 
@@ -61,11 +61,16 @@ public class SaldiFragment extends Fragment {
 
         adapter.setOnItemClickListener(item -> {
             if (item != null && item.getTrasferimentoSaldo() != null) {
+                // Se l'utente corrente è il creditore, passiamo i suoi handle locali
+                // così il bottom sheet può mostrare i link PayPal/Revolut con importo.
+                UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(requireContext());
+                String paypalHandle = item.isCredito() ? prefs.getPaypalHandle() : "";
+                String revolutHandle = item.isCredito() ? prefs.getRevolutHandle() : "";
                 InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
                         item.getTrasferimentoSaldo(),
                         item.getSchedaId(),
-                        "",
-                        ""
+                        paypalHandle,
+                        revolutHandle
                 );
                 sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
             }

@@ -24,7 +24,6 @@ import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import java.util.Locale;
 
 /**
  * BottomSheet per l'avvio dei pagamenti, saldi tra utenti e condivisione dei link PayPal/Revolut.
@@ -132,7 +131,7 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         } else {
             // Saldo generico tra altri partecipanti
             binding.tvTitoloPagamento.setText(R.string.titolo_bottom_sheet_pagamento);
-            binding.tvDescrizioneSaldo.setText(getString(R.string.saldi_descrizione_trasferimento, daNomePulito, aNomePulito) + " (" + strImportoValuta + ")");
+            binding.tvDescrizioneSaldo.setText(getString(R.string.saldi_descrizione_trasferimento_con_importo, daNomePulito, aNomePulito, strImportoValuta));
         }
 
         if (!TextUtils.isEmpty(creditorePaypalHandle)) {

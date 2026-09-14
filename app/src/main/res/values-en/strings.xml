@@ -10,7 +10,6 @@
     <string name="nav_account">Account</string>
 
     <!-- Titoli Schermate -->
-    <string name="title_schede_spese">Expense Groups</string>
     <string name="title_saldi">My Balances</string>
     <string name="title_valuta">Convert Currency</string>
     <string name="title_account">My Account</string>
@@ -28,7 +27,6 @@
 
     <!-- Preferenza Tema -->
     <string name="label_tema_app">Application theme</string>
-    <string name="hint_tema_app_desc">Light, Dark, or System default</string>
     <string name="tema_sistema">System default</string>
     <string name="tema_chiaro">Light</string>
     <string name="tema_scuro">Dark</string>
@@ -46,22 +44,15 @@
     <string name="error_nome_scheda_obbligatorio">Please enter a group name</string>
     <string name="empty_schede_titolo">No groups yet</string>
     <string name="empty_schede_desc">Tap the button below to create your first expense group with friends.</string>
-    <string name="partecipante_io">Me</string>
-    <string name="msg_scheda_creata">Group created successfully!</string>
-    <string name="valuta_eur">EUR</string>
     <string name="valuta_default">EUR</string>
     <string name="nome_gruppo_default">Group</string>
 
     <!-- Spese Fragment & Unisciti Gruppo -->
     <string name="titolo_spese">Groups</string>
-    <string name="btn_entra_testo">Join with code</string>
-    <string name="dialog_entra">Join a Group</string>
     <string name="dialog_titolo">Enter the alphanumeric invite code to sync expenses with your friends.</string>
     <string name="sugg_code">Invite code</string>
-    <string name="dialog_partecipate">Join</string>
     <string name="dialog_cancel">Cancel</string>
     <string name="error_codice_non_valido">Invalid code</string>
-    <string name="msg_gruppo_eliminato">Group deleted</string>
 
     <!-- Gestione Plurali Partecipanti -->
     <plurals name="label_partecipanti_count">
@@ -70,17 +61,12 @@
     </plurals>
 
     <!-- Saldi -->
-    <string name="label_saldo_netto">Net balance</string>
-    <string name="default_saldo_zero">€ 0.00</string>
-    <string name="label_ti_devono">You are owed</string>
-    <string name="label_devi_tu">You owe</string>
 
     <!-- Convertitore Valuta -->
     <string name="label_importo">Amount</string>
     <string name="label_valuta_da">From currency</string>
     <string name="label_valuta_a">To currency</string>
     <string name="btn_inverti">⇅ Invert</string>
-    <string name="btn_converti">Convert</string>
     <string name="label_risultato">Result</string>
     <string name="placeholder_risultato">-</string>
     <string name="tassi_bce_aggiornati">ECB rates updated: %s</string>
@@ -90,7 +76,7 @@
 
     <!-- Selettore Valuta Bottom Sheet -->
     <string name="title_seleziona_valuta">Select currency</string>
-    <string name="hint_cerca_valuta">Search currency or code...</string>
+    <string name="hint_cerca_valuta">Search currency or code…</string>
     <string name="label_valute_frequenti">Most used</string>
     <string name="label_tutte_le_valute">All ECB currencies</string>
     <string name="empty_valute_ricerca">No currencies found</string>
@@ -114,7 +100,6 @@
     <string name="switch_to_login">Already have an account? Log in</string>
     <string name="switch_to_register">Don\'t have an account? Sign up</string>
     <string name="btn_logout">Log Out</string>
-    <string name="label_account_attivo">Active Account</string>
     <string name="default_nome_utente">Username</string>
     <string name="default_email_utente">email@example.com</string>
 
@@ -128,34 +113,19 @@
     <string name="msg_logout_ok">Logged out. You are now in guest mode.</string>
 
     <!-- Preferenze Account -->
-    <string name="section_preferenze">Preferences</string>
     <string name="label_valuta_predefinita">Default currency</string>
-    <string name="hint_valuta_predefinita_desc">Used for newly created groups</string>
     <string name="msg_valuta_aggiornata">Default currency set to %s</string>
     <string name="label_lingua_app">App language</string>
-    <string name="hint_lingua_app_desc">Language and number format</string>
     <string name="msg_lingua_aggiornata">Language set to %s</string>
     <string name="lingua_sistema">System default</string>
 
     <!-- Dettaglio Scheda & Toolbar -->
-    <string name="cd_torna_indietro">Go back</string>
-    <string name="cd_modifica_nome_scheda">Edit group name</string>
-    <string name="cd_elimina_scheda">Delete group</string>
     <string name="dialog_titolo_modifica_scheda">Edit group name</string>
     <string name="dialog_hint_nome_scheda">Group name</string>
-    <string name="dialog_titolo_elimina_scheda">Delete card</string>
-    <string name="dialog_msg_elimina_scheda">Are you sure you want to delete this card? All associated expenses will be removed from your device.</string>
-    <string name="dialog_msg_elimina_scheda_con_saldi">Warning: you still have open balances in this card. Deleting it, the card will be removed from your device and its balances will no longer be calculated in your total. Do you want to proceed?</string>
     <string name="msg_scheda_eliminata">Group deleted</string>
     <string name="label_totale_spese">Total expenses</string>
-    <string name="label_partecipanti_formato">Members: %s</string>
 
     <!-- Azioni Scheda (Invita & Gestisci) -->
-    <string name="btn_invita">Invite</string>
-    <string name="btn_gestisci_gruppo">Manage</string>
-    <string name="msg_codice_invito_titolo">Join my group on PariPari!</string>
-    <string name="msg_codice_invito_body">Use this code to join the group \"%1$s\" on PariPari: %2$s</string>
-    <string name="condividi_con">Share invite code via</string>
     <string name="dialog_titolo_gestione_gruppo">Group members</string>
     <string name="msg_conferma_rimuovi_membro">Do you want to remove %s from the group?</string>
     <string name="btn_rimuovi">Remove</string>
@@ -165,7 +135,6 @@
     <string name="msg_errore_eliminazione_scheda_saldi">Cannot delete or leave this group: you have unsettled expenses or balances. Settle your balances inside the group before deleting it.</string>
     <string name="titolo_esci_gruppo">Leave group</string>
     <string name="msg_conferma_esci_gruppo">Are you sure you want to leave this group?</string>
-    <string name="msg_conferma_esci_gruppo_debiti">Warning: you have pending expenses or balances in this group. Are you sure you want to leave anyway?</string>
     <string name="btn_esci">Leave</string>
     <string name="msg_sei_uscito_dal_gruppo">You left the group</string>
     <string name="msg_sei_stato_rimosso_dal_gruppo">You were removed from the group</string>
@@ -182,14 +151,9 @@
     <string name="title_nuova_spesa">New Expense</string>
     <string name="hint_descrizione_spesa">Description (e.g., Dinner, Taxi)</string>
     <string name="hint_importo_spesa">Amount</string>
-    <string name="label_chi_ha_pagato">Who paid?</string>
     <string name="btn_salva_spesa">Add Expense</string>
-    <string name="msg_spesa_aggiunta">Expense added successfully!</string>
     <string name="error_descrizione_spesa">Please enter an expense description</string>
     <string name="error_importo_spesa">Please enter an amount greater than zero</string>
-    <string name="error_nessun_pagatore">Select who paid</string>
-    <string name="label_pagato_da">Paid by %s</string>
-    <string name="label_divisione_equa">Split among %d people</string>
     <string name="cat_cibo">Food</string>
     <string name="cat_spesa">Groceries</string>
     <string name="cat_trasporti">Transport</string>
@@ -218,7 +182,6 @@
     <string name="pdf_th_categoria">CATEGORY</string>
     <string name="pdf_th_pagante">PAID BY</string>
     <string name="pdf_th_importo">AMOUNT</string>
-    <string name="pdf_formato_importo">%1$.2f %2$s</string>
 
     <!-- Tasti e Azioni Generiche -->
     <string name="btn_salva">Save</string>
@@ -238,12 +201,8 @@
     <string name="divisione_equa">Equal</string>
     <string name="divisione_percentuale">Percentage</string>
     <string name="divisione_parti">By parts</string>
-    <string name="spesa_quota_valuta">%1$.2f %2$s</string>
     <string name="spesa_escluso">Excluded</string>
-    <string name="spesa_quote_esatte">Custom / percentage split</string>
-    <string name="spesa_quota">Share / %</string>
     <string name="spesa_salva">Save expense</string>
-    <string name="spesa_errore_somma_quote">Total shares (%1$.2f) do not match total amount (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Select at least one member for this expense</string>
     <string name="errore_mittente_destinatario_uguali">Sender and recipient cannot be the same</string>
     <string name="label_data_spesa">Date</string>
@@ -251,9 +210,7 @@
     <!-- Gestione Membri -->
     <string name="dettaglio_rinomina_partecipante">Rename member</string>
     <string name="dettaglio_elimina_partecipante">Delete member</string>
-    <string name="dialog_titolo_rinomina">Rename member</string>
     <string name="dialog_titolo_modifica_nome_profilo">Edit profile name</string>
-    <string name="dialog_titolo_modifica_mio_nome">Edit your name in the group</string>
     <string name="msg_nome_aggiornato_successo">Name updated successfully</string>
     <string name="msg_permesso_negato_modifica_nome">You can only edit your own name or members\' names if you are group leader.</string>
     <string name="msg_permesso_negato_modifica_nome_altri">You can only edit your own name.</string>
@@ -272,12 +229,9 @@
     </plurals>
 
     <!-- Saldi -->
-    <string name="titolo_dialog_saldi">Balances and Settlements</string>
-    <string name="saldi_tutti_in_pari">All debts are settled!</string>
     <string name="saldi_formato_importo">%1$.2f %2$s</string>
     <string name="saldi_descrizione_trasferimento">%1$s owes %2$s</string>
     <string name="btn_chiudi">Close</string>
-    <string name="spesa_errore_somma_percentuali">Percentages must total 100%% (current: %.1f%%)</string>
     <string name="lbl_nome_partecipante">Member Name</string>
 
     <!-- Navigazione interna alla Scheda -->
@@ -301,18 +255,12 @@
     <string name="btn_lascia">Leave</string>
 
     <!-- Dettagli spesa nell'adapter -->
-    <string name="spesa_formato_dettagli">Paid by %1$s • Split among %2$d</string>
     <string name="format_handle">"@%1$s"</string>
     <string name="msg_errore_apertura_link">Could not open link</string>
     <string name="title_condividi">Share</string>
-    <string name="msg_operazione_completata">Operation completed</string>
 
     <!-- Saldi Globale -->
-    <string name="label_da_ricevere">To receive</string>
-    <string name="label_da_dare">To pay</string>
     <string name="saldi_nessun_debito">No active debts or credits!</string>
-    <string name="saldi_devi_a">You owe %1$s (%2$s)</string>
-    <string name="saldi_ti_deve">%1$s owes you (%2$s)</string>
 
     <string name="dettaglio_persone_lbl">People Breakdown</string>
     <string name="da_ricevere_lbl">◉ To receive</string>
@@ -321,13 +269,7 @@
 
     <!-- Modifica Spesa & Stato Pagamenti -->
     <string name="spesa_modifica_titolo">Edit Expense</string>
-    <string name="spesa_quota_pagata">Already paid</string>
-    <string name="spesa_saldo_da_pagare">Remaining: %1$.2f %2$s</string>
-    <string name="spesa_saldo_rimborso">To refund: %1$.2f %2$s</string>
-    <string name="spesa_saldo_saldato">Settled</string>
     <string name="btn_elimina_spesa">Delete expense</string>
-    <string name="msg_spesa_aggiornata">Expense updated successfully!</string>
-    <string name="msg_spesa_eliminata">Expense deleted successfully!</string>
     <string name="dialog_titolo_elimina_spesa">Delete expense</string>
     <string name="dialog_msg_elimina_spesa">Are you sure you want to delete this expense? This action cannot be undone.</string>
 
@@ -341,25 +283,14 @@
     <string name="label_inquadra_fotocamera">Scan with camera to join</string>
     <string name="desc_qr_code">QR code with invite link</string>
     <string name="msg_invito_condivisione">Join my group \"%1$s\" on PariPari!\n\nTap the link to join directly:\n%2$s\n\nOr enter the invite code: %3$s</string>
-    <string name="dialog_titolo_conferma_unione">Join group</string>
-    <string name="dialog_msg_conferma_unione">Do you want to join the group with code %1$s?</string>
-    <string name="btn_unisciti">Join</string>
     <string name="msg_unione_successo">You joined %1$s!</string>
-    <string name="msg_ricerca_gruppo">Searching group…</string>
 
     <!-- Verifica Email -->
     <string name="label_verifica_email">Email verification</string>
-    <string name="desc_email_non_verificata">Tap to verify or resend link</string>
-    <string name="desc_email_verificata">Your email address is verified</string>
     <string name="badge_non_verificata">Not verified</string>
     <string name="badge_verificata">Verified</string>
-    <string name="dialog_titolo_verifica_email">Verify your email address</string>
-    <string name="dialog_msg_verifica_email">We sent a confirmation email to:\n\n%1$s\n\nClick the link in your inbox to verify your account.</string>
-    <string name="btn_reinvia_email">Resend email</string>
-    <string name="btn_controlla_stato">Check status</string>
     <string name="msg_email_verifica_inviata">Email resent! Check your spam folder.</string>
     <string name="msg_email_gia_verificata">Your email is already verified!</string>
-    <string name="msg_email_non_ancora_verificata">Email is not verified yet. Check your inbox or resend link.</string>
     <string name="msg_email_confermata_successo">Email successfully verified!</string>
     <string name="msg_profilo_aggiornato">Profile updated!</string>
     <string name="msg_errore_invio_email">Error sending verification email</string>
@@ -391,14 +322,8 @@
     <!-- Payment Methods (PayPal & Revolut) -->
     <string name="section_metodi_pagamento">Payment Methods</string>
     <string name="label_paypal_username">PayPal.me Account</string>
-    <string name="hint_paypal_username_desc">Share a direct paypal.me/username link</string>
     <string name="label_revolut_username">Revolut.me Account</string>
-    <string name="hint_revolut_username_desc">Share a direct revolut.me/username link</string>
     <string name="badge_non_configurato">Not configured</string>
-    <string name="dialog_titolo_paypal">Configure PayPal.me</string>
-    <string name="dialog_desc_paypal">Enter your PayPal.me username:</string>
-    <string name="dialog_titolo_revolut">Configure Revolut.me</string>
-    <string name="dialog_desc_revolut">Enter your Revolut.me username:</string>
     <string name="hint_paypal_tag">Handle PayPal.me</string>
     <string name="hint_revolut_tag">Handle Revolut.me</string>
     <string name="helper_paypal">Username only, without paypal.me/</string>
@@ -412,14 +337,11 @@
     <string name="desc_salda_debito">You owe %1$s to %2$s.</string>
     <string name="desc_richiedi_pagamento">%1$s owes you %2$s.</string>
     <string name="titolo_bottom_sheet_pagamento">Settle Debt</string>
-    <string name="desc_bottom_sheet_pagamento">Share a payment link or mark as settled %1$s.</string>
-    <string name="btn_invia_link_pagamento">Send payment link</string>
     <string name="opzione_paypal">PayPal.me Payment</string>
     <string name="opzione_revolut">Revolut.me Payment</string>
     <string name="btn_condividi">Share</string>
     <string name="btn_copia_link">Copy Link</string>
     <string name="btn_segna_saldato">✔ Mark as settled</string>
-    <string name="msg_saldo_registrato">Settlement of %1$s between %2$s and %3$s marked as paid!</string>
     <string name="msg_link_copiato">Payment link copied to clipboard</string>
     <string name="msg_condividi_mio_paypal">Hi %1$s! Here is my PayPal link to settle %2$s on PariPari:\n%3$s</string>
     <string name="msg_condividi_mio_revolut">Hi %1$s! Here is my Revolut link to settle %2$s on PariPari:\n%3$s</string>
@@ -431,7 +353,6 @@
     <!-- Settlement History -->
     <string name="btn_storico_saldi">History</string>
     <string name="titolo_storico_saldi">Settlement History</string>
-    <string name="subtitolo_storico_saldi">List of all settled balances</string>
     <string name="empty_storico_saldi_titolo">No settlement history</string>
     <string name="empty_storico_saldi_desc">Paid settlements and refunds will appear here.</string>
     <string name="badge_saldato_effettuato">✔ Settled</string>
@@ -443,11 +364,11 @@
     <string name="btn_cerca_scheda">Find Group</string>
     <string name="label_chi_sei_nel_gruppo">Who are you in this group?</string>
     <string name="stato_gia_registrato">Already registered</string>
+    <string name="stato_tuo_profilo">Your profile</string>
     <string name="opzione_nuovo_membro_titolo">Join as a new member</string>
     <string name="btn_entra_come">Join as %s</string>
     <string name="btn_aggiungiti_gruppo">Join group</string>
     <string name="btn_seleziona_chi_sei">Select who you are</string>
-    <string name="desc_utente_autenticato">Authenticated user</string>
     <string name="btn_conferma_unione">Confirm and Join</string>
 
     <!-- Current user account identification -->
@@ -457,9 +378,6 @@
     <string name="titolo_partecipanti_quote">Participants and Shares</string>
     <string name="titolo_dettaglio_spesa">Expense Details</string>
     <string name="label_speso_da_me">Spent by me</string>
-    <string name="titolo_annulla_pareggio">Cancel Settlement</string>
-    <string name="msg_conferma_annulla_pareggio">Do you want to cancel this settlement? Balances will be recalculated automatically.</string>
-    <string name="btn_annulla_pareggio">Cancel settlement</string>
     <string name="storico_pagamento_inviato">to %s</string>
     <string name="storico_pagamento_ricevuto">from %s</string>
     <string name="badge_inviato">sent</string>
@@ -485,6 +403,10 @@
     <string name="format_da_chi_pagato">Paid by: %s</string>
     <string name="format_chi_riceve">Received by: %s</string>
     <string name="cat_rimborsi">Reimbursements</string>
+    <string name="format_categoria_rimborso">💳 %s</string>
+    <string name="format_categoria_con_emoji">%1$s %2$s</string>
+    <string name="format_spesa_pagata_da">Paid by: %s</string>
+    <string name="saldi_descrizione_trasferimento_con_importo">%1$s owes %2$s (%3$s)</string>
     <string name="dialog_titolo_elimina_rimborso">Delete reimbursement</string>
     <string name="dialog_msg_elimina_rimborso">Are you sure you want to delete this reimbursement? Balances will be recalculated automatically.</string>
 

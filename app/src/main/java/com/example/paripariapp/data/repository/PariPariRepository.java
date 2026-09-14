@@ -2,7 +2,6 @@ package com.example.paripariapp.data.repository;
 
 import android.app.Application;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;

@@ -37,6 +37,44 @@ public class GruppoPreviewAndClaimTest {
     }
 
     @Test
+    public void testMembroGruppoPreview_relinkEsclusivoUserId() {
+        MembroGruppoPreview mioMembro = new MembroGruppoPreview(
+                "p-1", "scheda-1", "Marco", "marco@test.com", "uid-owner-123", null, "ATTIVO", true
+        );
+        MembroGruppoPreview mioVecchioMembro = new MembroGruppoPreview(
+                "p-2", "scheda-1", "Marco Vecchio", null, null, "uid-migrated-456", "ATTIVO", false
+        );
+        MembroGruppoPreview altroUtente = new MembroGruppoPreview(
+                "p-3", "scheda-1", "Giulia", "giulia@test.com", "uid-other-789", null, "ATTIVO", true
+        );
+        MembroGruppoPreview omonimoAnonimo = new MembroGruppoPreview(
+                "p-4", "scheda-1", "Marco", null, null, null, "ATTIVO", false
+        );
+
+        // Match rigoroso su userId
+        assertTrue(mioMembro.isMyProfile("uid-owner-123"));
+        assertFalse(mioMembro.isMyProfile("uid-other-789"));
+        assertFalse(mioMembro.isMyProfile(null));
+
+        // Match su previousUserId
+        assertTrue(mioVecchioMembro.isMyProfile("uid-migrated-456"));
+        assertFalse(mioVecchioMembro.isMyProfile("uid-owner-123"));
+
+        // Membro di un altro utente: NON è mio profilo
+        assertFalse(altroUtente.isMyProfile("uid-owner-123"));
+
+        // Omonimo con stesso nome ("Marco") ma userId nullo: NON è mio profilo (no euristiche di nome!)
+        assertFalse(omonimoAnonimo.isMyProfile("uid-owner-123"));
+
+        // Selezionabilità: il mio profilo è sempre selezionabile da me
+        assertTrue(mioMembro.isSelezionabileDa("uid-owner-123"));
+        // Il profilo di un altro NON è selezionabile da me
+        assertFalse(altroUtente.isSelezionabileDa("uid-owner-123"));
+        // L'anonimo libero è selezionabile (subentro)
+        assertTrue(omonimoAnonimo.isSelezionabileDa("uid-owner-123"));
+    }
+
+    @Test
     public void testGruppoPreview_costruzioneEFiltraggio() {
         List<MembroGruppoPreview> membri = new ArrayList<>();
         membri.add(new MembroGruppoPreview("p1", "scheda-123", "Mario", "mario@email.com", "uid-1", null, "ATTIVO", true));

@@ -10,7 +10,6 @@
     <string name="nav_account">Account</string>
 
     <!-- Titoli Schermate -->
-    <string name="title_schede_spese">Schede Spese</string>
     <string name="title_saldi">I miei Saldi</string>
     <string name="title_valuta">Converti Valuta</string>
     <string name="title_account">Il mio Account</string>
@@ -28,7 +27,6 @@
 
     <!-- Preferenza Tema -->
     <string name="label_tema_app">Tema dell\'applicazione</string>
-    <string name="hint_tema_app_desc">Chiaro, Scuro o Predefinito di sistema</string>
     <string name="tema_sistema">Predefinita di sistema</string>
     <string name="tema_chiaro">Chiaro</string>
     <string name="tema_scuro">Scuro</string>
@@ -46,22 +44,15 @@
     <string name="error_nome_scheda_obbligatorio">Inserisci il nome della scheda</string>
     <string name="empty_schede_titolo">Nessuna scheda presente</string>
     <string name="empty_schede_desc">Tocca il pulsante qui sotto per creare la tua prima scheda spese con gli amici.</string>
-    <string name="partecipante_io">Io</string>
-    <string name="msg_scheda_creata">Scheda creata con successo!</string>
-    <string name="valuta_eur">EUR</string>
     <string name="valuta_default">EUR</string>
     <string name="nome_gruppo_default">Gruppo</string>
 
     <!-- Spese Fragment & Unisciti Gruppo -->
     <string name="titolo_spese">Gruppi</string>
-    <string name="btn_entra_testo">Entra con codice</string>
-    <string name="dialog_entra">Entra in un Gruppo</string>
     <string name="dialog_titolo">Inserisci il codice invito alfanumerico per sincronizzare le spese con i tuoi amici.</string>
     <string name="sugg_code">Codice invito</string>
-    <string name="dialog_partecipate">Partecipa</string>
     <string name="dialog_cancel">Annulla</string>
     <string name="error_codice_non_valido">Codice non Valido</string>
-    <string name="msg_gruppo_eliminato">Gruppo Eliminato</string>
 
     <!-- Gestione Plurali Partecipanti -->
     <plurals name="label_partecipanti_count">
@@ -70,17 +61,12 @@
     </plurals>
 
     <!-- Saldi -->
-    <string name="label_saldo_netto">Saldo netto</string>
-    <string name="default_saldo_zero">€ 0,00</string>
-    <string name="label_ti_devono">Ti devono</string>
-    <string name="label_devi_tu">Devi tu</string>
 
     <!-- Convertitore Valuta -->
     <string name="label_importo">Importo</string>
     <string name="label_valuta_da">Da valuta</string>
     <string name="label_valuta_a">A valuta</string>
     <string name="btn_inverti">⇅ Inverti</string>
-    <string name="btn_converti">Converti</string>
     <string name="label_risultato">Risultato</string>
     <string name="placeholder_risultato">-</string>
     <string name="tassi_bce_aggiornati">Tassi BCE aggiornati al: %s</string>
@@ -90,7 +76,7 @@
 
     <!-- Selettore Valuta Bottom Sheet -->
     <string name="title_seleziona_valuta">Seleziona valuta</string>
-    <string name="hint_cerca_valuta">Cerca valuta o codice...</string>
+    <string name="hint_cerca_valuta">Cerca valuta o codice…</string>
     <string name="label_valute_frequenti">Più utilizzate</string>
     <string name="label_tutte_le_valute">Tutte le valute BCE</string>
     <string name="empty_valute_ricerca">Nessuna valuta trovata</string>
@@ -114,7 +100,6 @@
     <string name="switch_to_login">Hai già un account? Accedi</string>
     <string name="switch_to_register">Non hai un account? Registrati</string>
     <string name="btn_logout">Disconnetti</string>
-    <string name="label_account_attivo">Account Attivo</string>
     <string name="default_nome_utente">Nome Utente</string>
     <string name="default_email_utente">email@esempio.com</string>
 
@@ -128,34 +113,19 @@
     <string name="msg_logout_ok">Disconnesso. Sei ora in modalità ospite.</string>
 
     <!-- Preferenze Account -->
-    <string name="section_preferenze">Preferenze</string>
     <string name="label_valuta_predefinita">Valuta predefinita</string>
-    <string name="hint_valuta_predefinita_desc">Utilizzata per le nuove schede create</string>
     <string name="msg_valuta_aggiornata">Valuta predefinita impostata su %s</string>
     <string name="label_lingua_app">Lingua dell\'app</string>
-    <string name="hint_lingua_app_desc">Lingua e formato numeri</string>
     <string name="msg_lingua_aggiornata">Lingua impostata su %s</string>
     <string name="lingua_sistema">Predefinita di sistema</string>
 
     <!-- Dettaglio Scheda & Toolbar -->
-    <string name="cd_torna_indietro">Torna indietro</string>
-    <string name="cd_modifica_nome_scheda">Modifica nome scheda</string>
-    <string name="cd_elimina_scheda">Elimina scheda</string>
     <string name="dialog_titolo_modifica_scheda">Modifica nome gruppo</string>
     <string name="dialog_hint_nome_scheda">Nome del gruppo</string>
-    <string name="dialog_titolo_elimina_scheda">Elimina scheda</string>
-    <string name="dialog_msg_elimina_scheda">Sei sicuro di voler eliminare questa scheda? Tutte le spese associate verranno rimosse dal tuo dispositivo.</string>
-    <string name="dialog_msg_elimina_scheda_con_saldi">Attenzione: hai ancora dei saldi aperti in questa scheda. Eliminandola, la scheda verrà rimossa dal tuo dispositivo e i suoi debiti o crediti non saranno più conteggiati nei tuoi saldi totali. Vuoi procedere?</string>
     <string name="msg_scheda_eliminata">Gruppo eliminato</string>
     <string name="label_totale_spese">Totale spese</string>
-    <string name="label_partecipanti_formato">Partecipanti: %s</string>
 
     <!-- Azioni Scheda (Invita & Gestisci) -->
-    <string name="btn_invita">Invita</string>
-    <string name="btn_gestisci_gruppo">Gestisci</string>
-    <string name="msg_codice_invito_titolo">Unisciti al mio gruppo su PariPari!</string>
-    <string name="msg_codice_invito_body">Usa questo codice per unirti alla scheda \"%1$s\" su PariPari: %2$s</string>
-    <string name="condividi_con">Condividi codice invito tramite</string>
     <string name="dialog_titolo_gestione_gruppo">Membri del gruppo</string>
     <string name="msg_conferma_rimuovi_membro">Vuoi rimuovere %s dal gruppo?</string>
     <string name="btn_rimuovi">Rimuovi</string>
@@ -165,7 +135,6 @@
     <string name="msg_errore_eliminazione_scheda_saldi">Impossibile eliminare o abbandonare questo gruppo: risultano spese o debiti non saldati a tuo nome. Salda i conti all\'interno della scheda prima di eliminarla.</string>
     <string name="titolo_esci_gruppo">Esci dal gruppo</string>
     <string name="msg_conferma_esci_gruppo">Sei sicuro di voler uscire da questo gruppo?</string>
-    <string name="msg_conferma_esci_gruppo_debiti">Attenzione: risultano spese o saldi in sospeso a tuo nome in questo gruppo. Sei sicuro di voler uscire comunque?</string>
     <string name="btn_esci">Esci</string>
     <string name="msg_sei_uscito_dal_gruppo">Sei uscito dal gruppo</string>
     <string name="msg_sei_stato_rimosso_dal_gruppo">Sei stato rimosso dal gruppo</string>
@@ -182,14 +151,9 @@
     <string name="title_nuova_spesa">Nuova Spesa</string>
     <string name="hint_descrizione_spesa">Descrizione (es. Cena, Taxi)</string>
     <string name="hint_importo_spesa">Importo</string>
-    <string name="label_chi_ha_pagato">Chi ha pagato?</string>
     <string name="btn_salva_spesa">Aggiungi Spesa</string>
-    <string name="msg_spesa_aggiunta">Spesa aggiunta con successo!</string>
     <string name="error_descrizione_spesa">Inserisci una descrizione per la spesa</string>
     <string name="error_importo_spesa">Inserisci un importo maggiore di zero</string>
-    <string name="error_nessun_pagatore">Seleziona chi ha pagato</string>
-    <string name="label_pagato_da">Pagato da %s</string>
-    <string name="label_divisione_equa">Diviso tra %d persone</string>
     <string name="cat_cibo">Cibo</string>
     <string name="cat_spesa">Spesa</string>
     <string name="cat_trasporti">Trasporti</string>
@@ -218,7 +182,6 @@
     <string name="pdf_th_categoria">CATEGORIA</string>
     <string name="pdf_th_pagante">PAGANTE</string>
     <string name="pdf_th_importo">IMPORTO</string>
-    <string name="pdf_formato_importo">%1$.2f %2$s</string>
 
     <!-- Tasti e Azioni Generiche -->
     <string name="btn_salva">Salva</string>
@@ -238,34 +201,22 @@
     <string name="divisione_equa">Equa</string>
     <string name="divisione_percentuale">Percentuale</string>
     <string name="divisione_parti">Per parti</string>
-    <string name="spesa_quota_valuta">%1$.2f %2$s</string>
     <string name="spesa_escluso">Escluso</string>
-    <string name="spesa_quote_esatte">Divisione personalizzata / percentuale</string>
-    <string name="spesa_quota">Quota / %</string>
     <string name="spesa_salva">Salva spesa</string>
-    <string name="spesa_errore_somma_quote">La somma delle quote (%1$.2f) non corrisponde all\'importo totale (%2$.2f)</string>
     <string name="spesa_errore_nessun_partecipante">Seleziona almeno un partecipante per la spesa</string>
     <string name="errore_mittente_destinatario_uguali">Il mittente e il destinatario non possono coincidere</string>
     <string name="label_data_spesa">Data</string>
 
     <!-- Modifica Spesa & Stato Pagamenti -->
     <string name="spesa_modifica_titolo">Modifica Spesa</string>
-    <string name="spesa_quota_pagata">Già pagato</string>
-    <string name="spesa_saldo_da_pagare">Da integrare: %1$.2f %2$s</string>
-    <string name="spesa_saldo_rimborso">Da rimborsare: %1$.2f %2$s</string>
-    <string name="spesa_saldo_saldato">Saldato</string>
     <string name="btn_elimina_spesa">Elimina spesa</string>
-    <string name="msg_spesa_aggiornata">Spesa aggiornata con successo!</string>
-    <string name="msg_spesa_eliminata">Spesa eliminata con successo!</string>
     <string name="dialog_titolo_elimina_spesa">Elimina spesa</string>
     <string name="dialog_msg_elimina_spesa">Sei sicuro di voler eliminare questa spesa? L\'operazione non può essere annullata.</string>
 
     <!-- Gestione Membri -->
     <string name="dettaglio_rinomina_partecipante">Rinomina partecipante</string>
     <string name="dettaglio_elimina_partecipante">Elimina partecipante</string>
-    <string name="dialog_titolo_rinomina">Rinomina membro</string>
     <string name="dialog_titolo_modifica_nome_profilo">Modifica nome profilo</string>
-    <string name="dialog_titolo_modifica_mio_nome">Modifica il tuo nome nel gruppo</string>
     <string name="msg_nome_aggiornato_successo">Nome aggiornato con successo</string>
     <string name="msg_permesso_negato_modifica_nome">Puoi modificare solo il tuo nome o quello dei membri se sei capogruppo.</string>
     <string name="msg_permesso_negato_modifica_nome_altri">Puoi modificare soltanto il tuo nome.</string>
@@ -284,12 +235,9 @@
     </plurals>
 
     <!-- Saldi -->
-    <string name="titolo_dialog_saldi">Saldi e Pareggio Conti</string>
-    <string name="saldi_tutti_in_pari">Tutti i conti sono in pari!</string>
     <string name="saldi_formato_importo">%1$.2f %2$s</string>
     <string name="saldi_descrizione_trasferimento">%1$s deve dare a %2$s</string>
     <string name="btn_chiudi">Chiudi</string>
-    <string name="spesa_errore_somma_percentuali">La somma delle percentuali deve fare 100%% (attuale: %.1f%%)</string>
     <string name="lbl_nome_partecipante">Nome Partecipante</string>
 
     <!-- Navigazione interna alla Scheda -->
@@ -313,18 +261,12 @@
     <string name="btn_lascia">Lascia</string>
 
     <!-- Dettagli spesa nell'adapter -->
-    <string name="spesa_formato_dettagli">Pagato da %1$s • Diviso tra %2$d</string>
     <string name="format_handle">"@%1$s"</string>
     <string name="msg_errore_apertura_link">Impossibile aprire il link</string>
     <string name="title_condividi">Condividi</string>
-    <string name="msg_operazione_completata">Operazione completata</string>
 
     <!-- Saldi Globale -->
-    <string name="label_da_ricevere">Da ricevere</string>
-    <string name="label_da_dare">Da dare</string>
     <string name="saldi_nessun_debito">Nessun debito o credito attivo!</string>
-    <string name="saldi_devi_a">Devi a %1$s (%2$s)</string>
-    <string name="saldi_ti_deve">%1$s ti deve (%2$s)</string>
 
     <string name="dettaglio_persone_lbl">Dettaglio Persone</string>
     <string name="da_ricevere_lbl">◉ Da ricevere</string>
@@ -341,25 +283,14 @@
     <string name="label_inquadra_fotocamera">Inquadra con la fotocamera per unirti</string>
     <string name="desc_qr_code">Codice QR con link di invito</string>
     <string name="msg_invito_condivisione">Unisciti al mio gruppo \"%1$s\" su PariPari!\n\nClicca sul link per entrare direttamente:\n%2$s\n\nOppure inserisci il codice invito: %3$s</string>
-    <string name="dialog_titolo_conferma_unione">Unisciti al gruppo</string>
-    <string name="dialog_msg_conferma_unione">Vuoi unirti al gruppo con codice %1$s?</string>
-    <string name="btn_unisciti">Unisciti</string>
     <string name="msg_unione_successo">Ti sei unito a %1$s!</string>
-    <string name="msg_ricerca_gruppo">Ricerca gruppo in corso…</string>
 
     <!-- Verifica Email -->
     <string name="label_verifica_email">Verifica email</string>
-    <string name="desc_email_non_verificata">Tocca per verificare o reinviare il link</string>
-    <string name="desc_email_verificata">Il tuo indirizzo email è confermato</string>
     <string name="badge_non_verificata">Non verificata</string>
     <string name="badge_verificata">Verificata</string>
-    <string name="dialog_titolo_verifica_email">Verifica il tuo indirizzo email</string>
-    <string name="dialog_msg_verifica_email">Ti abbiamo inviato un\'email di conferma all\'indirizzo:\n\n%1$s\n\nClicca sul link ricevuto nella tua casella di posta per verificare il tuo account.</string>
-    <string name="btn_reinvia_email">Reinvia email</string>
-    <string name="btn_controlla_stato">Controlla stato</string>
     <string name="msg_email_verifica_inviata">Email reinviata! Controlla la cartella spam.</string>
     <string name="msg_email_gia_verificata">Il tuo indirizzo email è già verificato!</string>
-    <string name="msg_email_non_ancora_verificata">L\'email non risulta ancora confermata. Controlla la posta o reinvia il link.</string>
     <string name="msg_email_confermata_successo">Email confermata con successo!</string>
     <string name="msg_profilo_aggiornato">Profilo aggiornato!</string>
     <string name="msg_errore_invio_email">Errore durante l\'invio dell\'email</string>
@@ -391,14 +322,8 @@
     <!-- Metodi di Pagamento (PayPal & Revolut) -->
     <string name="section_metodi_pagamento">Metodi di Pagamento</string>
     <string name="label_paypal_username">Account PayPal.me</string>
-    <string name="hint_paypal_username_desc">Condividi un link diretto paypal.me/username</string>
     <string name="label_revolut_username">Account Revolut.me</string>
-    <string name="hint_revolut_username_desc">Condividi un link diretto revolut.me/username</string>
     <string name="badge_non_configurato">Non configurato</string>
-    <string name="dialog_titolo_paypal">Configura PayPal.me</string>
-    <string name="dialog_desc_paypal">Inserisci il tuo username PayPal.me:</string>
-    <string name="dialog_titolo_revolut">Configura Revolut.me</string>
-    <string name="dialog_desc_revolut">Inserisci il tuo username Revolut.me:</string>
     <string name="hint_paypal_tag">Handle PayPal.me</string>
     <string name="hint_revolut_tag">Handle Revolut.me</string>
     <string name="helper_paypal">Solo il nome utente, senza paypal.me/</string>
@@ -412,14 +337,11 @@
     <string name="desc_salda_debito">Devi dare %1$s a %2$s.</string>
     <string name="desc_richiedi_pagamento">%1$s ti deve %2$s.</string>
     <string name="titolo_bottom_sheet_pagamento">Salda il Saldo</string>
-    <string name="desc_bottom_sheet_pagamento">Condividi un link di pagamento o segna come saldato %1$s.</string>
-    <string name="btn_invia_link_pagamento">Invia link di pagamento</string>
     <string name="opzione_paypal">Pagamento PayPal.me</string>
     <string name="opzione_revolut">Pagamento Revolut.me</string>
     <string name="btn_condividi">Condividi</string>
     <string name="btn_copia_link">Copia Link</string>
     <string name="btn_segna_saldato">✔ Segna come già pagato</string>
-    <string name="msg_saldo_registrato">Saldo di %1$s tra %2$s e %3$s segnato come pagato!</string>
     <string name="msg_link_copiato">Link di pagamento copiato negli appunti</string>
     <string name="msg_condividi_mio_paypal">Ciao %1$s! Ecco il mio link PayPal per saldarmi %2$s su PariPari:\n%3$s</string>
     <string name="msg_condividi_mio_revolut">Ciao %1$s! Ecco il mio link Revolut per saldarmi %2$s su PariPari:\n%3$s</string>
@@ -431,7 +353,6 @@
     <!-- Storico Saldi Pagati -->
     <string name="btn_storico_saldi">Storico</string>
     <string name="titolo_storico_saldi">Storico Pagamenti Saldi</string>
-    <string name="subtitolo_storico_saldi">Elenco di tutti i pareggi e saldi effettuati</string>
     <string name="empty_storico_saldi_titolo">Nessun saldo registrato</string>
     <string name="empty_storico_saldi_desc">I pagamenti e i pareggi effettuati appariranno qui.</string>
     <string name="badge_saldato_effettuato">✔ Saldato</string>
@@ -443,11 +364,11 @@
     <string name="btn_cerca_scheda">Cerca Gruppo</string>
     <string name="label_chi_sei_nel_gruppo">Chi sei in questo gruppo?</string>
     <string name="stato_gia_registrato">Già registrato</string>
+    <string name="stato_tuo_profilo">Il tuo profilo</string>
     <string name="opzione_nuovo_membro_titolo">Aggiungiti come nuovo membro</string>
     <string name="btn_entra_come">Entra come %s</string>
     <string name="btn_aggiungiti_gruppo">Aggiungiti al gruppo</string>
     <string name="btn_seleziona_chi_sei">Seleziona chi sei</string>
-    <string name="desc_utente_autenticato">Utente autenticato</string>
     <string name="btn_conferma_unione">Conferma ed entra</string>
 
     <!-- Identificazione account utente corrente -->
@@ -457,9 +378,6 @@
     <string name="titolo_partecipanti_quote">Partecipanti e quote</string>
     <string name="titolo_dettaglio_spesa">Dettaglio Spesa</string>
     <string name="label_speso_da_me">Speso da me</string>
-    <string name="titolo_annulla_pareggio">Annulla pareggio</string>
-    <string name="msg_conferma_annulla_pareggio">Vuoi annullare questo pagamento registrato per errore? I saldi verranno ricalcolati automaticamente.</string>
-    <string name="btn_annulla_pareggio">Annulla pareggio</string>
     <string name="storico_pagamento_inviato">a %s</string>
     <string name="storico_pagamento_ricevuto">da %s</string>
     <string name="badge_inviato">inviato</string>
@@ -485,6 +403,10 @@
     <string name="format_da_chi_pagato">Da chi pagato: %s</string>
     <string name="format_chi_riceve">Chi li riceve: %s</string>
     <string name="cat_rimborsi">Rimborsi</string>
+    <string name="format_categoria_rimborso">💳 %s</string>
+    <string name="format_categoria_con_emoji">%1$s %2$s</string>
+    <string name="format_spesa_pagata_da">Spesa pagata da: %s</string>
+    <string name="saldi_descrizione_trasferimento_con_importo">%1$s deve dare a %2$s (%3$s)</string>
     <string name="dialog_titolo_elimina_rimborso">Elimina rimborso</string>
     <string name="dialog_msg_elimina_rimborso">Sei sicuro di voler eliminare questo rimborso? I saldi verranno ricalcolati automaticamente.</string>
 

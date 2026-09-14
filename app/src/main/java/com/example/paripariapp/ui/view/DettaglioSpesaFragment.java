@@ -208,7 +208,7 @@ public class DettaglioSpesaFragment extends Fragment {
         // Emoji & Categoria
         String categoria = spesa.getCategoria() != null ? spesa.getCategoria() : getString(R.string.cat_altro);
         String emoji = CategoriaUtil.getEmojiForCategoria(categoria, spesa.getTitolo());
-        binding.tvCategoriaDettaglio.setText(emoji + " " + categoria);
+        binding.tvCategoriaDettaglio.setText(getString(R.string.format_categoria_con_emoji, emoji, categoria));
 
         // Titolo
         binding.tvTitoloDettaglio.setText(spesa.getTitolo());
@@ -242,8 +242,7 @@ public class DettaglioSpesaFragment extends Fragment {
 
         // Spesa pagata da: + Nome
         String pagatoreNome = spesaCorrente.getNomePagatore() != null ? spesaCorrente.getNomePagatore() : getString(R.string.nome_sconosciuto);
-        String testoPagatoDa = "Spesa pagata da: " + pagatoreNome;
-        binding.tvPagatoDaDettaglio.setText(testoPagatoDa);
+        binding.tvPagatoDaDettaglio.setText(getString(R.string.format_spesa_pagata_da, pagatoreNome));
 
         // Quote partecipanti
         setupQuoteRecycler(spesa, valutaSpesa, gruppoVal);

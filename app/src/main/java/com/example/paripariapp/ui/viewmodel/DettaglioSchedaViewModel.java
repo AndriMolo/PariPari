@@ -11,10 +11,8 @@ import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
 import com.example.paripariapp.data.model.SpesaPartecipante;
-import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.data.repository.PariPariRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

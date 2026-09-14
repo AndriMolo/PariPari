@@ -1,7 +1,6 @@
 package com.example.paripariapp.ui.view;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -204,16 +203,21 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
         String infoMembri = "Valuta: " + preview.getValutaPredefinita();
         binding.tvValutaEMembri.setText(infoMembri);
 
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String currentUid = currentUser != null ? currentUser.getUid() : null;
+        adapter.setCurrentUid(currentUid);
         adapter.setMembri(preview.getMembri());
 
         MembroGruppoPreview relinkTarget = cercaMembroPerRelink(preview);
-        if (relinkTarget != null && relinkTarget.isSostituibile()) {
-            // Predisposizione relink: se il profilo appartiene all'account corrente ed è libero, preselezionalo
+        if (relinkTarget != null) {
+            // Auto-relink deterministico esclusivo via userId: profilo appartenente all'utente
             membroSelezionatoPerSubentro = relinkTarget;
             isNuovoMembroSelezionato = false;
             aggiornaStatoNuovoMembro(false);
+            adapter.selectMemberById(relinkTarget.getId());
             binding.btnConfermaUnione.setEnabled(true);
-            binding.btnConfermaUnione.setText(R.string.btn_unisciti);
+            String nomeMembro = com.example.paripariapp.data.model.Partecipante.pulisciNome(relinkTarget.getNome());
+            binding.btnConfermaUnione.setText(getString(R.string.btn_entra_come, nomeMembro));
         } else if (preview.getMembriSostituibili().isEmpty()) {
             // Nessun membro sostituibile: preseleziona direttamente "Nuovo membro"
             binding.cardNuovoMembro.performClick();
@@ -222,14 +226,16 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
             membroSelezionatoPerSubentro = null;
             isNuovoMembroSelezionato = false;
             aggiornaStatoNuovoMembro(false);
+            adapter.clearSelection();
             binding.btnConfermaUnione.setEnabled(false);
             binding.btnConfermaUnione.setText(R.string.btn_seleziona_chi_sei);
         }
     }
 
     /**
-     * Predisposizione modulare per il relink:
-     * Cerca tra i membri dell'anteprima se ce n'è uno collegabile in automatico.
+     * Auto-relink deterministico ed esclusivo tramite userId:
+     * Cerca tra i membri dell'anteprima l'unico profilo avente userId o previousUserId
+     * corrispondente all'UID dell'account Firebase corrente.
      */
     @Nullable
     private MembroGruppoPreview cercaMembroPerRelink(@Nullable FirestoreSyncManager.GruppoPreview preview) {
@@ -239,7 +245,7 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
         String currentUid = currentUser.getUid();
 
         for (MembroGruppoPreview m : preview.getMembri()) {
-            if (m.getUserId() != null && m.getUserId().equals(currentUid)) {
+            if (m.isMyProfile(currentUid)) {
                 return m;
             }
         }
