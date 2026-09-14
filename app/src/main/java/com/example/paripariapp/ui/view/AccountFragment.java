@@ -13,12 +13,11 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
+import com.example.paripariapp.databinding.DialogModificaPaymentHandleBinding;
 import com.example.paripariapp.databinding.FragmentAccountBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.example.paripariapp.util.AppSnackbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 /**
  * Fragment principale della schermata "Account".
@@ -237,77 +236,41 @@ public class AccountFragment extends Fragment {
     }
 
     private void setupPaymentMethodsSelectors() {
-        binding.rowPaypal.setOnClickListener(v -> mostraDialogModificaPaypal());
-        binding.rowRevolut.setOnClickListener(v -> mostraDialogModificaRevolut());
+        binding.rowPaypal.setOnClickListener(v -> mostraDialogModificaPaymentHandle(true));
+        binding.rowRevolut.setOnClickListener(v -> mostraDialogModificaPaymentHandle(false));
     }
 
-    private void mostraDialogModificaPaypal() {
-        String currentHandle = viewModel.getPaypalHandle();
+    private void mostraDialogModificaPaymentHandle(boolean isPaypal) {
+        String currentHandle = isPaypal ? viewModel.getPaypalHandle() : viewModel.getRevolutHandle();
+        DialogModificaPaymentHandleBinding dialogBinding = DialogModificaPaymentHandleBinding.inflate(getLayoutInflater());
 
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_payment_handle, null);
-        TextInputLayout til = dialogView.findViewById(R.id.til_handle);
-        TextInputEditText et = dialogView.findViewById(R.id.et_handle);
-
-        til.setHint(getString(R.string.hint_paypal_tag));
-        til.setPrefixText("paypal.me/");
-        til.setHelperText(getString(R.string.helper_paypal));
+        dialogBinding.tilHandle.setHint(getString(isPaypal ? R.string.hint_paypal_tag : R.string.hint_revolut_tag));
+        dialogBinding.tilHandle.setPrefixText(isPaypal ? "paypal.me/" : "revolut.me/");
+        dialogBinding.tilHandle.setHelperText(getString(isPaypal ? R.string.helper_paypal : R.string.helper_revolut));
 
         if (!TextUtils.isEmpty(currentHandle)) {
-            et.setText(currentHandle);
-            et.setSelection(currentHandle.length());
+            dialogBinding.etHandle.setText(currentHandle);
+            dialogBinding.etHandle.setSelection(currentHandle.length());
         }
 
         androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setView(dialogView)
+                .setView(dialogBinding.getRoot())
                 .setPositiveButton(R.string.btn_salva, (d, which) -> {
-                    String raw = et.getText() != null ? et.getText().toString().trim() : "";
-                    viewModel.setPaypalHandle(raw);
-                    AppSnackbar.show(binding.getRoot(), R.string.msg_paypal_salvato);
+                    String raw = dialogBinding.etHandle.getText() != null ? dialogBinding.etHandle.getText().toString().trim() : "";
+                    if (isPaypal) {
+                        viewModel.setPaypalHandle(raw);
+                    } else {
+                        viewModel.setRevolutHandle(raw);
+                    }
+                    AppSnackbar.show(binding.getRoot(), isPaypal ? R.string.msg_paypal_salvato : R.string.msg_revolut_salvato);
                 })
                 .setNeutralButton(R.string.btn_elimina, (d, which) -> {
-                    viewModel.setPaypalHandle("");
-                    AppSnackbar.show(binding.getRoot(), R.string.msg_paypal_salvato);
-                })
-                .setNegativeButton(R.string.btn_annulla, null)
-                .create();
-
-        dialog.setOnShowListener(d -> {
-            android.widget.Button posBtn = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
-            if (posBtn != null) {
-                posBtn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_check, 0, 0, 0);
-                posBtn.setCompoundDrawablePadding((int) (6 * getResources().getDisplayMetrics().density));
-            }
-        });
-
-        dialog.show();
-    }
-
-    private void mostraDialogModificaRevolut() {
-        String currentHandle = viewModel.getRevolutHandle();
-
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_payment_handle, null);
-        TextInputLayout til = dialogView.findViewById(R.id.til_handle);
-        TextInputEditText et = dialogView.findViewById(R.id.et_handle);
-
-        til.setHint(getString(R.string.hint_revolut_tag));
-        til.setPrefixText("revolut.me/");
-        til.setHelperText(getString(R.string.helper_revolut));
-
-        if (!TextUtils.isEmpty(currentHandle)) {
-            et.setText(currentHandle);
-            et.setSelection(currentHandle.length());
-        }
-
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-                .setView(dialogView)
-                .setPositiveButton(R.string.btn_salva, (d, which) -> {
-                    String raw = et.getText() != null ? et.getText().toString().trim() : "";
-                    viewModel.setRevolutHandle(raw);
-                    AppSnackbar.show(binding.getRoot(), R.string.msg_revolut_salvato);
-                })
-                .setNeutralButton(R.string.btn_elimina, (d, which) -> {
-                    viewModel.setRevolutHandle("");
-                    AppSnackbar.show(binding.getRoot(), R.string.msg_revolut_salvato);
+                    if (isPaypal) {
+                        viewModel.setPaypalHandle("");
+                    } else {
+                        viewModel.setRevolutHandle("");
+                    }
+                    AppSnackbar.show(binding.getRoot(), isPaypal ? R.string.msg_paypal_salvato : R.string.msg_revolut_salvato);
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .create();

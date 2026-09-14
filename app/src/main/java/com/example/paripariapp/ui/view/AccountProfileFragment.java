@@ -171,50 +171,40 @@ public class AccountProfileFragment extends Fragment {
         }
 
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_modifica_email, null);
-        dialog.setContentView(dialogView);
+        com.example.paripariapp.databinding.DialogModificaEmailBinding dialogBinding =
+                com.example.paripariapp.databinding.DialogModificaEmailBinding.inflate(getLayoutInflater());
+        dialog.setContentView(dialogBinding.getRoot());
 
-        TextInputLayout tilNuovaEmail = dialogView.findViewById(R.id.til_nuova_email);
-        TextInputEditText etNuovaEmail = dialogView.findViewById(R.id.et_nuova_email);
-        TextInputLayout tilPasswordAttuale = dialogView.findViewById(R.id.til_password_attuale);
-        TextInputEditText etPasswordAttuale = dialogView.findViewById(R.id.et_password_attuale);
-        View btnAnnulla = dialogView.findViewById(R.id.btn_dialog_annulla);
-        View btnConferma = dialogView.findViewById(R.id.btn_dialog_conferma);
+        dialogBinding.btnDialogAnnulla.setOnClickListener(v -> dialog.dismiss());
 
-        if (btnAnnulla != null) {
-            btnAnnulla.setOnClickListener(v -> dialog.dismiss());
-        }
+        dialogBinding.btnDialogConferma.setOnClickListener(v -> {
+            String nuovaEmail = dialogBinding.etNuovaEmail.getText() != null
+                    ? dialogBinding.etNuovaEmail.getText().toString().trim() : "";
+            String password = dialogBinding.etPasswordAttuale.getText() != null
+                    ? dialogBinding.etPasswordAttuale.getText().toString().trim() : "";
 
-        if (btnConferma != null) {
-            btnConferma.setOnClickListener(v -> {
-                String nuovaEmail = etNuovaEmail != null && etNuovaEmail.getText() != null
-                        ? etNuovaEmail.getText().toString().trim() : "";
-                String password = etPasswordAttuale != null && etPasswordAttuale.getText() != null
-                        ? etPasswordAttuale.getText().toString().trim() : "";
+            boolean valid = true;
+            dialogBinding.tilNuovaEmail.setError(null);
+            dialogBinding.tilPasswordAttuale.setError(null);
 
-                boolean valid = true;
-                if (tilNuovaEmail != null) tilNuovaEmail.setError(null);
-                if (tilPasswordAttuale != null) tilPasswordAttuale.setError(null);
+            if (TextUtils.isEmpty(nuovaEmail) || !Patterns.EMAIL_ADDRESS.matcher(nuovaEmail).matches()) {
+                dialogBinding.tilNuovaEmail.setError(getString(R.string.error_email_valida));
+                valid = false;
+            } else if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(nuovaEmail)) {
+                dialogBinding.tilNuovaEmail.setError(getString(R.string.error_email_uguale));
+                valid = false;
+            }
 
-                if (TextUtils.isEmpty(nuovaEmail) || !Patterns.EMAIL_ADDRESS.matcher(nuovaEmail).matches()) {
-                    if (tilNuovaEmail != null) tilNuovaEmail.setError(getString(R.string.error_email_valida));
-                    valid = false;
-                } else if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(nuovaEmail)) {
-                    if (tilNuovaEmail != null) tilNuovaEmail.setError(getString(R.string.error_email_uguale));
-                    valid = false;
-                }
+            if (TextUtils.isEmpty(password)) {
+                dialogBinding.tilPasswordAttuale.setError(getString(R.string.error_password_vuota));
+                valid = false;
+            }
 
-                if (TextUtils.isEmpty(password)) {
-                    if (tilPasswordAttuale != null) tilPasswordAttuale.setError(getString(R.string.error_password_vuota));
-                    valid = false;
-                }
-
-                if (valid) {
-                    viewModel.modificaEmail(nuovaEmail, password);
-                    dialog.dismiss();
-                }
-            });
-        }
+            if (valid) {
+                viewModel.modificaEmail(nuovaEmail, password);
+                dialog.dismiss();
+            }
+        });
 
         dialog.show();
     }

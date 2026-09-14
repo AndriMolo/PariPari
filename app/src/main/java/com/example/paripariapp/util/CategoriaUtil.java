@@ -26,7 +26,7 @@ public class CategoriaUtil {
 
     @NonNull
     public static String getEmojiForCategoria(@Nullable String categoria, @Nullable String titolo) {
-        String textToAnalyze = ((categoria != null ? categoria : "") + " " + (titolo != null ? titolo : "")).trim().toLowerCase();
+        String textToAnalyze = ((categoria != null ? categoria : "") + " " + (titolo != null ? titolo : "")).trim().toLowerCase(java.util.Locale.ROOT);
 
         if (textToAnalyze.isEmpty()) {
             return "🧾";
@@ -124,7 +124,7 @@ public class CategoriaUtil {
 
     public static boolean isCategoriaSaldi(@Nullable String categoria) {
         if (categoria == null) return false;
-        String catLower = categoria.trim().toLowerCase();
+        String catLower = categoria.trim().toLowerCase(java.util.Locale.ROOT);
         return catLower.equalsIgnoreCase("saldi") || catLower.equalsIgnoreCase("saldo") || catLower.contains("pareggio");
     }
 }

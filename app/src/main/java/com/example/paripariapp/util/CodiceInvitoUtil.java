@@ -33,6 +33,6 @@ public final class CodiceInvitoUtil {
      */
     public static String normalizzaCodice(String input) {
         if (input == null) return "";
-        return input.trim().replace(" ", "").toUpperCase();
+        return input.trim().replace(" ", "").toUpperCase(java.util.Locale.ROOT);
     }
 }

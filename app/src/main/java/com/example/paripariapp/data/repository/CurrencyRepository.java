@@ -92,7 +92,7 @@ public class CurrencyRepository {
         if ("EUR".equalsIgnoreCase(currencyCode)) {
             return 1.0;
         }
-        Double rate = ratesCache.get(currencyCode.toUpperCase());
+        Double rate = ratesCache.get(currencyCode.toUpperCase(java.util.Locale.ROOT));
         return rate != null ? rate : 1.0;
     }
 

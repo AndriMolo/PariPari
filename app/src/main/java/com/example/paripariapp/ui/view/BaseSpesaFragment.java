@@ -352,12 +352,13 @@ public abstract class BaseSpesaFragment extends Fragment {
         lockedParticipantIds.clear();
 
         for (Partecipante p : lista) {
-            View row = getLayoutInflater().inflate(R.layout.item_quota_partecipante, layoutElencoQuote, false);
-            CheckBox cb = row.findViewById(R.id.spunta_partecipante);
-            TextView tvNome = row.findViewById(R.id.nome_partecipante);
-            TextView tvEqua = row.findViewById(R.id.tv_quota_equa);
-            EditText etQuota = row.findViewById(R.id.campo_quota);
-            TextInputLayout quotaContainer = row.findViewById(R.id.contenitore_quota);
+            com.example.paripariapp.databinding.ItemQuotaPartecipanteBinding rowBinding =
+                    com.example.paripariapp.databinding.ItemQuotaPartecipanteBinding.inflate(getLayoutInflater(), layoutElencoQuote, false);
+            CheckBox cb = rowBinding.spuntaPartecipante;
+            TextView tvNome = rowBinding.nomePartecipante;
+            TextView tvEqua = rowBinding.tvQuotaEqua;
+            EditText etQuota = rowBinding.campoQuota;
+            TextInputLayout quotaContainer = rowBinding.contenitoreQuota;
 
             tvNome.setText(p.getNome());
             etQuota.setFilters(FILTRO_DUE_DECIMALI);
@@ -484,7 +485,7 @@ public abstract class BaseSpesaFragment extends Fragment {
                 public void afterTextChanged(Editable s) {}
             });
 
-            layoutElencoQuote.addView(row);
+            layoutElencoQuote.addView(rowBinding.getRoot());
         }
     }
 

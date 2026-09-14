@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             ("https".equalsIgnoreCase(scheme) && "paripari.app".equalsIgnoreCase(host))) {
             String code = uri.getQueryParameter("code");
             if (code != null && !code.trim().isEmpty()) {
-                mostraDialogConfermaJoin(code.trim().toUpperCase());
+                mostraDialogConfermaJoin(code.trim().toUpperCase(java.util.Locale.ROOT));
             }
         }
     }

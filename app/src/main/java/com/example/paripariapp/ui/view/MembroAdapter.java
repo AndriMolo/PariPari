@@ -83,7 +83,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     public void setCapogruppo(boolean capogruppo) {
         if (this.isCapogruppo != capogruppo) {
             this.isCapogruppo = capogruppo;
-            notifyDataSetChanged();
+            notifyItemRangeChanged(0, getItemCount());
         }
     }
 
@@ -129,7 +129,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         boolean isMe = (myId != null && myId.equals(p.getId())) ||
                 Partecipante.isCurrentUserParticipant(p, currentUser);
 
-        String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase() : "?";
+        String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase(java.util.Locale.getDefault()) : "?";
         holder.binding.avatarIniziale.setText(iniziale);
 
         boolean isEditing = Objects.equals(p.getId(), editingParticipantId);
@@ -164,7 +164,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
                 holder.binding.tilModificaInline.setError(null);
                 hideKeyboard(holder.binding.etModificaInline);
                 editingParticipantId = null;
-                notifyDataSetChanged();
+                notifyItemRangeChanged(0, getItemCount());
 
                 if (onNomeModificatoListener != null && !nuovoNome.equals(p.getNome())) {
                     onNomeModificatoListener.onNomeModificato(p, nuovoNome);
@@ -184,7 +184,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             holder.binding.bottoneAnnullaInline.setOnClickListener(v -> {
                 hideKeyboard(holder.binding.etModificaInline);
                 editingParticipantId = null;
-                notifyDataSetChanged();
+                notifyItemRangeChanged(0, getItemCount());
             });
 
         } else {
@@ -202,7 +202,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             holder.binding.bottoneModifica.setVisibility(canEdit ? View.VISIBLE : View.GONE);
             holder.binding.bottoneModifica.setOnClickListener(v -> {
                 editingParticipantId = p.getId();
-                notifyDataSetChanged();
+                notifyItemRangeChanged(0, getItemCount());
             });
 
             holder.binding.bottoneElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);

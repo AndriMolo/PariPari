@@ -361,14 +361,14 @@ public class DettaglioSchedaFragment extends Fragment {
                 searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                     @Override
                     public boolean onQueryTextSubmit(String query) {
-                        queryFiltroTesto = query != null ? query.trim().toLowerCase() : "";
+                        queryFiltroTesto = query != null ? query.trim().toLowerCase(java.util.Locale.getDefault()) : "";
                         applicaFiltriERaggruppa();
                         return true;
                     }
 
                     @Override
                     public boolean onQueryTextChange(String newText) {
-                        queryFiltroTesto = newText != null ? newText.trim().toLowerCase() : "";
+                        queryFiltroTesto = newText != null ? newText.trim().toLowerCase(java.util.Locale.getDefault()) : "";
                         applicaFiltriERaggruppa();
                         return true;
                     }
@@ -514,7 +514,7 @@ public class DettaglioSchedaFragment extends Fragment {
             }
 
             boolean matchTesto = queryFiltroTesto.isEmpty() ||
-                    s.getTitolo().toLowerCase().contains(queryFiltroTesto);
+                    s.getTitolo().toLowerCase(java.util.Locale.getDefault()).contains(queryFiltroTesto);
 
             boolean matchCat = categoriaSelezionata.equalsIgnoreCase(labelTutte) ||
                     categoriaSelezionata.equalsIgnoreCase(s.getCategoria());
@@ -835,28 +835,28 @@ public class DettaglioSchedaFragment extends Fragment {
     private void mostraDialogCodiceGruppo() {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_codice_gruppo, binding.getRoot(), false);
-        dialog.setContentView(sheetView);
+        com.example.paripariapp.databinding.DialogCodiceGruppoBinding sheetBinding =
+                com.example.paripariapp.databinding.DialogCodiceGruppoBinding.inflate(getLayoutInflater());
+        dialog.setContentView(sheetBinding.getRoot());
 
-        TextView tvCodiceGruppo = sheetView.findViewById(R.id.tvCodiceGruppo);
         String codice = (schedaCorrente != null && schedaCorrente.getCodiceInvito() != null && !schedaCorrente.getCodiceInvito().isEmpty())
                 ? schedaCorrente.getCodiceInvito() : "CARICO";
 
         if ("CARICO".equals(codice) && schedaCorrente != null) {
             viewModel.assicuraCodiceInvito(schedaCorrente);
         }
-        tvCodiceGruppo.setText(codice);
+        sheetBinding.tvCodiceGruppo.setText(codice);
 
-        sheetView.findViewById(R.id.btnCopiaCodice).setOnClickListener(v -> {
+        sheetBinding.btnCopiaCodice.setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("Codice gruppo", codice);
             if (clipboard != null) {
                 clipboard.setPrimaryClip(clip);
-                AppSnackbar.show(sheetView, R.string.msg_codice_copiato);
+                AppSnackbar.show(sheetBinding.getRoot(), R.string.msg_codice_copiato);
             }
         });
 
-        sheetView.findViewById(R.id.btnCondividiLink).setOnClickListener(v -> {
+        sheetBinding.btnCondividiLink.setOnClickListener(v -> {
             String titoloGruppo = (titolo != null && !titolo.isEmpty()) ? titolo : (schedaCorrente != null ? schedaCorrente.getTitolo() : "Gruppo");
             String messaggio = getString(R.string.msg_invito_condivisione, titoloGruppo, codice);
 
@@ -867,7 +867,7 @@ public class DettaglioSchedaFragment extends Fragment {
             startActivity(Intent.createChooser(shareIntent, getString(R.string.btn_condividi_link)));
         });
 
-        sheetView.findViewById(R.id.btnChiudiDialogCodice).setOnClickListener(v -> dialog.dismiss());
+        sheetBinding.btnChiudiDialogCodice.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }

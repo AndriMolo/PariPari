@@ -147,7 +147,7 @@ public class UserPreferencesRepository {
         if (currencyCode == null || currencyCode.trim().isEmpty()) {
             return;
         }
-        String cleanCode = currencyCode.trim().toUpperCase();
+        String cleanCode = currencyCode.trim().toUpperCase(Locale.ROOT);
         preferences.edit().putString(KEY_DEFAULT_CURRENCY, cleanCode).apply();
         defaultCurrencyLive.postValue(cleanCode);
     }
@@ -179,7 +179,7 @@ public class UserPreferencesRepository {
         if (displayCurrency.contains(" - ")) {
             return displayCurrency.split(" - ")[0].trim();
         }
-        return displayCurrency.trim().toUpperCase();
+        return displayCurrency.trim().toUpperCase(Locale.ROOT);
     }
 
     /**
@@ -190,7 +190,7 @@ public class UserPreferencesRepository {
             return SUPPORTED_CURRENCIES.get(0);
         }
         for (String item : SUPPORTED_CURRENCIES) {
-            if (item.startsWith(currencyCode.toUpperCase())) {
+            if (item.startsWith(currencyCode.toUpperCase(Locale.ROOT))) {
                 return item;
             }
         }
@@ -203,7 +203,7 @@ public class UserPreferencesRepository {
     public static int getIndexOfCurrencyCode(String currencyCode) {
         if (currencyCode == null) return 0;
         for (int i = 0; i < SUPPORTED_CURRENCIES.size(); i++) {
-            if (SUPPORTED_CURRENCIES.get(i).startsWith(currencyCode.toUpperCase())) {
+            if (SUPPORTED_CURRENCIES.get(i).startsWith(currencyCode.toUpperCase(Locale.ROOT))) {
                 return i;
             }
         }
@@ -228,7 +228,7 @@ public class UserPreferencesRepository {
      */
     public static String getCurrencyFlag(String currencyCode) {
         if (currencyCode == null) return "🏳️";
-        switch (currencyCode.toUpperCase().trim()) {
+        switch (currencyCode.toUpperCase(Locale.ROOT).trim()) {
             case "EUR": return "🇪🇺";
             case "USD": return "🇺🇸";
             case "GBP": return "🇬🇧";
@@ -403,7 +403,7 @@ public class UserPreferencesRepository {
         if (themeCode == null || themeCode.trim().isEmpty()) {
             return;
         }
-        String cleanCode = themeCode.trim().toUpperCase();
+        String cleanCode = themeCode.trim().toUpperCase(Locale.ROOT);
         preferences.edit().putString(KEY_APP_THEME, cleanCode).apply();
         appThemeLive.postValue(cleanCode);
         applyTheme(cleanCode);
@@ -454,11 +454,12 @@ public class UserPreferencesRepository {
     public static String cleanPaypalHandle(String input) {
         if (input == null) return "";
         String clean = input.trim();
-        if (clean.toLowerCase().startsWith("https://paypal.me/")) {
+        String cleanLower = clean.toLowerCase(Locale.ROOT);
+        if (cleanLower.startsWith("https://paypal.me/")) {
             clean = clean.substring("https://paypal.me/".length());
-        } else if (clean.toLowerCase().startsWith("http://paypal.me/")) {
+        } else if (cleanLower.startsWith("http://paypal.me/")) {
             clean = clean.substring("http://paypal.me/".length());
-        } else if (clean.toLowerCase().startsWith("paypal.me/")) {
+        } else if (cleanLower.startsWith("paypal.me/")) {
             clean = clean.substring("paypal.me/".length());
         }
         if (clean.startsWith("@")) {
@@ -478,11 +479,12 @@ public class UserPreferencesRepository {
     public static String cleanRevolutHandle(String input) {
         if (input == null) return "";
         String clean = input.trim();
-        if (clean.toLowerCase().startsWith("https://revolut.me/")) {
+        String cleanLower = clean.toLowerCase(Locale.ROOT);
+        if (cleanLower.startsWith("https://revolut.me/")) {
             clean = clean.substring("https://revolut.me/".length());
-        } else if (clean.toLowerCase().startsWith("http://revolut.me/")) {
+        } else if (cleanLower.startsWith("http://revolut.me/")) {
             clean = clean.substring("http://revolut.me/".length());
-        } else if (clean.toLowerCase().startsWith("revolut.me/")) {
+        } else if (cleanLower.startsWith("revolut.me/")) {
             clean = clean.substring("revolut.me/".length());
         }
         if (clean.startsWith("@")) {
@@ -506,7 +508,7 @@ public class UserPreferencesRepository {
             return "https://paypal.me/" + clean;
         }
         String formattedAmount = String.format(Locale.US, "%.2f", importo);
-        String code = (valuta != null && !valuta.trim().isEmpty()) ? valuta.trim().toUpperCase() : "EUR";
+        String code = (valuta != null && !valuta.trim().isEmpty()) ? valuta.trim().toUpperCase(Locale.ROOT) : "EUR";
         return "https://paypal.me/" + clean + "/" + formattedAmount + code;
     }
 

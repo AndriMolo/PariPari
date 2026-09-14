@@ -80,10 +80,10 @@ public class ValutaSelettoreAdapter extends ListAdapter<String, ValutaSelettoreA
         if (query == null || query.trim().isEmpty()) {
             filtered.addAll(allCurrencies);
         } else {
-            String lower = query.trim().toLowerCase();
+            String lower = query.trim().toLowerCase(java.util.Locale.getDefault());
             for (String item : allCurrencies) {
-                String code = UserPreferencesRepository.extractCurrencyCode(item).toLowerCase();
-                String name = UserPreferencesRepository.extractCurrencyName(item).toLowerCase();
+                String code = UserPreferencesRepository.extractCurrencyCode(item).toLowerCase(java.util.Locale.ROOT);
+                String name = UserPreferencesRepository.extractCurrencyName(item).toLowerCase(java.util.Locale.getDefault());
                 if (code.contains(lower) || name.contains(lower)) {
                     filtered.add(item);
                 }
