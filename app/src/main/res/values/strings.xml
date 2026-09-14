@@ -26,10 +26,6 @@
     <string name="empty_saldi_titolo">Tutto in pari! 👍</string>
     <string name="empty_saldi_desc">Non ci sono saldi da saldare o rimborsi in sospeso.</string>
 
-    <!-- Header Valuta -->
-    <string name="valuta_header_titolo">Converti un Importo</string>
-    <string name="valuta_header_subtitolo">Inserisci la cifra da valutare in un\'altra valuta con i tassi di cambio BCE aggiornati.</string>
-
     <!-- Preferenza Tema -->
     <string name="label_tema_app">Tema dell\'applicazione</string>
     <string name="hint_tema_app_desc">Chiaro, Scuro o Predefinito di sistema</string>

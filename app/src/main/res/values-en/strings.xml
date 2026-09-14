@@ -26,10 +26,6 @@
     <string name="empty_saldi_titolo">All settled up! 👍</string>
     <string name="empty_saldi_desc">There are no pending balances or refunds.</string>
 
-    <!-- Header Valuta -->
-    <string name="valuta_header_titolo">Convert an Amount</string>
-    <string name="valuta_header_subtitolo">Enter the amount to evaluate in another currency with updated ECB exchange rates.</string>
-
     <!-- Preferenza Tema -->
     <string name="label_tema_app">Application theme</string>
     <string name="hint_tema_app_desc">Light, Dark, or System default</string>
