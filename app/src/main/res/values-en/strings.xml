@@ -234,6 +234,11 @@
     <string name="spesa_pagante">Who paid?</string>
     <string name="spesa_categoria">Category</string>
     <string name="spesa_divisione">How to split the expense?</string>
+    <string name="divisione_equa">Equal</string>
+    <string name="divisione_percentuale">Percentage</string>
+    <string name="divisione_parti">By parts</string>
+    <string name="spesa_quota_valuta">%1$.2f %2$s</string>
+    <string name="spesa_escluso">Excluded</string>
     <string name="spesa_quote_esatte">Custom / percentage split</string>
     <string name="spesa_quota">Share / %</string>
     <string name="spesa_salva">Save expense</string>

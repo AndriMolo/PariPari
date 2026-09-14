@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="categorie_spesa">
+        <item>@string/cat_cibo</item>
+        <item>@string/cat_spesa</item>
+        <item>@string/cat_trasporti</item>
+        <item>@string/cat_alloggio</item>
+        <item>@string/cat_svago</item>
+        <item>@string/cat_shopping</item>
+        <item>@string/cat_bar</item>
+        <item>@string/cat_salute</item>
+        <item>@string/cat_altro</item>
+    </string-array>
+</resources>

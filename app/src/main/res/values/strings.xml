@@ -234,6 +234,11 @@
     <string name="spesa_pagante">Chi ha pagato?</string>
     <string name="spesa_categoria">Categoria</string>
     <string name="spesa_divisione">Come dividere la spesa?</string>
+    <string name="divisione_equa">Equa</string>
+    <string name="divisione_percentuale">Percentuale</string>
+    <string name="divisione_parti">Per parti</string>
+    <string name="spesa_quota_valuta">%1$.2f %2$s</string>
+    <string name="spesa_escluso">Escluso</string>
     <string name="spesa_quote_esatte">Divisione personalizzata / percentuale</string>
     <string name="spesa_quota">Quota / %</string>
     <string name="spesa_salva">Salva spesa</string>

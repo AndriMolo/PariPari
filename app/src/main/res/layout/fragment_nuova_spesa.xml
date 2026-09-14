@@ -76,6 +76,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        android:baselineAligned="false"
                         android:orientation="horizontal">
 
                         <com.google.android.material.textfield.TextInputLayout
@@ -167,18 +168,46 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/interruttore_personalizzata"
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggle_gruppo_divisione"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/spesa_quote_esatte"
-                        android:textStyle="bold" />
+                        android:layout_marginBottom="12dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_divisione_equa"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/divisione_equa"
+                            app:icon="@drawable/ic_split_equal" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_divisione_percentuale"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/divisione_percentuale"
+                            app:icon="@drawable/ic_split_percent" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_divisione_parti"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/divisione_parti"
+                            app:icon="@drawable/ic_split_amount" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
 
                     <LinearLayout
                         android:id="@+id/layout_elenco_quote"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
                         android:orientation="vertical" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

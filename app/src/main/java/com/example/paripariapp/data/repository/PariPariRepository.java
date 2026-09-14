@@ -291,10 +291,7 @@ public class PariPariRepository {
 
     public void insertSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            spesaDao.insert(spesa);
-            if (quote != null && !quote.isEmpty()) {
-                spesaDao.insertQuote(quote);
-            }
+            spesaDao.insertSpesaConQuoteTransaction(spesa, quote);
             if (syncManager.isConnected() && auth.getCurrentUser() != null) {
                 syncManager.uploadSpesaConQuote(spesa, quote);
             }
@@ -307,8 +304,7 @@ public class PariPariRepository {
 
     public void deleteSpesa(String spesaId, String schedaId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            spesaDao.deleteQuoteBySpesaId(spesaId);
-            spesaDao.deleteById(spesaId);
+            spesaDao.deleteSpesaTransaction(spesaId);
             syncManager.deleteSpesa(spesaId, schedaId);
         });
     }
@@ -324,14 +320,12 @@ public class PariPariRepository {
     public void aggiornaSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             spesa.setSyncStatus(SyncStatus.PENDING_UPDATE);
-            spesaDao.insert(spesa);
-            spesaDao.deleteQuoteBySpesaId(spesa.getId());
             if (quote != null && !quote.isEmpty()) {
                 for (SpesaPartecipante q : quote) {
                     q.setSyncStatus(SyncStatus.PENDING_UPDATE);
                 }
-                spesaDao.insertQuote(quote);
             }
+            spesaDao.aggiornaSpesaConQuoteTransaction(spesa, quote);
             if (syncManager.isConnected() && auth.getCurrentUser() != null) {
                 syncManager.uploadSpesaConQuote(spesa, quote);
             }

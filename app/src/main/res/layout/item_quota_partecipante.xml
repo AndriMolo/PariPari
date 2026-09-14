@@ -25,15 +25,24 @@
         android:textColor="?attr/colorOnSurface"
         android:text="@string/lbl_nome_partecipante" />
 
-    <!-- Contenitore dell'input quota / percentuale -->
+    <!-- Quota calcolata in modalità equa (es. 25,00 €) -->
+    <TextView
+        android:id="@+id/tv_quota_equa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold"
+        android:visibility="visible" />
+
+    <!-- Contenitore dell'input quota (percentuale o importo esatto) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/contenitore_quota"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-        android:layout_width="110dp"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:hint="%"
-        app:suffixText="%"
         android:visibility="gone">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -42,7 +51,7 @@
             android:layout_height="wrap_content"
             android:gravity="end"
             android:inputType="numberDecimal"
-             />
+            android:singleLine="true" />
 
     </com.google.android.material.textfield.TextInputLayout>
 

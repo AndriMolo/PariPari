@@ -13,8 +13,10 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SpesaUiHelperTest {
 
@@ -57,7 +59,6 @@ public class SpesaUiHelperTest {
         for (SpesaPartecipante q : quote) {
             somma += q.getQuota();
         }
-        // 3.33 + 3.33 + 3.34 = 10.00
         assertEquals(10.00, somma, 0.0001);
         assertEquals(3.33, quote.get(0).getQuota(), 0.001);
         assertEquals(3.33, quote.get(1).getQuota(), 0.001);
@@ -110,5 +111,99 @@ public class SpesaUiHelperTest {
         assertEquals(2, quote.size());
         assertEquals(35.00, quote.get(0).getQuota(), 0.001);
         assertEquals(15.00, quote.get(1).getQuota(), 0.001);
+    }
+
+    @Test
+    public void testBilanciaPercentuali_scenarioUtente() {
+        Partecipante p1 = new Partecipante("1", "s1", "Alice", null, SyncStatus.SYNCED);
+        Partecipante p2 = new Partecipante("2", "s1", "Bob", null, SyncStatus.SYNCED);
+        Partecipante p3 = new Partecipante("3", "s1", "Charlie", null, SyncStatus.SYNCED);
+
+        List<Partecipante> inclusi = new ArrayList<>();
+        inclusi.add(p1);
+        inclusi.add(p2);
+        inclusi.add(p3);
+
+        Map<String, Double> initial = SpesaUiHelper.calcolaDivisioneInizialePercentuale(inclusi);
+        assertEquals(3, initial.size());
+        assertEquals(100.0, initial.get("1") + initial.get("2") + initial.get("3"), 0.01);
+
+        // Step 1: Modifica p1 a 60%
+        Set<String> locked = new HashSet<>();
+        locked.add("1");
+        Map<String, Double> step1 = SpesaUiHelper.bilanciaPercentuali(inclusi, "1", 60.0, locked, initial);
+        assertEquals(60.0, step1.get("1"), 0.01);
+        assertEquals(20.0, step1.get("2"), 0.01);
+        assertEquals(20.0, step1.get("3"), 0.01);
+        assertEquals(100.0, step1.get("1") + step1.get("2") + step1.get("3"), 0.01);
+
+        // Step 2: Modifica p2 a 30%
+        locked.add("2");
+        Map<String, Double> step2 = SpesaUiHelper.bilanciaPercentuali(inclusi, "2", 30.0, locked, step1);
+        assertEquals(60.0, step2.get("1"), 0.01);
+        assertEquals(30.0, step2.get("2"), 0.01);
+        assertEquals(10.0, step2.get("3"), 0.01);
+        assertEquals(100.0, step2.get("1") + step2.get("2") + step2.get("3"), 0.01);
+    }
+
+    @Test
+    public void testBilanciaImporti_scenarioUtente() {
+        Partecipante p1 = new Partecipante("1", "s1", "Alice", null, SyncStatus.SYNCED);
+        Partecipante p2 = new Partecipante("2", "s1", "Bob", null, SyncStatus.SYNCED);
+        Partecipante p3 = new Partecipante("3", "s1", "Charlie", null, SyncStatus.SYNCED);
+
+        List<Partecipante> inclusi = new ArrayList<>();
+        inclusi.add(p1);
+        inclusi.add(p2);
+        inclusi.add(p3);
+
+        double total = 90.00;
+        Map<String, Double> initial = SpesaUiHelper.calcolaDivisioneInizialeImporto(total, inclusi);
+        assertEquals(30.00, initial.get("1"), 0.01);
+        assertEquals(30.00, initial.get("2"), 0.01);
+        assertEquals(30.00, initial.get("3"), 0.01);
+
+        // Step 1: Modifica p1 a 50.00€
+        Set<String> locked = new HashSet<>();
+        locked.add("1");
+        Map<String, Double> step1 = SpesaUiHelper.bilanciaImporti(total, inclusi, "1", 50.00, locked, initial);
+        assertEquals(50.00, step1.get("1"), 0.01);
+        assertEquals(20.00, step1.get("2"), 0.01);
+        assertEquals(20.00, step1.get("3"), 0.01);
+        assertEquals(90.00, step1.get("1") + step1.get("2") + step1.get("3"), 0.01);
+
+        // Step 2: Modifica p2 a 30.00€
+        locked.add("2");
+        Map<String, Double> step2 = SpesaUiHelper.bilanciaImporti(total, inclusi, "2", 30.00, locked, step1);
+        assertEquals(50.00, step2.get("1"), 0.01);
+        assertEquals(30.00, step2.get("2"), 0.01);
+        assertEquals(10.00, step2.get("3"), 0.01);
+        assertEquals(90.00, step2.get("1") + step2.get("2") + step2.get("3"), 0.01);
+    }
+
+    @Test
+    public void testCalcolaDivisionePerImporto() {
+        Partecipante p1 = new Partecipante("1", "s1", "Alice", null, SyncStatus.SYNCED);
+        Partecipante p2 = new Partecipante("2", "s1", "Bob", null, SyncStatus.SYNCED);
+        Partecipante p3 = new Partecipante("3", "s1", "Charlie", null, SyncStatus.SYNCED);
+
+        List<Partecipante> tutti = new ArrayList<>();
+        tutti.add(p1);
+        tutti.add(p2);
+        tutti.add(p3);
+
+        List<Partecipante> inclusi = new ArrayList<>();
+        inclusi.add(p1);
+        inclusi.add(p2);
+
+        Map<String, Double> importi = new HashMap<>();
+        importi.put("1", 45.00);
+        importi.put("2", 15.00);
+
+        List<SpesaPartecipante> quote = SpesaUiHelper.calcolaDivisionePerImporto("spesa1", 60.00, inclusi, tutti, importi, SyncStatus.PENDING_INSERT);
+        assertEquals(3, quote.size());
+        assertEquals(45.00, quote.get(0).getQuota(), 0.001);
+        assertEquals(15.00, quote.get(1).getQuota(), 0.001);
+        assertEquals(0.00, quote.get(2).getQuota(), 0.001);
     }
 }

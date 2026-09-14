@@ -11,14 +11,22 @@ import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.SpesaPartecipante;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Helper per la deduplicazione della logica di calcolo, validazione e ripartizione
- * delle quote spese condivisa tra NuovaSpesaFragment e ModificaSpesaFragment.
+ * Helper per la deduplicazione della logica di calcolo, validazione, auto-bilanciamento
+ * e ripartizione delle quote spese condivisa tra NuovaSpesaFragment e ModificaSpesaFragment.
  */
 public final class SpesaUiHelper {
+
+    public enum TipoDivisione {
+        EQUA,
+        PERCENTUALE,
+        PER_PARTI
+    }
 
     private SpesaUiHelper() {
         // Utility class
@@ -44,6 +52,230 @@ public final class SpesaUiHelper {
      */
     public static boolean isSommaPercentualiValida(double sommaPercentuali) {
         return Math.abs(sommaPercentuali - 100.0) <= 0.05;
+    }
+
+    /**
+     * Verifica che la somma degli importi inseriti sia pari all'importo totale (con tolleranza di 0.05 per arrotondamenti).
+     */
+    public static boolean isSommaImportiValida(double sommaImporti, double importoTotale) {
+        return Math.abs(sommaImporti - importoTotale) <= 0.05;
+    }
+
+    /**
+     * Calcola la divisione iniziale delle percentuali (100% diviso equamente tra tutti gli inclusi).
+     */
+    @NonNull
+    public static Map<String, Double> calcolaDivisioneInizialePercentuale(@NonNull List<Partecipante> partecipantiInclusi) {
+        Map<String, Double> result = new HashMap<>();
+        if (partecipantiInclusi.isEmpty()) {
+            return result;
+        }
+        int size = partecipantiInclusi.size();
+        double quotaBase = Math.round((100.0 / size) * 10.0) / 10.0;
+        double assegnato = 0.0;
+        for (int i = 0; i < size; i++) {
+            Partecipante p = partecipantiInclusi.get(i);
+            if (i == size - 1) {
+                double quotaFinale = Math.round((100.0 - assegnato) * 10.0) / 10.0;
+                result.put(p.getId(), quotaFinale);
+            } else {
+                result.put(p.getId(), quotaBase);
+                assegnato += quotaBase;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Calcola la divisione iniziale degli importi (importoTotale diviso equamente tra tutti gli inclusi).
+     */
+    @NonNull
+    public static Map<String, Double> calcolaDivisioneInizialeImporto(double importoTotale, @NonNull List<Partecipante> partecipantiInclusi) {
+        Map<String, Double> result = new HashMap<>();
+        if (partecipantiInclusi.isEmpty()) {
+            return result;
+        }
+        int size = partecipantiInclusi.size();
+        double quotaBase = Math.round((importoTotale / size) * 100.0) / 100.0;
+        double assegnato = 0.0;
+        for (int i = 0; i < size; i++) {
+            Partecipante p = partecipantiInclusi.get(i);
+            if (i == size - 1) {
+                double quotaFinale = Math.round((importoTotale - assegnato) * 100.0) / 100.0;
+                result.put(p.getId(), quotaFinale);
+            } else {
+                result.put(p.getId(), quotaBase);
+                assegnato += quotaBase;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Auto-bilancia le percentuali in tempo reale.
+     * Quando un partecipante viene modificato dall'utente, il rimanente (100% - bloccati) viene distribuito
+     * equamente tra i partecipanti non ancora modificati (o l'ultimo partecipante disponibile).
+     * La somma restituita è SEMPRE pari a 100.0%.
+     */
+    @NonNull
+    public static Map<String, Double> bilanciaPercentuali(
+            @NonNull List<Partecipante> partecipantiInclusi,
+            @NonNull String activeId,
+            double activeVal,
+            @NonNull Set<String> lockedIds,
+            @NonNull Map<String, Double> currentPercMap
+    ) {
+        Map<String, Double> updated = new HashMap<>(currentPercMap);
+        if (partecipantiInclusi.isEmpty()) {
+            return updated;
+        }
+
+        if (partecipantiInclusi.size() == 1) {
+            updated.put(partecipantiInclusi.get(0).getId(), 100.0);
+            return updated;
+        }
+
+        // Calcola somma degli altri locked esclusi l'activeId
+        double sumOtherLocked = 0.0;
+        for (Partecipante p : partecipantiInclusi) {
+            if (!p.getId().equals(activeId) && lockedIds.contains(p.getId())) {
+                Double val = currentPercMap.get(p.getId());
+                sumOtherLocked += (val != null ? val : 0.0);
+            }
+        }
+
+        double maxActive = Math.max(0.0, Math.round((100.0 - sumOtherLocked) * 10.0) / 10.0);
+        double clampedActive = Math.min(Math.max(0.0, activeVal), maxActive);
+        clampedActive = Math.round(clampedActive * 10.0) / 10.0;
+        updated.put(activeId, clampedActive);
+
+        double rimanente = Math.max(0.0, Math.round((100.0 - (sumOtherLocked + clampedActive)) * 10.0) / 10.0);
+
+        List<String> unlocked = new ArrayList<>();
+        for (Partecipante p : partecipantiInclusi) {
+            if (!p.getId().equals(activeId) && !lockedIds.contains(p.getId())) {
+                unlocked.add(p.getId());
+            }
+        }
+
+        if (!unlocked.isEmpty()) {
+            int uSize = unlocked.size();
+            double quotaBase = Math.round((rimanente / uSize) * 10.0) / 10.0;
+            double allocato = 0.0;
+            for (int i = 0; i < uSize; i++) {
+                String uId = unlocked.get(i);
+                if (i == uSize - 1) {
+                    double finale = Math.round((rimanente - allocato) * 10.0) / 10.0;
+                    updated.put(uId, Math.max(0.0, finale));
+                } else {
+                    updated.put(uId, Math.max(0.0, quotaBase));
+                    allocato += quotaBase;
+                }
+            }
+        } else {
+            // Se tutti sono locked, assorbe l'ultimo partecipante diverso da activeId
+            for (int i = partecipantiInclusi.size() - 1; i >= 0; i--) {
+                Partecipante p = partecipantiInclusi.get(i);
+                if (!p.getId().equals(activeId)) {
+                    double val = Math.max(0.0, Math.round((rimanente + (currentPercMap.containsKey(p.getId()) ? currentPercMap.get(p.getId()) : 0.0)) * 10.0) / 10.0);
+                    // Ricalcola esattamente per fare 100.0
+                    double sumOthers = 0.0;
+                    for (Partecipante op : partecipantiInclusi) {
+                        if (!op.getId().equals(p.getId())) {
+                            Double v = updated.get(op.getId());
+                            sumOthers += (v != null ? v : 0.0);
+                        }
+                    }
+                    updated.put(p.getId(), Math.max(0.0, Math.round((100.0 - sumOthers) * 10.0) / 10.0));
+                    break;
+                }
+            }
+        }
+
+        return updated;
+    }
+
+    /**
+     * Auto-bilancia gli importi in tempo reale.
+     * Quando un partecipante viene modificato dall'utente, il rimanente (importoTotale - bloccati) viene distribuito
+     * equamente tra i partecipanti non ancora modificati (o l'ultimo partecipante disponibile).
+     * La somma restituita è SEMPRE pari a importoTotale.
+     */
+    @NonNull
+    public static Map<String, Double> bilanciaImporti(
+            double importoTotale,
+            @NonNull List<Partecipante> partecipantiInclusi,
+            @NonNull String activeId,
+            double activeVal,
+            @NonNull Set<String> lockedIds,
+            @NonNull Map<String, Double> currentImportoMap
+    ) {
+        Map<String, Double> updated = new HashMap<>(currentImportoMap);
+        if (partecipantiInclusi.isEmpty()) {
+            return updated;
+        }
+
+        if (partecipantiInclusi.size() == 1) {
+            updated.put(partecipantiInclusi.get(0).getId(), importoTotale);
+            return updated;
+        }
+
+        // Calcola somma degli altri locked esclusi l'activeId
+        double sumOtherLocked = 0.0;
+        for (Partecipante p : partecipantiInclusi) {
+            if (!p.getId().equals(activeId) && lockedIds.contains(p.getId())) {
+                Double val = currentImportoMap.get(p.getId());
+                sumOtherLocked += (val != null ? val : 0.0);
+            }
+        }
+
+        double maxActive = Math.max(0.0, Math.round((importoTotale - sumOtherLocked) * 100.0) / 100.0);
+        double clampedActive = Math.min(Math.max(0.0, activeVal), maxActive);
+        clampedActive = Math.round(clampedActive * 100.0) / 100.0;
+        updated.put(activeId, clampedActive);
+
+        double rimanente = Math.max(0.0, Math.round((importoTotale - (sumOtherLocked + clampedActive)) * 100.0) / 100.0);
+
+        List<String> unlocked = new ArrayList<>();
+        for (Partecipante p : partecipantiInclusi) {
+            if (!p.getId().equals(activeId) && !lockedIds.contains(p.getId())) {
+                unlocked.add(p.getId());
+            }
+        }
+
+        if (!unlocked.isEmpty()) {
+            int uSize = unlocked.size();
+            double quotaBase = Math.round((rimanente / uSize) * 100.0) / 100.0;
+            double allocato = 0.0;
+            for (int i = 0; i < uSize; i++) {
+                String uId = unlocked.get(i);
+                if (i == uSize - 1) {
+                    double finale = Math.round((rimanente - allocato) * 100.0) / 100.0;
+                    updated.put(uId, Math.max(0.0, finale));
+                } else {
+                    updated.put(uId, Math.max(0.0, quotaBase));
+                    allocato += quotaBase;
+                }
+            }
+        } else {
+            // Se tutti sono locked, assorbe l'ultimo partecipante diverso da activeId
+            for (int i = partecipantiInclusi.size() - 1; i >= 0; i--) {
+                Partecipante p = partecipantiInclusi.get(i);
+                if (!p.getId().equals(activeId)) {
+                    double sumOthers = 0.0;
+                    for (Partecipante op : partecipantiInclusi) {
+                        if (!op.getId().equals(p.getId())) {
+                            Double v = updated.get(op.getId());
+                            sumOthers += (v != null ? v : 0.0);
+                        }
+                    }
+                    updated.put(p.getId(), Math.max(0.0, Math.round((importoTotale - sumOthers) * 100.0) / 100.0));
+                    break;
+                }
+            }
+        }
+
+        return updated;
     }
 
     /**
@@ -124,6 +356,57 @@ public final class SpesaUiHelper {
                 quotaEuro = Math.round((importoTotale - totaleAssegnato) * 100.0) / 100.0;
             } else {
                 quotaEuro = Math.round((importoTotale * (perc / 100.0)) * 100.0) / 100.0;
+                totaleAssegnato += quotaEuro;
+            }
+            quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaEuro, syncStatus));
+        }
+
+        for (Partecipante p : tuttiPartecipanti) {
+            boolean incluso = false;
+            for (Partecipante inc : partecipantiInclusi) {
+                if (inc.getId().equals(p.getId())) {
+                    incluso = true;
+                    break;
+                }
+            }
+            if (!incluso) {
+                quote.add(new SpesaPartecipante(spesaId, p.getId(), 0.0, syncStatus));
+            }
+        }
+
+        return quote;
+    }
+
+    /**
+     * Calcola la ripartizione per parti/importi di una spesa tra i partecipanti inclusi,
+     * bilanciando i centesimi sull'ultimo elemento.
+     */
+    @NonNull
+    public static List<SpesaPartecipante> calcolaDivisionePerImporto(
+            @NonNull String spesaId,
+            double importoTotale,
+            @NonNull List<Partecipante> partecipantiInclusi,
+            @NonNull List<Partecipante> tuttiPartecipanti,
+            @NonNull Map<String, Double> importiInseriti,
+            int syncStatus
+    ) {
+        List<SpesaPartecipante> quote = new ArrayList<>();
+        if (partecipantiInclusi.isEmpty()) {
+            return quote;
+        }
+
+        double totaleAssegnato = 0.0;
+        int size = partecipantiInclusi.size();
+        for (int i = 0; i < size; i++) {
+            Partecipante p = partecipantiInclusi.get(i);
+            Double valObj = importiInseriti.get(p.getId());
+            double val = valObj != null ? valObj : 0.0;
+            double quotaEuro;
+
+            if (i == size - 1) {
+                quotaEuro = Math.round((importoTotale - totaleAssegnato) * 100.0) / 100.0;
+            } else {
+                quotaEuro = Math.round(val * 100.0) / 100.0;
                 totaleAssegnato += quotaEuro;
             }
             quote.add(new SpesaPartecipante(spesaId, p.getId(), quotaEuro, syncStatus));

@@ -5,6 +5,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaConDettagli;
@@ -39,6 +40,29 @@ public interface SpesaDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertQuote(List<SpesaPartecipante> quote);
+
+    @Transaction
+    default void insertSpesaConQuoteTransaction(Spesa spesa, List<SpesaPartecipante> quote) {
+        insert(spesa);
+        if (quote != null && !quote.isEmpty()) {
+            insertQuote(quote);
+        }
+    }
+
+    @Transaction
+    default void aggiornaSpesaConQuoteTransaction(Spesa spesa, List<SpesaPartecipante> quote) {
+        insert(spesa);
+        deleteQuoteBySpesaId(spesa.getId());
+        if (quote != null && !quote.isEmpty()) {
+            insertQuote(quote);
+        }
+    }
+
+    @Transaction
+    default void deleteSpesaTransaction(String spesaId) {
+        deleteQuoteBySpesaId(spesaId);
+        deleteById(spesaId);
+    }
 
     @Query("DELETE FROM spese WHERE id = :spesaId")
     void deleteById(String spesaId);
