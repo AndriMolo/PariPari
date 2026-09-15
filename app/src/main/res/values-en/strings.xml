@@ -4,10 +4,21 @@
     <string name="app_name_brand">PariPari</string>
 
     <!-- Bottom Navigation Labels -->
-    <string name="nav_spese">Expenses</string>
+    <string name="nav_spese">Groups</string>
     <string name="nav_saldi">Balances</string>
     <string name="nav_valuta">Currency</string>
     <string name="nav_account">Account</string>
+
+    <string name="formato_rimborso_titolo">Reimbursement: from %1$s to %2$s</string>
+    <string name="membro_default">Member</string>
+    <string name="btn_allega_scontrino">Attach receipt</string>
+    <string name="btn_scansiona_scontrino">Scan with camera</string>
+    <string name="scontrino_allegato">Receipt attached</string>
+    <string name="rimuovi_scontrino">Remove</string>
+    <string name="ocr_in_corso">Scanning receipt for amount and date…</string>
+    <string name="ocr_successo">Amount detected from receipt: %s</string>
+    <string name="ocr_nessun_importo">No amount clearly detected</string>
+    <string name="error_credenziali_google">Unable to retrieve Google credentials</string>
 
     <!-- Titoli Schermate -->
     <string name="title_saldi">My Balances</string>

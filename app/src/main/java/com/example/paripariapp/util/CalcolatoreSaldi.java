@@ -204,6 +204,10 @@ public class CalcolatoreSaldi {
             }
         }
 
+        // Ordinamento decrescente per garantire determinismo e minimizzare le transazioni
+        java.util.Collections.sort(debitori, (a, b) -> Double.compare(b.getValue(), a.getValue()));
+        java.util.Collections.sort(creditori, (a, b) -> Double.compare(b.getValue(), a.getValue()));
+
         // Compensazione diretta (greedy) dei debiti e crediti
         int iDeb = 0;
         int iCred = 0;

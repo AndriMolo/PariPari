@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.local.PartecipanteDao;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.RisultatoSaldi;
@@ -178,7 +179,12 @@ public class SpeseViewModel extends AndroidViewModel {
         String spesaId = UUID.randomUUID().toString();
         String pulitoDa = Partecipante.pulisciNome(daNome);
         String pulitoA = Partecipante.pulisciNome(aNome);
-        String titolo = "Rimborso: da " + (pulitoDa.isEmpty() ? "Membro" : pulitoDa) + " a " + (pulitoA.isEmpty() ? "Membro" : pulitoA);
+        String defaultMembro = getApplication().getString(R.string.membro_default);
+        String titolo = getApplication().getString(
+                R.string.formato_rimborso_titolo,
+                pulitoDa.isEmpty() ? defaultMembro : pulitoDa,
+                pulitoA.isEmpty() ? defaultMembro : pulitoA
+        );
 
         // 1. Spesa fittizia di pareggio
         Spesa pagamento = new Spesa(

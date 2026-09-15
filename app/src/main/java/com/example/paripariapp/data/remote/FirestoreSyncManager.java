@@ -238,6 +238,7 @@ public class FirestoreSyncManager {
         data.put("dataSpesa", spesa.getDataSpesa());
         data.put("categoria", spesa.getCategoria());
         data.put("pagatoDaId", spesa.getPagatoDaId());
+        data.put("scontrinoUrl", spesa.getScontrinoUrl());
 
         WriteBatch batch = firestore.batch();
         DocumentReference spesaRef = firestore.collection("groups").document(spesa.getSchedaId())
@@ -595,6 +596,7 @@ public class FirestoreSyncManager {
                                     Long dataSpesa = doc.getLong("dataSpesa");
                                     String categoria = doc.getString("categoria");
                                     String pagatoDaId = doc.getString("pagatoDaId");
+                                    String scontrinoUrl = doc.getString("scontrinoUrl");
 
                                     if (titolo != null && importo != null) {
                                         Spesa spesa = new Spesa(
@@ -606,7 +608,7 @@ public class FirestoreSyncManager {
                                                 dataSpesa != null ? dataSpesa : System.currentTimeMillis(),
                                                 categoria != null ? categoria : "Generale",
                                                 pagatoDaId != null ? pagatoDaId : "",
-                                                null,
+                                                scontrinoUrl,
                                                 SyncStatus.SYNCED
                                         );
                                         spesaDao.insert(spesa);
@@ -1069,6 +1071,7 @@ public class FirestoreSyncManager {
                                         Long eData = eDoc.getLong("dataSpesa");
                                         String eCat = eDoc.getString("categoria");
                                         String ePagato = eDoc.getString("pagatoDaId");
+                                        String eScontrino = eDoc.getString("scontrinoUrl");
 
                                         if (eTit != null && eImp != null) {
                                             speseScaricate.add(new Spesa(
@@ -1080,7 +1083,7 @@ public class FirestoreSyncManager {
                                                     eData != null ? eData : System.currentTimeMillis(),
                                                     eCat != null ? eCat : "Generale",
                                                     ePagato != null ? ePagato : "",
-                                                    null,
+                                                    eScontrino,
                                                     SyncStatus.SYNCED
                                             ));
 

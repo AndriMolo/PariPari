@@ -16,3 +16,5 @@
 .cxx
 local.properties
 .vscode/
+node_modules/
+functions/node_modules/

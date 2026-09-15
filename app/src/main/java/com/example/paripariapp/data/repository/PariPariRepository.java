@@ -281,7 +281,7 @@ public class PariPariRepository {
                 for (Scheda s : schede) {
                     List<Partecipante> parti = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
                     if (parti != null) {
-                        String myPartId = Partecipante.findCurrentUserId(parti, currentUser);
+                        String myPartId = Partecipante.findCurrentUserId(parti, currentUser, UserPreferencesRepository.getInstance(application), s.getId());
                         for (Partecipante p : parti) {
                             if (p.getId().equals(myPartId) || Partecipante.isCurrentUserParticipant(p, currentUser)) {
                                 p.setPaypalHandle(paypalHandle);
@@ -438,7 +438,7 @@ public class PariPariRepository {
 
                 List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta, application);
 
-                String mioId = Partecipante.findCurrentUserId(parti, currentUser);
+                String mioId = Partecipante.findCurrentUserId(parti, currentUser, UserPreferencesRepository.getInstance(application), idScheda);
 
                 if (mioId != null) {
                     for (TrasferimentoSaldo t : trasferimenti) {
@@ -471,7 +471,7 @@ public class PariPariRepository {
         String valuta = (scheda != null && scheda.getValutaPredefinita() != null) ? scheda.getValutaPredefinita() : "EUR";
         List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta, application);
         FirebaseUser currentUser = auth.getCurrentUser();
-        String mioId = Partecipante.findCurrentUserId(parti, currentUser);
+        String mioId = Partecipante.findCurrentUserId(parti, currentUser, UserPreferencesRepository.getInstance(application), schedaId);
         if (mioId != null && trasferimenti != null) {
             for (TrasferimentoSaldo t : trasferimenti) {
                 if ((t.getDaPartecipanteId().equals(mioId) || t.getAPartecipanteId().equals(mioId)) && t.getImporto() > 0.001) {

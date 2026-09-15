@@ -45,20 +45,23 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.material)
     implementation(libs.lifecycle.livedata)
+    implementation(libs.core.splashscreen)
 
     // Room Database
     implementation(libs.room.runtime)
     annotationProcessor(libs.room.compiler)
 
-    // Firebase BoM, Auth, Storage e Firestore
+    // Firebase BoM, Auth, Storage, Firestore e Messaging
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.play.services.auth)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.messaging)
 
-    // Generazione codici QR
+    // Generazione codici QR e OCR Riconoscimento Scontrini
     implementation(libs.zxing.core)
+    implementation(libs.mlkit.text.recognition)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)

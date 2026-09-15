@@ -96,6 +96,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
+                android:clipToPadding="false"
                 android:paddingHorizontal="16dp"
                 android:paddingBottom="4dp">
 
@@ -103,12 +104,13 @@
                     android:id="@+id/chip_group_categorie"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:singleLine="true"
                     app:singleSelection="true"
                     app:selectionRequired="false">
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_tutte"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true"
@@ -116,70 +118,70 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_rimborsi"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_rimborsi" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_cibo"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_cibo" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_spesa"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_spesa" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_trasporti"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_trasporti" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_alloggio"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_alloggio" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_svago"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_svago" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_shopping"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_shopping" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_bar"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_bar" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_salute"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_salute" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chip_cat_altro"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/cat_altro" />

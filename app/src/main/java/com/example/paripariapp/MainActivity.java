@@ -25,9 +25,16 @@ import com.example.paripariapp.ui.view.ValutaFragment;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private Fragment currentFragment;
+
+    private final androidx.activity.result.ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
+                // Permesso notifiche gestito
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -39,26 +46,17 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        richiediPermessoNotificheSeNecessario();
+        aggiornaFcmTokenSeLoggato();
 
         if (savedInstanceState == null) {
-            loadFragment(new SpeseFragment());
+            mostraFragmentTab(R.id.nav_spese);
+        } else {
+            mostraFragmentTab(binding.bottomNavigation.getSelectedItemId());
         }
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            int itemId = item.getItemId();
-
-            if (itemId == R.id.nav_spese) {
-                selectedFragment = new SpeseFragment();
-            } else if (itemId == R.id.nav_saldi) {
-                selectedFragment = new SaldiFragment();
-            } else if (itemId == R.id.nav_valuta) {
-                selectedFragment = new ValutaFragment();
-            } else if (itemId == R.id.nav_account) {
-                selectedFragment = new AccountFragment();
-            }
-
-            return loadFragment(selectedFragment);
+            return mostraFragmentTab(item.getItemId());
         });
 
         binding.bottomNavigation.setOnItemReselectedListener(item -> {
@@ -117,16 +115,66 @@ public class MainActivity extends AppCompatActivity {
                 .show(getSupportFragmentManager(), "UniscitiSchedaBottomSheet");
     }
 
-    private boolean loadFragment(Fragment fragment) {
-        if (fragment == null) return false;
-        // Pulisce l'eventuale backstack residuo quando si passa da un tab principale all'altro
-        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    private boolean mostraFragmentTab(int itemId) {
+        String tag;
+        if (itemId == R.id.nav_spese) {
+            tag = "tab_spese";
+        } else if (itemId == R.id.nav_saldi) {
+            tag = "tab_saldi";
+        } else if (itemId == R.id.nav_valuta) {
+            tag = "tab_valuta";
+        } else if (itemId == R.id.nav_account) {
+            tag = "tab_account";
+        } else {
+            return false;
+        }
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        FragmentManager fm = getSupportFragmentManager();
+        fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        Fragment targetFragment = fm.findFragmentByTag(tag);
+        androidx.fragment.app.FragmentTransaction transaction = fm.beginTransaction();
+
+        // Nasconde esplicitamente tutti gli altri fragment esistenti per evitare sovrapposizioni dopo ricreazione
+        for (Fragment f : fm.getFragments()) {
+            if (f != null && f != targetFragment) {
+                transaction.hide(f);
+            }
+        }
+
+        if (targetFragment == null) {
+            if (itemId == R.id.nav_spese) {
+                targetFragment = new SpeseFragment();
+            } else if (itemId == R.id.nav_saldi) {
+                targetFragment = new SaldiFragment();
+            } else if (itemId == R.id.nav_valuta) {
+                targetFragment = new ValutaFragment();
+            } else {
+                targetFragment = new AccountFragment();
+            }
+            transaction.add(R.id.fragment_container, targetFragment, tag);
+        } else {
+            transaction.show(targetFragment);
+        }
+
+        currentFragment = targetFragment;
+        transaction.commit();
         return true;
+    }
+
+    private void aggiornaFcmTokenSeLoggato() {
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                .addOnSuccessListener(com.example.paripariapp.service.PariPariMessagingService::inviaTokenAlServer)
+                .addOnFailureListener(e -> android.util.Log.w("MainActivity", "Errore recupero token FCM", e));
+    }
+
+    private void richiediPermessoNotificheSeNecessario() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) !=
+                    android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
 
     public void navigaVersoAccount() {

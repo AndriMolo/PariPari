@@ -244,6 +244,34 @@ public class DettaglioSpesaFragment extends Fragment {
         String pagatoreNome = spesaCorrente.getNomePagatore() != null ? spesaCorrente.getNomePagatore() : getString(R.string.nome_sconosciuto);
         binding.tvPagatoDaDettaglio.setText(getString(R.string.format_spesa_pagata_da, pagatoreNome));
 
+        // Scontrino / Ricevuta allegata
+        if (spesa.getScontrinoUrl() != null && !spesa.getScontrinoUrl().trim().isEmpty()) {
+            binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
+            String url = spesa.getScontrinoUrl();
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+                    try {
+                        java.io.InputStream in = new java.net.URL(url).openStream();
+                        android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+                        if (in != null) in.close();
+                        if (bmp != null && getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                if (binding != null) {
+                                    binding.ivScontrinoDettaglio.setImageBitmap(bmp);
+                                }
+                            });
+                        }
+                    } catch (Exception ignored) {}
+                });
+            } else {
+                try {
+                    binding.ivScontrinoDettaglio.setImageURI(android.net.Uri.parse(url));
+                } catch (Exception ignored) {}
+            }
+        } else {
+            binding.cardScontrinoDettaglio.setVisibility(View.GONE);
+        }
+
         // Quote partecipanti
         setupQuoteRecycler(spesa, valutaSpesa, gruppoVal);
     }

@@ -135,7 +135,6 @@ public class AccountFragment extends Fragment {
         sheet.setOnCurrencySelectedListener(currencyFull -> {
             String code = UserPreferencesRepository.extractCurrencyCode(currencyFull);
             viewModel.setDefaultCurrency(code);
-            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_valuta_aggiornata, code));
         });
         sheet.show(getParentFragmentManager(), "selettore_valuta_account");
     }
@@ -175,8 +174,6 @@ public class AccountFragment extends Fragment {
                 .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
                     String code = languageCodes[which];
                     viewModel.setAppLanguage(code);
-                    String display = getDisplayLanguageForCode(code);
-                    AppSnackbar.show(binding.getRoot(), getString(R.string.msg_lingua_aggiornata, display));
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
@@ -211,7 +208,6 @@ public class AccountFragment extends Fragment {
                         code = UserPreferencesRepository.THEME_DARK;
                     }
                     viewModel.setAppTheme(code);
-                    AppSnackbar.show(binding.getRoot(), R.string.msg_tema_aggiornato);
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
@@ -262,7 +258,6 @@ public class AccountFragment extends Fragment {
                     } else {
                         viewModel.setRevolutHandle(raw);
                     }
-                    AppSnackbar.show(binding.getRoot(), isPaypal ? R.string.msg_paypal_salvato : R.string.msg_revolut_salvato);
                 })
                 .setNeutralButton(R.string.btn_elimina, (d, which) -> {
                     if (isPaypal) {
@@ -270,7 +265,6 @@ public class AccountFragment extends Fragment {
                     } else {
                         viewModel.setRevolutHandle("");
                     }
-                    AppSnackbar.show(binding.getRoot(), isPaypal ? R.string.msg_paypal_salvato : R.string.msg_revolut_salvato);
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .create();

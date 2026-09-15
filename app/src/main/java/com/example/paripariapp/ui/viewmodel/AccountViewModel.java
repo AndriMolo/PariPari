@@ -302,7 +302,6 @@ public class AccountViewModel extends AndroidViewModel {
             }
 
             repository.aggiornaNomeUtenteInTuttiIGruppi(nomePulito);
-            successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_nome_aggiornato_successo));
         });
     }
 
@@ -338,9 +337,9 @@ public class AccountViewModel extends AndroidViewModel {
                                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Email di verifica inviata con successo"))
                                     .addOnFailureListener(e -> Log.w(TAG, "Invio email di verifica fallito: " + e.getMessage()));
                         }
-                        successMessage.setValue(isNewAccount
-                                ? getApplication().getString(com.example.paripariapp.R.string.msg_registrazione_ok)
-                                : getApplication().getString(com.example.paripariapp.R.string.msg_profilo_aggiornato));
+                        if (isNewAccount) {
+                            successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_registrazione_ok));
+                        }
                     });
         });
     }

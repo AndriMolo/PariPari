@@ -4,10 +4,21 @@
     <string name="app_name_brand">PariPari</string>
 
     <!-- Bottom Navigation Labels -->
-    <string name="nav_spese">Spese</string>
+    <string name="nav_spese">Gruppi</string>
     <string name="nav_saldi">Saldi</string>
     <string name="nav_valuta">Valuta</string>
     <string name="nav_account">Account</string>
+
+    <string name="formato_rimborso_titolo">Rimborso: da %1$s a %2$s</string>
+    <string name="membro_default">Membro</string>
+    <string name="btn_allega_scontrino">Allega scontrino</string>
+    <string name="btn_scansiona_scontrino">Scansiona con fotocamera</string>
+    <string name="scontrino_allegato">Scontrino allegato</string>
+    <string name="rimuovi_scontrino">Rimuovi</string>
+    <string name="ocr_in_corso">Riconoscimento importo e data in corso…</string>
+    <string name="ocr_successo">Importo rilevato dallo scontrino: %s</string>
+    <string name="ocr_nessun_importo">Nessun importo rilevato con certezza</string>
+    <string name="error_credenziali_google">Impossibile recuperare le credenziali Google</string>
 
     <!-- Titoli Schermate -->
     <string name="title_saldi">I miei Saldi</string>

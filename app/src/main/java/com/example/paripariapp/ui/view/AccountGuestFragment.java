@@ -72,7 +72,7 @@ public class AccountGuestFragment extends Fragment {
                             if (account != null && account.getIdToken() != null) {
                                 viewModel.accediConGoogle(account.getIdToken());
                             } else {
-                                AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), "Impossibile recuperare le credenziali Google");
+                                AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), getString(R.string.error_credenziali_google));
                             }
                         } catch (ApiException e) {
                             Log.w(TAG, "Accesso con Google fallito: code=" + e.getStatusCode(), e);

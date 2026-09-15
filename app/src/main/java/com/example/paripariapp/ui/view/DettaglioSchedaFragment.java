@@ -874,9 +874,6 @@ public class DettaglioSchedaFragment extends Fragment {
                 return;
             }
             viewModel.aggiornaNomePartecipante(p.getId(), nuovoNome);
-            if (binding != null) {
-                AppSnackbar.show(binding.getRoot(), R.string.msg_nome_aggiornato_successo);
-            }
         });
 
         membroAdapter.setOnEliminaClickListener(p -> {
