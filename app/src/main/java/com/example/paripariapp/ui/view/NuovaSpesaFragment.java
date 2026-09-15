@@ -204,7 +204,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         String paganteSelezionato = binding.menuPagante.getText() != null ? binding.menuPagante.getText().toString() : "";
         List<String> destinatariDisponibili = new ArrayList<>();
         for (Partecipante p : partecipanti) {
-            if (!p.getNome().equalsIgnoreCase(paganteSelezionato)) {
+            if (p.isAttivo() && !p.getNome().equalsIgnoreCase(paganteSelezionato)) {
                 destinatariDisponibili.add(p.getNome());
             }
         }
@@ -228,7 +228,9 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
             final List<String> nomi = new ArrayList<>();
             for (Partecipante p : lista) {
-                nomi.add(p.getNome());
+                if (p.isAttivo()) {
+                    nomi.add(p.getNome());
+                }
             }
             ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
             binding.menuPagante.setAdapter(adapter);

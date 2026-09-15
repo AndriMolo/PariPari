@@ -156,7 +156,8 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         boolean haPaypal = !TextUtils.isEmpty(finalPaypalLink);
         boolean haRevolut = !TextUtils.isEmpty(finalRevolutLink);
 
-        // Pulsante Segna come saldato
+        // Pulsante Segna come saldato (visibile sia per Debitore che per Creditore)
+        binding.btnSegnaSaldato.setVisibility(View.VISIBLE);
         binding.btnSegnaSaldato.setOnClickListener(v -> {
             if (schedaId != null && daId != null && aId != null) {
                 com.example.paripariapp.util.HapticUtil.confirm(binding.btnSegnaSaldato);
@@ -176,9 +177,16 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
 
             binding.tvPaypalLink.setOnClickListener(v -> apriLinkEsterno(finalPaypalLink));
             binding.btnCopiaPaypal.setOnClickListener(v -> copiaInAppunti(finalPaypalLink));
-            binding.btnCondividiPaypal.setOnClickListener(v -> condivideMessaggio(
-                    getString(R.string.msg_condividi_mio_paypal, daNome, strImportoValuta, finalPaypalLink)
-            ));
+
+            if (isDebitore) {
+                binding.btnCondividiPaypal.setText(R.string.btn_paga_ora_paypal);
+                binding.btnCondividiPaypal.setOnClickListener(v -> apriLinkEsterno(finalPaypalLink));
+            } else {
+                binding.btnCondividiPaypal.setText(R.string.btn_condividi);
+                binding.btnCondividiPaypal.setOnClickListener(v -> condivideMessaggio(
+                        getString(R.string.msg_condividi_mio_paypal, daNome, strImportoValuta, finalPaypalLink)
+                ));
+            }
         } else {
             binding.cardPaypal.setVisibility(View.GONE);
         }
@@ -191,9 +199,16 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
 
             binding.tvRevolutLink.setOnClickListener(v -> apriLinkEsterno(finalRevolutLink));
             binding.btnCopiaRevolut.setOnClickListener(v -> copiaInAppunti(finalRevolutLink));
-            binding.btnCondividiRevolut.setOnClickListener(v -> condivideMessaggio(
-                    getString(R.string.msg_condividi_mio_revolut, daNome, strImportoValuta, finalRevolutLink)
-            ));
+
+            if (isDebitore) {
+                binding.btnCondividiRevolut.setText(R.string.btn_paga_ora_revolut);
+                binding.btnCondividiRevolut.setOnClickListener(v -> apriLinkEsterno(finalRevolutLink));
+            } else {
+                binding.btnCondividiRevolut.setText(R.string.btn_condividi);
+                binding.btnCondividiRevolut.setOnClickListener(v -> condivideMessaggio(
+                        getString(R.string.msg_condividi_mio_revolut, daNome, strImportoValuta, finalRevolutLink)
+                ));
+            }
         } else {
             binding.cardRevolut.setVisibility(View.GONE);
         }

@@ -170,53 +170,47 @@ public class PariPariRepository {
 
     public void esciDalGruppo(String schedaId, String partecipanteId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            syncManager.detachSubcollectionListeners(schedaId);
-
-            // 1. Prima nel DB locale (Room): gestiamo lo stato, il creatore o eventuale cancellazione se vuoto
             Scheda scheda = schedaDao.getSchedaById(schedaId);
             List<Partecipante> partecipanti = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
 
             if (scheda != null && partecipanti != null) {
-                boolean eraCreatore = (scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(partecipanteId));
-
                 Partecipante pUscito = partecipanteDao.getPartecipanteById(partecipanteId);
                 if (pUscito != null) {
+                    FirebaseUser currentUser = auth.getCurrentUser();
+                    boolean isSelf = Partecipante.isCurrentUserParticipant(pUscito, currentUser);
+                    if (isSelf) {
+                        syncManager.detachSubcollectionListeners(schedaId);
+                    }
+
                     pUscito.setStato(Partecipante.STATO_USCITO);
-                    pUscito.setPreviousUserId(auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null);
+                    pUscito.setPreviousUserId(currentUser != null ? currentUser.getUid() : null);
                     pUscito.setUserId(null);
                     pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
                     partecipanteDao.update(pUscito);
-                }
 
-                if (eraCreatore) {
-                    String nuovoCreatoreId = null;
-                    // Cerca un altro utente autenticato
-                    for (Partecipante p : partecipanti) {
-                        if (!p.getId().equals(partecipanteId) && p.isAttivo() && p.isAutenticato()) {
-                            nuovoCreatoreId = p.getId();
-                            break;
-                        }
-                    }
-                    if (nuovoCreatoreId == null) {
-                        // Cerca qualsiasi altro partecipante attivo
+                    boolean eraCreatore = (scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(partecipanteId));
+                    if (eraCreatore) {
+                        String nuovoCreatoreId = null;
                         for (Partecipante p : partecipanti) {
-                            if (!p.getId().equals(partecipanteId) && p.isAttivo()) {
+                            if (!p.getId().equals(partecipanteId) && p.isAttivo() && p.isAutenticato()) {
                                 nuovoCreatoreId = p.getId();
                                 break;
                             }
                         }
-                    }
+                        if (nuovoCreatoreId == null) {
+                            for (Partecipante p : partecipanti) {
+                                if (!p.getId().equals(partecipanteId) && p.isAttivo()) {
+                                    nuovoCreatoreId = p.getId();
+                                    break;
+                                }
+                            }
+                        }
 
-                    if (nuovoCreatoreId != null) {
-                        scheda.setCreatoreId(nuovoCreatoreId);
-                        scheda.setSyncStatus(SyncStatus.PENDING_UPDATE);
-                        schedaDao.update(scheda);
-                    } else {
-                        // Nessun altro utente rimasto -> cancella definitivamente la scheda
-                        spesaDao.deleteQuoteBySchedaId(schedaId);
-                        spesaDao.deleteBySchedaId(schedaId);
-                        partecipanteDao.deleteBySchedaId(schedaId);
-                        schedaDao.deleteById(schedaId);
+                        if (nuovoCreatoreId != null) {
+                            scheda.setCreatoreId(nuovoCreatoreId);
+                            scheda.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                            schedaDao.update(scheda);
+                        }
                     }
                 }
             }
@@ -224,6 +218,29 @@ public class PariPariRepository {
             // 2. Poi su Firestore
             if (auth.getCurrentUser() != null && syncManager.isConnected()) {
                 syncManager.esciDalGruppo(schedaId, partecipanteId);
+            }
+        });
+    }
+
+    public void disattivaMembro(String schedaId, String partecipanteId) {
+        esciDalGruppo(schedaId, partecipanteId);
+    }
+
+    public void riattivaMembro(String schedaId, String partecipanteId) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
+            if (p != null) {
+                p.setStato(Partecipante.STATO_ATTIVO);
+                FirebaseUser currentUser = auth.getCurrentUser();
+                if (p.getPreviousUserId() != null && currentUser != null && currentUser.getUid().equals(p.getPreviousUserId())) {
+                    p.setUserId(currentUser.getUid());
+                }
+                p.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                partecipanteDao.update(p);
+
+                if (syncManager.isConnected() && currentUser != null) {
+                    syncManager.uploadPartecipante(p);
+                }
             }
         });
     }
@@ -480,6 +497,172 @@ public class PariPariRepository {
             }
         }
         return false;
+    }
+
+    public interface OnImportCsvCallback {
+        void onSuccess(String schedaId, String titolo);
+        void onError(String errore);
+    }
+
+    public void importaSchedaDaCsv(android.content.Context context, android.net.Uri csvUri, OnImportCsvCallback callback) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            String schedaId = java.util.UUID.randomUUID().toString();
+            com.example.paripariapp.util.ImportatoreCsvUtil.RisultatoImportazione res =
+                    com.example.paripariapp.util.ImportatoreCsvUtil.analizzaCsv(context, csvUri, schedaId);
+
+            android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+            if (res == null || res.speseConQuote.isEmpty()) {
+                mainHandler.post(() -> callback.onError("Impossibile leggere il file CSV o formato non valido"));
+                return;
+            }
+
+            Scheda scheda = Scheda.createNew(res.nomeScheda, "", res.valuta, null);
+            scheda.setId(schedaId);
+
+            if (res.partecipanti != null && !res.partecipanti.isEmpty()) {
+                scheda.setCreatoreId(res.partecipanti.get(0).getId());
+                UserPreferencesRepository.getInstance(context)
+                        .setMyParticipantId(schedaId, res.partecipanti.get(0).getId());
+            }
+
+            insertScheda(scheda, res.partecipanti);
+
+            for (com.example.paripariapp.util.ImportatoreCsvUtil.SpesaConQuote sq : res.speseConQuote) {
+                insertSpesaConQuote(sq.spesa, sq.quote);
+            }
+
+            mainHandler.post(() -> callback.onSuccess(schedaId, res.nomeScheda));
+        });
+    }
+
+    public interface OnUploadCallback {
+        void onSuccess(String url);
+        void onError(String errore);
+    }
+
+    public void aggiornaIconaScheda(String schedaId, String iconaUrl) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Scheda s = schedaDao.getSchedaById(schedaId);
+            if (s != null) {
+                s.setIconaUrl(iconaUrl);
+                s.setDataAggiornamento(System.currentTimeMillis());
+                schedaDao.insert(s);
+                syncManager.uploadScheda(s, partecipanteDao.getPartecipantiBySchedaSync(schedaId));
+            }
+        });
+    }
+
+    public void uploadIconaScheda(android.content.Context context, android.net.Uri fileUri, String schedaId, OnUploadCallback callback) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            byte[] imageBytes = ridimensionaEComprimiImmagine(context, fileUri);
+            android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+            if (imageBytes == null) {
+                mainHandler.post(() -> callback.onError("Impossibile elaborare l'immagine selezionata"));
+                return;
+            }
+
+            com.google.firebase.storage.StorageReference ref =
+                    com.google.firebase.storage.FirebaseStorage.getInstance().getReference()
+                            .child("group_icons/" + schedaId + ".jpg");
+
+            ref.putBytes(imageBytes)
+                    .continueWithTask(task -> {
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            throw task.getException();
+                        }
+                        return ref.getDownloadUrl();
+                    })
+                    .addOnSuccessListener(downloadUri -> {
+                        String url = downloadUri.toString();
+                        aggiornaIconaScheda(schedaId, url);
+                        mainHandler.post(() -> callback.onSuccess(url));
+                    })
+                    .addOnFailureListener(e -> mainHandler.post(() -> callback.onError(e.getMessage())));
+        });
+    }
+
+    public void aggiornaAvatarUtente(String photoUrl) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                String uid = user.getUid();
+                List<Partecipante> partecipanti = partecipanteDao.getAllPartecipantiSync();
+                if (partecipanti != null) {
+                    for (Partecipante p : partecipanti) {
+                        if (uid.equals(p.getUserId())) {
+                            p.setPhotoUrl(photoUrl);
+                            partecipanteDao.insert(p);
+                            syncManager.uploadPartecipante(p);
+                        }
+                    }
+                }
+                java.util.Map<String, Object> userData = new java.util.HashMap<>();
+                userData.put("photoUrl", photoUrl != null ? photoUrl : "");
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("users").document(uid)
+                        .set(userData, com.google.firebase.firestore.SetOptions.merge());
+            }
+        });
+    }
+
+    public void uploadAvatarUtente(android.content.Context context, android.net.Uri fileUri, OnUploadCallback callback) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+            if (user == null) {
+                mainHandler.post(() -> callback.onError("Utente non autenticato"));
+                return;
+            }
+
+            byte[] imageBytes = ridimensionaEComprimiImmagine(context, fileUri);
+            if (imageBytes == null) {
+                mainHandler.post(() -> callback.onError("Impossibile elaborare l'immagine profilata"));
+                return;
+            }
+
+            com.google.firebase.storage.StorageReference ref =
+                    com.google.firebase.storage.FirebaseStorage.getInstance().getReference()
+                            .child("avatars/" + user.getUid() + ".jpg");
+
+            ref.putBytes(imageBytes)
+                    .continueWithTask(task -> {
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            throw task.getException();
+                        }
+                        return ref.getDownloadUrl();
+                    })
+                    .addOnSuccessListener(downloadUri -> {
+                        String url = downloadUri.toString();
+                        aggiornaAvatarUtente(url);
+                        mainHandler.post(() -> callback.onSuccess(url));
+                    })
+                    .addOnFailureListener(e -> mainHandler.post(() -> callback.onError(e.getMessage())));
+        });
+    }
+
+    private byte[] ridimensionaEComprimiImmagine(android.content.Context context, android.net.Uri fileUri) {
+        try (java.io.InputStream is = context.getContentResolver().openInputStream(fileUri)) {
+            android.graphics.Bitmap bitmapOriginal = android.graphics.BitmapFactory.decodeStream(is);
+            if (bitmapOriginal == null) return null;
+
+            int maxDim = 1024;
+            int width = bitmapOriginal.getWidth();
+            int height = bitmapOriginal.getHeight();
+
+            if (width > maxDim || height > maxDim) {
+                float ratio = Math.min((float) maxDim / width, (float) maxDim / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+                bitmapOriginal = android.graphics.Bitmap.createScaledBitmap(bitmapOriginal, width, height, true);
+            }
+
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            bitmapOriginal.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos);
+            return baos.toByteArray();
+        } catch (Exception e) {
+            android.util.Log.e("PariPariRepository", "Errore compressione immagine", e);
+            return null;
+        }
     }
 
     public void assicuraCodiceInvito(Scheda scheda) {

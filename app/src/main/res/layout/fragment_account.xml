@@ -46,9 +46,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/label_valuta_predefinita"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <!-- Pillola con valuta corrente e icona dropdown -->
                 <LinearLayout
@@ -66,7 +66,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         tools:text="EUR"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold" />
 
@@ -101,9 +101,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/label_lingua_app"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <!-- Pillola con lingua corrente e icona dropdown -->
                 <LinearLayout
@@ -121,7 +121,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/lingua_sistema"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold" />
 
@@ -156,9 +156,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/label_tema_app"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <!-- Pillola con tema corrente e icona dropdown -->
                 <LinearLayout
@@ -176,7 +176,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/tema_sistema"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold" />
 
@@ -203,7 +203,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/section_metodi_pagamento"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
                 android:textColor="?attr/colorPrimary"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
@@ -234,9 +234,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/label_paypal_username"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -253,7 +253,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/badge_non_configurato"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold" />
 
@@ -295,9 +295,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/label_revolut_username"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -314,7 +314,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/badge_non_configurato"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold" />
 

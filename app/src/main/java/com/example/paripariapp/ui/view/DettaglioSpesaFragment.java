@@ -246,9 +246,9 @@ public class DettaglioSpesaFragment extends Fragment {
 
         // Scontrino / Ricevuta allegata
         if (spesa.getScontrinoUrl() != null && !spesa.getScontrinoUrl().trim().isEmpty()) {
-            binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
-            String url = spesa.getScontrinoUrl();
+            String url = spesa.getScontrinoUrl().trim();
             if (url.startsWith("http://") || url.startsWith("https://")) {
+                binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
                 com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
                     try {
                         java.io.InputStream in = new java.net.URL(url).openStream();
@@ -261,12 +261,23 @@ public class DettaglioSpesaFragment extends Fragment {
                                 }
                             });
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                if (binding != null) {
+                                    binding.cardScontrinoDettaglio.setVisibility(View.GONE);
+                                }
+                            });
+                        }
+                    }
                 });
             } else {
                 try {
                     binding.ivScontrinoDettaglio.setImageURI(android.net.Uri.parse(url));
-                } catch (Exception ignored) {}
+                    binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
+                } catch (Exception e) {
+                    binding.cardScontrinoDettaglio.setVisibility(View.GONE);
+                }
             }
         } else {
             binding.cardScontrinoDettaglio.setVisibility(View.GONE);

@@ -44,6 +44,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
     };
 
     private OnEliminaClickListener onEliminaClickListener;
+    private OnRiattivaClickListener onRiattivaClickListener;
     private OnNomeModificatoListener onNomeModificatoListener;
     private boolean isCapogruppo = false;
     private FirebaseUser currentUser;
@@ -52,6 +53,10 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
     public interface OnEliminaClickListener {
         void onEliminaClick(Partecipante partecipante);
+    }
+
+    public interface OnRiattivaClickListener {
+        void onRiattivaClick(Partecipante partecipante);
     }
 
     public interface OnNomeModificatoListener {
@@ -64,6 +69,10 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
     public void setOnEliminaClickListener(OnEliminaClickListener listener) {
         this.onEliminaClickListener = listener;
+    }
+
+    public void setOnRiattivaClickListener(OnRiattivaClickListener listener) {
+        this.onRiattivaClickListener = listener;
     }
 
     public void setOnNomeModificatoListener(OnNomeModificatoListener listener) {
@@ -129,8 +138,17 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         boolean isMe = (myId != null && myId.equals(p.getId())) ||
                 Partecipante.isCurrentUserParticipant(p, currentUser);
 
-        String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase(java.util.Locale.getDefault()) : "?";
-        holder.binding.avatarIniziale.setText(iniziale);
+        String photoUrl = p.getPhotoUrl();
+        if (photoUrl != null && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
+            holder.binding.avatarIniziale.setVisibility(View.GONE);
+            holder.binding.ivAvatarFoto.setVisibility(View.VISIBLE);
+            com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(photoUrl, holder.binding.ivAvatarFoto, R.drawable.ic_account);
+        } else {
+            holder.binding.ivAvatarFoto.setVisibility(View.GONE);
+            holder.binding.avatarIniziale.setVisibility(View.VISIBLE);
+            String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase(java.util.Locale.getDefault()) : "?";
+            holder.binding.avatarIniziale.setText(iniziale);
+        }
 
         boolean isEditing = Objects.equals(p.getId(), editingParticipantId);
 
@@ -194,23 +212,46 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             holder.binding.bottoneSalvaInline.setVisibility(View.GONE);
             holder.binding.bottoneAnnullaInline.setVisibility(View.GONE);
 
-            String nomeDisplay = Partecipante.formattaNomePerVisualizzazione(context, p, isMe);
-            holder.binding.nomePartecipante.setText(nomeDisplay);
-            holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
+            boolean isExMembro = !p.isAttivo();
 
-            boolean canEdit = isMe || isCapogruppo;
-            holder.binding.bottoneModifica.setVisibility(canEdit ? View.VISIBLE : View.GONE);
-            holder.binding.bottoneModifica.setOnClickListener(v -> {
-                editingParticipantId = p.getId();
-                notifyItemRangeChanged(0, getItemCount());
-            });
+            if (isExMembro) {
+                holder.binding.getRoot().setAlpha(0.5f);
+                String nomeClean = Partecipante.pulisciNome(p.getNome());
+                String nomeDisplay = nomeClean + " (" + context.getString(R.string.stato_ex_membro) + ")";
+                holder.binding.nomePartecipante.setText(nomeDisplay);
+                holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
 
-            holder.binding.bottoneElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
-            holder.binding.bottoneElimina.setOnClickListener(v -> {
-                if (onEliminaClickListener != null) {
-                    onEliminaClickListener.onEliminaClick(p);
-                }
-            });
+                holder.binding.bottoneModifica.setVisibility(View.GONE);
+                holder.binding.bottoneElimina.setVisibility(View.VISIBLE);
+                holder.binding.bottoneElimina.setIconResource(R.drawable.ic_check);
+                holder.binding.bottoneElimina.setContentDescription(context.getString(R.string.btn_riattiva_membro));
+                holder.binding.bottoneElimina.setOnClickListener(v -> {
+                    if (onRiattivaClickListener != null) {
+                        onRiattivaClickListener.onRiattivaClick(p);
+                    }
+                });
+            } else {
+                holder.binding.getRoot().setAlpha(1.0f);
+                String nomeDisplay = Partecipante.formattaNomePerVisualizzazione(context, p, isMe);
+                holder.binding.nomePartecipante.setText(nomeDisplay);
+                holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
+
+                boolean canEdit = isMe || isCapogruppo;
+                holder.binding.bottoneModifica.setVisibility(canEdit ? View.VISIBLE : View.GONE);
+                holder.binding.bottoneModifica.setOnClickListener(v -> {
+                    editingParticipantId = p.getId();
+                    notifyItemRangeChanged(0, getItemCount());
+                });
+
+                holder.binding.bottoneElimina.setVisibility((isCapogruppo || isMe) ? View.VISIBLE : View.GONE);
+                holder.binding.bottoneElimina.setIconResource(R.drawable.ic_delete);
+                holder.binding.bottoneElimina.setContentDescription(context.getString(R.string.btn_rimuovi));
+                holder.binding.bottoneElimina.setOnClickListener(v -> {
+                    if (onEliminaClickListener != null) {
+                        onEliminaClickListener.onEliminaClick(p);
+                    }
+                });
+            }
         }
     }
 

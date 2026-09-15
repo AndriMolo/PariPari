@@ -3,6 +3,7 @@ package com.example.paripariapp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -24,8 +25,11 @@ import com.example.paripariapp.ui.view.ValutaFragment;
  */
 public class MainActivity extends AppCompatActivity {
 
+    private static final String KEY_SELECTED_TAB = "key_selected_tab_id";
+
     private ActivityMainBinding binding;
     private Fragment currentFragment;
+    private int currentSelectedTabId = R.id.nav_spese;
 
     private final androidx.activity.result.ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -49,13 +53,17 @@ public class MainActivity extends AppCompatActivity {
         richiediPermessoNotificheSeNecessario();
         aggiornaFcmTokenSeLoggato();
 
-        if (savedInstanceState == null) {
-            mostraFragmentTab(R.id.nav_spese);
+        if (savedInstanceState != null) {
+            currentSelectedTabId = savedInstanceState.getInt(KEY_SELECTED_TAB, R.id.nav_spese);
         } else {
-            mostraFragmentTab(binding.bottomNavigation.getSelectedItemId());
+            currentSelectedTabId = R.id.nav_spese;
         }
 
+        binding.bottomNavigation.setSelectedItemId(currentSelectedTabId);
+        mostraFragmentTab(currentSelectedTabId);
+
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            currentSelectedTabId = item.getItemId();
             return mostraFragmentTab(item.getItemId());
         });
 
@@ -64,6 +72,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         gestisciDeepLink(getIntent());
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_SELECTED_TAB, currentSelectedTabId);
     }
 
     @Override

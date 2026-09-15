@@ -37,7 +37,7 @@
                 android:id="@+id/tv_categoria_dettaglio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
                 android:textColor="?attr/colorPrimary"
                 android:textStyle="bold"
                 tools:text="🍕 Cibo" />
@@ -48,7 +48,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
                 tools:text="Cena al ristorante" />
@@ -59,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="14 Settembre 2026" />
 
@@ -83,14 +83,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/label_totale_spesa"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                        android:textAppearance="?attr/textAppearanceLabelMedium" />
 
                     <TextView
                         android:id="@+id/tv_importo_totale_dettaglio"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline4"
+                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold"
                         tools:text="100,00 EUR" />
@@ -100,7 +100,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:visibility="gone"
                         tools:text="≈ 116,50 USD" />
@@ -111,12 +111,12 @@
                         android:layout_marginVertical="12dp"
                         android:background="?attr/colorOutlineVariant" />
 
-                    <!-- Pagato Da con soldi in ROSSO -->
+                    <!-- Pagato Da -->
                     <TextView
                         android:id="@+id/tv_pagato_da_dettaglio"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
                         android:textColor="?attr/colorOnSurface"
                         tools:text="Pagato da Mario Rossi: 100,00 EUR" />
                 </LinearLayout>
@@ -129,7 +129,7 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/titolo_partecipanti_quote"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 

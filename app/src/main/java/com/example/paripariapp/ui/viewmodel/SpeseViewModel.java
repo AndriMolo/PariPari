@@ -172,16 +172,20 @@ public class SpeseViewModel extends AndroidViewModel {
         }
     }
     public void registraPagamento(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta) {
-        registraRimborso(schedaId, daId, daNome, aId, aNome, importo, valuta, null);
+        registraRimborsoConCategoria(schedaId, daId, daNome, aId, aNome, importo, valuta, "SETTLE_UP", "Pareggio");
     }
 
     public void registraRimborso(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta, @Nullable String descrizione) {
+        registraRimborsoConCategoria(schedaId, daId, daNome, aId, aNome, importo, valuta, descrizione, "Rimborso");
+    }
+
+    public void registraRimborsoConCategoria(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta, @Nullable String descrizione, String categoria) {
         String spesaId = UUID.randomUUID().toString();
         String pulitoDa = Partecipante.pulisciNome(daNome);
         String pulitoA = Partecipante.pulisciNome(aNome);
         String defaultMembro = getApplication().getString(R.string.membro_default);
         String titolo = getApplication().getString(
-                R.string.formato_rimborso_titolo,
+                R.string.titolo_rimborso_formattato,
                 pulitoDa.isEmpty() ? defaultMembro : pulitoDa,
                 pulitoA.isEmpty() ? defaultMembro : pulitoA
         );
@@ -194,7 +198,7 @@ public class SpeseViewModel extends AndroidViewModel {
                 importo,
                 valuta != null ? valuta : "EUR",
                 System.currentTimeMillis(),
-                "Pareggio",
+                categoria != null ? categoria : "Pareggio",
                 daId, // Chi paga realmente
                 descrizione, // Memorizzato in scontrino_url
                 SyncStatus.PENDING_INSERT
@@ -232,5 +236,13 @@ public class SpeseViewModel extends AndroidViewModel {
                                         @Nullable String nomePersonalizzato,
                                         PariPariRepository.OnJoinSchedaCallback callback) {
         repository.uniscitiASchedaTramiteCodice(codice, claimedPartecipanteId, nomePersonalizzato, callback);
+    }
+
+    public void importaSchedaDaCsv(android.content.Context context, android.net.Uri csvUri, PariPariRepository.OnImportCsvCallback callback) {
+        repository.importaSchedaDaCsv(context, csvUri, callback);
+    }
+
+    public PariPariRepository getRepository() {
+        return repository;
     }
 }

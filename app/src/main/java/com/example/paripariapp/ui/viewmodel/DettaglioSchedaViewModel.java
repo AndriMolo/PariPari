@@ -69,6 +69,14 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.esciDalGruppo(schedaId, partecipanteId);
     }
 
+    public void disattivaMembro(String schedaId, String partecipanteId) {
+        repository.disattivaMembro(schedaId, partecipanteId);
+    }
+
+    public void riattivaMembro(String schedaId, String partecipanteId) {
+        repository.riattivaMembro(schedaId, partecipanteId);
+    }
+
     public void eliminaPartecipante(String partecipanteId) {
         repository.deletePartecipante(partecipanteId);
     }

@@ -44,6 +44,9 @@ public class Scheda {
     @ColumnInfo(name = "codice_invito")
     private String codiceInvito;
 
+    @ColumnInfo(name = "icona_url")
+    private String iconaUrl;
+
     public Scheda(@NonNull String id, @NonNull String titolo, String descrizione,
                   @NonNull String valutaPredefinita, String creatoreId,
                   long dataCreazione, long dataAggiornamento, int syncStatus) {
@@ -148,5 +151,13 @@ public class Scheda {
 
     public void setCodiceInvito(String codiceInvito) {
         this.codiceInvito = codiceInvito;
+    }
+
+    public String getIconaUrl() {
+        return iconaUrl;
+    }
+
+    public void setIconaUrl(String iconaUrl) {
+        this.iconaUrl = iconaUrl;
     }
 }

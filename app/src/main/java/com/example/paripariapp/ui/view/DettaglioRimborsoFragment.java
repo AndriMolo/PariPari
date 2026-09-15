@@ -201,7 +201,7 @@ public class DettaglioRimborsoFragment extends Fragment {
         binding.tvCategoriaDettaglio.setText(getString(R.string.format_categoria_rimborso, getString(R.string.cat_rimborsi)));
 
         // 2. Titolo
-        binding.tvTitoloDettaglio.setText(spesa.getTitolo());
+        binding.tvTitoloDettaglio.setText(com.example.paripariapp.util.SpesaUtil.formattaTitoloSpesa(requireContext(), spesa));
 
         // 3. Data
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault());

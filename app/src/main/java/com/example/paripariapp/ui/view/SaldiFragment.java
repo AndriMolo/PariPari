@@ -61,18 +61,34 @@ public class SaldiFragment extends Fragment {
 
         adapter.setOnItemClickListener(item -> {
             if (item != null && item.getTrasferimentoSaldo() != null) {
-                // Se l'utente corrente è il creditore, passiamo i suoi handle locali
-                // così il bottom sheet può mostrare i link PayPal/Revolut con importo.
                 UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(requireContext());
-                String paypalHandle = item.isCredito() ? prefs.getPaypalHandle() : "";
-                String revolutHandle = item.isCredito() ? prefs.getRevolutHandle() : "";
-                InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
-                        item.getTrasferimentoSaldo(),
-                        item.getSchedaId(),
-                        paypalHandle,
-                        revolutHandle
-                );
-                sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                String aId = item.getTrasferimentoSaldo().getAPartecipanteId();
+
+                com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+                    com.example.paripariapp.data.model.Partecipante creditore =
+                            com.example.paripariapp.data.local.AppDatabase.getInstance(requireContext().getApplicationContext())
+                                    .partecipanteDao().getPartecipanteById(aId);
+
+                    String paypalHandle = (creditore != null && creditore.getPaypalHandle() != null && !creditore.getPaypalHandle().trim().isEmpty())
+                            ? creditore.getPaypalHandle().trim()
+                            : (item.isCredito() ? prefs.getPaypalHandle() : "");
+
+                    String revolutHandle = (creditore != null && creditore.getRevolutHandle() != null && !creditore.getRevolutHandle().trim().isEmpty())
+                            ? creditore.getRevolutHandle().trim()
+                            : (item.isCredito() ? prefs.getRevolutHandle() : "");
+
+                    requireActivity().runOnUiThread(() -> {
+                        if (isAdded() && getContext() != null) {
+                            InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                                    item.getTrasferimentoSaldo(),
+                                    item.getSchedaId(),
+                                    paypalHandle,
+                                    revolutHandle
+                            );
+                            sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                        }
+                    });
+                });
             }
         });
 

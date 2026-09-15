@@ -317,9 +317,11 @@ public abstract class BaseSpesaFragment extends Fragment {
     protected List<Partecipante> getPartecipantiInclusi() {
         List<Partecipante> inclusi = new ArrayList<>();
         for (Partecipante p : partecipanti) {
-            CheckBox cb = checkMap.get(p.getId());
-            if (cb != null && cb.isChecked()) {
-                inclusi.add(p);
+            if (p.isAttivo()) {
+                CheckBox cb = checkMap.get(p.getId());
+                if (cb != null && cb.isChecked()) {
+                    inclusi.add(p);
+                }
             }
         }
         return inclusi;
@@ -466,6 +468,7 @@ public abstract class BaseSpesaFragment extends Fragment {
         lockedParticipantIds.clear();
 
         for (Partecipante p : lista) {
+            if (!p.isAttivo()) continue;
             com.example.paripariapp.databinding.ItemQuotaPartecipanteBinding rowBinding =
                     com.example.paripariapp.databinding.ItemQuotaPartecipanteBinding.inflate(getLayoutInflater(), layoutElencoQuote, false);
             CheckBox cb = rowBinding.spuntaPartecipante;

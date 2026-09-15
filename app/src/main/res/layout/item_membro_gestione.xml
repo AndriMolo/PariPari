@@ -16,16 +16,30 @@
         android:orientation="horizontal"
         android:padding="12dp">
 
-        <TextView
-            android:id="@+id/avatar_iniziale"
+        <FrameLayout
             android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:background="@drawable/bg_circle_avatar"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnPrimaryContainer"
-            android:textStyle="bold"
-            tools:text="M" />
+            android:layout_height="42dp">
+
+            <TextView
+                android:id="@+id/avatar_iniziale"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_circle_avatar"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnPrimaryContainer"
+                android:textStyle="bold"
+                tools:text="M" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_avatar_foto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/nome_partecipante"

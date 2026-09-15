@@ -28,6 +28,9 @@ public interface PartecipanteDao {
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     List<Partecipante> getPartecipantiBySchedaSync(String schedaId);
 
+    @Query("SELECT * FROM partecipanti WHERE sync_status != " + SyncStatus.PENDING_DELETE)
+    List<Partecipante> getAllPartecipantiSync();
+
     @Query("SELECT * FROM partecipanti WHERE id = :id LIMIT 1")
     Partecipante getPartecipanteById(String id);
 

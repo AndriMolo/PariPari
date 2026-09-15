@@ -316,7 +316,20 @@ public class AccountViewModel extends AndroidViewModel {
                 .build();
 
         user.updateProfile(profileUpdates).addOnCompleteListener(profileTask -> {
-            // Salva il documento profilo su Firestore
+            isLoading.setValue(false);
+            userLiveData.setValue(user);
+            isGuestMode.setValue(false);
+            isEmailVerifiedLive.setValue(user.isEmailVerified());
+            repository.aggiornaNomeUtenteInTuttiIGruppi(nome);
+
+            if (isNewAccount) {
+                user.sendEmailVerification()
+                        .addOnSuccessListener(aVoid -> Log.d(TAG, "Email di verifica inviata con successo"))
+                        .addOnFailureListener(e -> Log.w(TAG, "Invio email di verifica fallito: " + e.getMessage()));
+                successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_registrazione_ok));
+            }
+
+            // Salva il documento profilo su Firestore (non bloccante)
             Map<String, Object> userData = new HashMap<>();
             userData.put("nome", nome);
             userData.put("email", email);
@@ -326,21 +339,8 @@ public class AccountViewModel extends AndroidViewModel {
             }
 
             firestore.collection("users").document(user.getUid())
-                    .set(userData)
-                    .addOnCompleteListener(dbTask -> {
-                        isLoading.setValue(false);
-                        userLiveData.setValue(user);
-                        isGuestMode.setValue(false);
-                        isEmailVerifiedLive.setValue(user.isEmailVerified());
-                        if (isNewAccount) {
-                            user.sendEmailVerification()
-                                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Email di verifica inviata con successo"))
-                                    .addOnFailureListener(e -> Log.w(TAG, "Invio email di verifica fallito: " + e.getMessage()));
-                        }
-                        if (isNewAccount) {
-                            successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_registrazione_ok));
-                        }
-                    });
+                    .set(userData, com.google.firebase.firestore.SetOptions.merge())
+                    .addOnFailureListener(e -> Log.w(TAG, "Salvataggio profilo su Firestore fallito: " + e.getMessage()));
         });
     }
 
@@ -426,33 +426,25 @@ public class AccountViewModel extends AndroidViewModel {
             nome = getApplication().getString(com.example.paripariapp.R.string.default_nome_utente);
         }
         String email = user.getEmail() != null ? user.getEmail() : "";
-
         final String finalNome = nome;
-        firestore.collection("users").document(user.getUid())
-                .get()
-                .addOnCompleteListener(docTask -> {
-                    Map<String, Object> userData = new HashMap<>();
-                    if (!docTask.isSuccessful() || docTask.getResult() == null || !docTask.getResult().exists()) {
-                        userData.put("nome", finalNome);
-                        userData.put("email", email);
-                        userData.put("createdAt", FieldValue.serverTimestamp());
-                        userData.put("updatedAt", FieldValue.serverTimestamp());
-                        firestore.collection("users").document(user.getUid()).set(userData);
-                    } else {
-                        userData.put("updatedAt", FieldValue.serverTimestamp());
-                        if (user.getDisplayName() != null) {
-                            userData.put("nome", user.getDisplayName());
-                        }
-                        firestore.collection("users").document(user.getUid()).update(userData);
-                    }
 
-                    isLoading.setValue(false);
-                    userLiveData.setValue(user);
-                    isGuestMode.setValue(false);
-                    isEmailVerifiedLive.setValue(user.isEmailVerified());
-                    repository.aggiornaNomeUtenteInTuttiIGruppi(finalNome);
-                    successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_login_google_ok));
-                });
+        // Aggiorna immediatamente lo stato di autenticazione nella UI
+        isLoading.setValue(false);
+        userLiveData.setValue(user);
+        isGuestMode.setValue(false);
+        isEmailVerifiedLive.setValue(user.isEmailVerified());
+        repository.aggiornaNomeUtenteInTuttiIGruppi(finalNome);
+        successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_login_google_ok));
+
+        // Aggiornamento asincrono non bloccante del profilo utente su Firestore
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("nome", finalNome);
+        userData.put("email", email);
+        userData.put("updatedAt", FieldValue.serverTimestamp());
+
+        firestore.collection("users").document(user.getUid())
+                .set(userData, com.google.firebase.firestore.SetOptions.merge())
+                .addOnFailureListener(e -> Log.w(TAG, "Salvataggio profilo Google su Firestore fallito: " + e.getMessage()));
     }
 
     /**

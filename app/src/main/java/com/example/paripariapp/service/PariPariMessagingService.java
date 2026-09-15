@@ -102,8 +102,12 @@ public class PariPariMessagingService extends FirebaseMessagingService {
     }
 
     private void creaCanaleNotificaSeNecessario() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        creaCanaleNotificaSeNecessario(this);
+    }
+
+    private static void creaCanaleNotificaSeNecessario(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context != null) {
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (notificationManager != null && notificationManager.getNotificationChannel(CANALE_NOTIFICHE_ID) == null) {
                 NotificationChannel channel = new NotificationChannel(
                         CANALE_NOTIFICHE_ID,
@@ -118,17 +122,60 @@ public class PariPariMessagingService extends FirebaseMessagingService {
     }
 
     /**
+     * Genera e mostra una notifica nativa di sistema direttamente da codice Java.
+     */
+    public static void mostraNotificaNativa(Context context, String titolo, String messaggio, @androidx.annotation.Nullable String schedaId) {
+        if (context == null || messaggio == null || messaggio.trim().isEmpty()) return;
+
+        creaCanaleNotificaSeNecessario(context);
+
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        if (schedaId != null) {
+            intent.putExtra("extra_scheda_id", schedaId);
+        }
+
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context.getApplicationContext(),
+                (int) System.currentTimeMillis(),
+                intent,
+                flags
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context.getApplicationContext(), CANALE_NOTIFICHE_ID)
+                .setSmallIcon(R.drawable.ic_receipt)
+                .setContentTitle(titolo != null ? titolo : context.getString(R.string.app_name))
+                .setContentText(messaggio)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(messaggio))
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+        }
+    }
+
+    /**
      * Associa il token FCM al profilo dell'utente autenticato su Firestore.
      */
     public static void inviaTokenAlServer(String token) {
         if (token == null || token.isEmpty()) return;
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && !user.isAnonymous()) {
+        if (user != null) {
             Map<String, Object> tokenData = new HashMap<>();
             tokenData.put("token", token);
             tokenData.put("aggiornato_il", FieldValue.serverTimestamp());
 
+            // 1. Salva nella sotto-collezione /users/{uid}/fcm_tokens/{token}
             FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(user.getUid())
@@ -136,6 +183,15 @@ public class PariPariMessagingService extends FirebaseMessagingService {
                     .document(token)
                     .set(tokenData)
                     .addOnFailureListener(e -> Log.w(TAG, "Impossibile registrare token FCM per l'utente", e));
+
+            // 2. Salva anche come campo diretto sul documento profilo /users/{uid}
+            Map<String, Object> userDirectToken = new HashMap<>();
+            userDirectToken.put("fcmToken", token);
+            userDirectToken.put("updatedAt", FieldValue.serverTimestamp());
+            FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(user.getUid())
+                    .set(userDirectToken, com.google.firebase.firestore.SetOptions.merge());
         }
     }
 }

@@ -158,6 +158,9 @@ public class FirestoreSyncManager {
         data.put("dataCreazione", scheda.getDataCreazione());
         data.put("dataAggiornamento", scheda.getDataAggiornamento());
         data.put("codiceInvito", scheda.getCodiceInvito());
+        if (scheda.getIconaUrl() != null) {
+            data.put("iconaUrl", scheda.getIconaUrl());
+        }
 
         WriteBatch batch = firestore.batch();
         DocumentReference ref = firestore.collection("groups").document(scheda.getId());
@@ -180,6 +183,21 @@ public class FirestoreSyncManager {
                     }
                 } else {
                     pData.put("isAutenticato", false);
+                }
+                if (p.getPreviousUserId() != null) {
+                    pData.put("previousUserId", p.getPreviousUserId());
+                }
+                if (p.getStato() != null) {
+                    pData.put("stato", p.getStato());
+                }
+                if (p.getPaypalHandle() != null) {
+                    pData.put("paypalHandle", p.getPaypalHandle());
+                }
+                if (p.getRevolutHandle() != null) {
+                    pData.put("revolutHandle", p.getRevolutHandle());
+                }
+                if (p.getPhotoUrl() != null) {
+                    pData.put("photoUrl", p.getPhotoUrl());
                 }
                 batch.set(pRef, pData);
             }
@@ -221,6 +239,22 @@ public class FirestoreSyncManager {
             data.put("isAutenticato", false);
         }
 
+        if (p.getPreviousUserId() != null) {
+            data.put("previousUserId", p.getPreviousUserId());
+        }
+        if (p.getStato() != null) {
+            data.put("stato", p.getStato());
+        }
+        if (p.getPaypalHandle() != null) {
+            data.put("paypalHandle", p.getPaypalHandle());
+        }
+        if (p.getRevolutHandle() != null) {
+            data.put("revolutHandle", p.getRevolutHandle());
+        }
+        if (p.getPhotoUrl() != null) {
+            data.put("photoUrl", p.getPhotoUrl());
+        }
+
         firestore.collection("groups").document(p.getSchedaId())
                 .collection("participants").document(p.getId())
                 .set(data, SetOptions.merge())
@@ -238,7 +272,13 @@ public class FirestoreSyncManager {
         data.put("dataSpesa", spesa.getDataSpesa());
         data.put("categoria", spesa.getCategoria());
         data.put("pagatoDaId", spesa.getPagatoDaId());
-        data.put("scontrinoUrl", spesa.getScontrinoUrl());
+
+        String scontrinoUrl = spesa.getScontrinoUrl();
+        if (scontrinoUrl != null && (scontrinoUrl.startsWith("http://") || scontrinoUrl.startsWith("https://"))) {
+            data.put("scontrinoUrl", scontrinoUrl);
+        } else {
+            data.put("scontrinoUrl", null);
+        }
 
         WriteBatch batch = firestore.batch();
         DocumentReference spesaRef = firestore.collection("groups").document(spesa.getSchedaId())
@@ -347,7 +387,12 @@ public class FirestoreSyncManager {
             DocumentReference pRef = firestore.collection("groups").document(schedaId)
                     .collection("participants").document(partecipanteId);
 
-            pRef.delete().addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("stato", Partecipante.STATO_USCITO);
+            updates.put("previousUserId", auth.getCurrentUser().getUid());
+            updates.put("userId", com.google.firebase.firestore.FieldValue.delete());
+
+            pRef.update(updates).addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
                 firestore.collection("groups").document(schedaId).get()
                         .addOnSuccessListener(AppDatabase.databaseWriteExecutor, groupDoc -> {
                             if (groupDoc != null && groupDoc.exists()) {
@@ -380,10 +425,11 @@ public class FirestoreSyncManager {
     }
 
     public void deleteSpesa(String spesaId, String schedaId) {
-        if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+        if (schedaId != null && spesaId != null && auth.getCurrentUser() != null) {
             firestore.collection("groups").document(schedaId)
                     .collection("expenses").document(spesaId)
-                    .delete();
+                    .delete()
+                    .addOnFailureListener(e -> Log.w(TAG, "Eliminazione spesa remota differita: " + e.getMessage()));
         }
     }
 
@@ -558,10 +604,23 @@ public class FirestoreSyncManager {
                                 case MODIFIED:
                                     String nome = doc.getString("nome");
                                     String email = doc.getString("email");
-                                    if (nome != null && !nome.trim().isEmpty()) {
-                                        partecipanteDao.insert(new Partecipante(pId, groupId, nome, email, SyncStatus.SYNCED));
-                                    }
                                     String pUserId = doc.getString("userId");
+                                    String pPreviousUserId = doc.getString("previousUserId");
+                                    String pStato = doc.getString("stato");
+                                    String paypal = doc.getString("paypalHandle");
+                                    String revolut = doc.getString("revolutHandle");
+                                    String photoUrl = doc.getString("photoUrl");
+
+                                    if (nome != null && !nome.trim().isEmpty()) {
+                                        Partecipante p = new Partecipante(pId, groupId, nome, email, SyncStatus.SYNCED);
+                                        p.setUserId(pUserId);
+                                        p.setPreviousUserId(pPreviousUserId);
+                                        if (pStato != null) p.setStato(pStato);
+                                        p.setPaypalHandle(paypal);
+                                        p.setRevolutHandle(revolut);
+                                        p.setPhotoUrl(photoUrl);
+                                        partecipanteDao.insert(p);
+                                    }
                                     if (pUserId != null && !pUserId.trim().isEmpty()) {
                                         Scheda s = schedaDao.getSchedaById(groupId);
                                         if (s != null && pUserId.equals(s.getCreatoreId())) {
@@ -577,10 +636,15 @@ public class FirestoreSyncManager {
                     });
                 });
 
+        final boolean[] isInitialBatch = new boolean[]{true};
+
         ListenerRegistration eReg = firestore.collection("groups").document(groupId)
                 .collection("expenses")
                 .addSnapshotListener((snapshots, error) -> {
                     if (error != null || snapshots == null) return;
+
+                    final boolean isFirstBatch = isInitialBatch[0];
+                    isInitialBatch[0] = false;
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
@@ -631,14 +695,63 @@ public class FirestoreSyncManager {
                                                             }
                                                         }
                                                         if (!quote.isEmpty()) {
+                                                            spesaDao.deleteQuoteBySpesaId(eId);
                                                             spesaDao.insertQuote(quote);
                                                         }
                                                     }
                                                 });
+
+                                        // Notifica NATIVA in Java per gli altri membri SOLO se il cambio avviene in tempo reale (non nel primo caricamento iniziale)
+                                        if (!isFirstBatch && !doc.getMetadata().hasPendingWrites()) {
+                                            Scheda s = schedaDao.getSchedaById(groupId);
+                                            String nomeGruppo = (s != null && s.getTitolo() != null) ? s.getTitolo() : "Gruppo";
+
+                                            Partecipante pPagante = (pagatoDaId != null && !pagatoDaId.isEmpty()) ? partecipanteDao.getPartecipanteById(pagatoDaId) : null;
+                                            String nomePagatore = (pPagante != null && pPagante.getNome() != null) ? pPagante.getNome() : "Un partecipante";
+
+                                            boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(categoria);
+                                            String importoFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", importo, valuta != null ? valuta : "EUR");
+
+                                            String notifTitolo;
+                                            String notifMessaggio;
+
+                                            if (dc.getType() == DocumentChange.Type.ADDED) {
+                                                if (isRimborso) {
+                                                    notifTitolo = "Pagamento saldato in \"" + nomeGruppo + "\"";
+                                                    notifMessaggio = nomePagatore + " ha registrato un rimborso di " + importoFmt;
+                                                } else {
+                                                    notifTitolo = "Nuova spesa in \"" + nomeGruppo + "\"";
+                                                    notifMessaggio = nomePagatore + " ha aggiunto \"" + titolo + "\" (" + importoFmt + ")";
+                                                }
+                                                com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
+                                            } else if (dc.getType() == DocumentChange.Type.MODIFIED) {
+                                                if (isRimborso) {
+                                                    notifTitolo = "Rimborso modificato in \"" + nomeGruppo + "\"";
+                                                    notifMessaggio = "Il rimborso di " + importoFmt + " (" + titolo + ") è stato modificato";
+                                                } else {
+                                                    notifTitolo = "Spesa modificata in \"" + nomeGruppo + "\"";
+                                                    notifMessaggio = nomePagatore + " ha modificato \"" + titolo + "\" (" + importoFmt + ")";
+                                                }
+                                                com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
+                                            }
+                                        }
                                     }
                                     break;
                                 case REMOVED:
+                                    Spesa spesaEliminata = spesaDao.getSpesaByIdSync(eId);
                                     spesaDao.deleteById(eId);
+
+                                    if (!isFirstBatch && !doc.getMetadata().hasPendingWrites() && spesaEliminata != null) {
+                                        Scheda sRem = schedaDao.getSchedaById(groupId);
+                                        String nomeGruppoRem = (sRem != null && sRem.getTitolo() != null) ? sRem.getTitolo() : "Gruppo";
+                                        boolean isRimborsoRem = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesaEliminata.getCategoria());
+                                        String importoFmtRem = String.format(java.util.Locale.getDefault(), "%.2f %s", spesaEliminata.getImporto(), spesaEliminata.getValuta() != null ? spesaEliminata.getValuta() : "EUR");
+
+                                        String notifTitoloRem = isRimborsoRem ? "Rimborso eliminato in \"" + nomeGruppoRem + "\"" : "Spesa eliminata in \"" + nomeGruppoRem + "\"";
+                                        String notifMessaggioRem = isRimborsoRem ? "Il rimborso di " + importoFmtRem + " è stato eliminato" : "La spesa \"" + spesaEliminata.getTitolo() + "\" (" + importoFmtRem + ") è stata eliminata";
+
+                                        com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitoloRem, notifMessaggioRem, groupId);
+                                    }
                                     break;
                             }
                         }
@@ -675,6 +788,7 @@ public class FirestoreSyncManager {
                         String valuta = doc.getString("valutaPredefinita");
                         Long dataAgg = doc.getLong("dataAggiornamento");
                         String codInvito = doc.getString("codiceInvito");
+                        String iconaUrl = doc.getString("iconaUrl");
 
                         if (titolo != null) {
                             Scheda s = schedaDao.getSchedaById(groupId);
@@ -694,6 +808,10 @@ public class FirestoreSyncManager {
                                 }
                                 if (codInvito != null && !codInvito.equals(s.getCodiceInvito())) {
                                     s.setCodiceInvito(codInvito);
+                                    modificata = true;
+                                }
+                                if (iconaUrl != null && !iconaUrl.equals(s.getIconaUrl())) {
+                                    s.setIconaUrl(iconaUrl);
                                     modificata = true;
                                 }
                                 if (modificata) {
@@ -1005,10 +1123,11 @@ public class FirestoreSyncManager {
                             String pNome = pDoc.getString("nome");
                             String pEmail = pDoc.getString("email");
                             String pUserId = pDoc.getString("userId");
+                            String pPreviousUserId = pDoc.getString("previousUserId");
 
                             boolean isClaimTarget = (claimedPartecipanteId != null && claimedPartecipanteId.equals(pDoc.getId()));
-                            boolean isUserMatch = (currentUid != null && currentUid.equals(pUserId))
-                                    || (currentEmail != null && currentEmail.equalsIgnoreCase(pEmail));
+                            boolean isUserMatch = (currentUid != null && (currentUid.equals(pUserId) || currentUid.equals(pPreviousUserId)))
+                                    || (currentEmail != null && !currentEmail.isEmpty() && currentEmail.equalsIgnoreCase(pEmail));
 
                             if (creatoreId != null && (creatoreId.equals(pUserId) || creatoreId.equals(pDoc.getId()))) {
                                 scheda.setCreatoreId(pDoc.getId());
@@ -1020,9 +1139,21 @@ public class FirestoreSyncManager {
                                 String finalName = (nomePersonalizzato != null && !nomePersonalizzato.trim().isEmpty())
                                         ? nomePersonalizzato.trim()
                                         : (pNome != null ? pNome : currentNome);
-                                partiScaricati.add(new Partecipante(pDoc.getId(), groupId, finalName, currentEmail, SyncStatus.SYNCED));
+                                Partecipante pClaimed = new Partecipante(pDoc.getId(), groupId, finalName, currentEmail, SyncStatus.SYNCED);
+                                pClaimed.setUserId(currentUid);
+                                pClaimed.setStato(Partecipante.STATO_ATTIVO);
+                                pClaimed.setPaypalHandle(pDoc.getString("paypalHandle"));
+                                pClaimed.setRevolutHandle(pDoc.getString("revolutHandle"));
+                                partiScaricati.add(pClaimed);
                             } else if (pNome != null) {
-                                partiScaricati.add(new Partecipante(pDoc.getId(), groupId, pNome, pEmail, SyncStatus.SYNCED));
+                                Partecipante pOther = new Partecipante(pDoc.getId(), groupId, pNome, pEmail, SyncStatus.SYNCED);
+                                pOther.setUserId(pUserId);
+                                pOther.setPreviousUserId(pPreviousUserId);
+                                String pStato = pDoc.getString("stato");
+                                if (pStato != null) pOther.setStato(pStato);
+                                pOther.setPaypalHandle(pDoc.getString("paypalHandle"));
+                                pOther.setRevolutHandle(pDoc.getString("revolutHandle"));
+                                partiScaricati.add(pOther);
                             }
                         }
                     }
@@ -1031,6 +1162,7 @@ public class FirestoreSyncManager {
                     if (!giaPresente) {
                         mioPartId = UUID.randomUUID().toString();
                         Partecipante mioPartecipante = new Partecipante(mioPartId, groupId, currentNome, currentEmail, SyncStatus.SYNCED);
+                        mioPartecipante.setUserId(currentUid);
                         partiScaricati.add(mioPartecipante);
 
                         Map<String, Object> myData = new HashMap<>();
@@ -1044,6 +1176,7 @@ public class FirestoreSyncManager {
                     } else if (existingDocToUpdate != null) {
                         Map<String, Object> patch = new HashMap<>();
                         patch.put("userId", currentUid);
+                        patch.put("stato", Partecipante.STATO_ATTIVO);
                         if (currentEmail != null) patch.put("email", currentEmail);
                         patch.put("isAutenticato", currentUser != null && !currentUser.isAnonymous());
                         if (nomePersonalizzato != null && !nomePersonalizzato.trim().isEmpty()) {

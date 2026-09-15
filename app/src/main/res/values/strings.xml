@@ -10,6 +10,7 @@
     <string name="nav_account">Account</string>
 
     <string name="formato_rimborso_titolo">Rimborso: da %1$s a %2$s</string>
+    <string name="titolo_rimborso_formattato">Rimborso: da %1$s a %2$s</string>
     <string name="membro_default">Membro</string>
     <string name="btn_allega_scontrino">Allega scontrino</string>
     <string name="btn_scansiona_scontrino">Scansiona con fotocamera</string>
@@ -29,6 +30,8 @@
     <string name="dialog_opzioni_scheda_titolo">Scegli un\'opzione</string>
     <string name="dialog_opzioni_nuova_scheda">➕ Avvia una nuova scheda</string>
     <string name="dialog_opzioni_entra_scheda">🔑 Entra in una scheda con codice</string>
+    <string name="dialog_opzioni_importa_csv">📂 Importa gruppo da file CSV</string>
+    <string name="msg_importazione_csv_successo">Gruppo \'%s\' importato con successo!</string>
 
     <!-- Empty States -->
     <string name="empty_membri_titolo">Nessun partecipante nel gruppo</string>
@@ -150,6 +153,14 @@
     <string name="msg_sei_uscito_dal_gruppo">Sei uscito dal gruppo</string>
     <string name="msg_sei_stato_rimosso_dal_gruppo">Sei stato rimosso dal gruppo</string>
     <string name="msg_membro_rimosso">%s è stato rimosso dal gruppo</string>
+    <string name="stato_ex_membro">Ex membro</string>
+    <string name="btn_riattiva_membro">Riattiva membro</string>
+    <string name="msg_membro_riattivato">%s è stato riattivato nel gruppo</string>
+    <string name="msg_membro_disattivato">%s è stato spostato negli ex membri</string>
+    <string name="btn_testa_link">Testa link di pagamento</string>
+    <string name="error_handle_vuoto">Inserisci prima il tuo username per testare il link</string>
+    <string name="btn_paga_ora_paypal">Paga ora con PayPal</string>
+    <string name="btn_paga_ora_revolut">Paga ora con Revolut</string>
     <string name="titolo_bilancio_membri">Bilancio dei Membri</string>
     <string name="titolo_pagamenti_pareggio">Pagamenti per pareggiare</string>
     <string name="label_saldo_pareggio">Trasferimento di pareggio</string>
@@ -396,7 +407,10 @@
     <string name="tipo_spesa">Spesa</string>
     <string name="tipo_rimborso">Rimborso</string>
     <string name="label_ricevuto_da">A chi</string>
-    <string name="msg_saldi_rimozione_solo_spese">Per modificare o rimuovere un rimborso, utilizza la schermata Spese del gruppo.</string>
+    <string name="msg_saldi_rimozione_solo_spese">Questo rimborso è stato inserito come spesa diretta. Può essere modificato o eliminato solo dalla lista delle spese.</string>
+    <string name="titolo_annulla_saldo">Annulla saldo</string>
+    <string name="msg_conferma_annulla_saldo">Sei sicuro di voler annullare questo saldo? Il debito tornerà attivo nel gruppo.</string>
+    <string name="btn_annulla_saldo">Annulla saldo</string>
 
     <string name="label_codice_6_caratteri">Codice a 6 caratteri</string>
     <string name="handle_format">@%s</string>

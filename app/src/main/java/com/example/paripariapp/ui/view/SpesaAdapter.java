@@ -55,6 +55,8 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             if (oldItem.getType() == SpesaListItem.TYPE_HEADER) {
                 return Objects.equals(oldItem.getHeaderTitle(), newItem.getHeaderTitle());
             } else {
+                if (oldItem.getSpesa() == null || newItem.getSpesa() == null) return false;
+                if (oldItem.getSpesa().getSpesa() == null || newItem.getSpesa().getSpesa() == null) return false;
                 return Objects.equals(oldItem.getSpesa().getSpesa().getId(), newItem.getSpesa().getSpesa().getId());
             }
         }
@@ -66,6 +68,8 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             }
             SpesaConDettagli o = oldItem.getSpesa();
             SpesaConDettagli n = newItem.getSpesa();
+            if (o == null || n == null || o.getSpesa() == null || n.getSpesa() == null) return false;
+
             return Objects.equals(o.getSpesa().getTitolo(), n.getSpesa().getTitolo()) &&
                     Double.compare(o.getSpesa().getImporto(), n.getSpesa().getImporto()) == 0 &&
                     Objects.equals(o.getSpesa().getValuta(), n.getSpesa().getValuta()) &&
@@ -127,6 +131,7 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
                 java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
         public void bind(SpesaConDettagli item, OnSpesaClickListener listener, OnSpesaLongClickListener longListener) {
+            if (item == null || item.getSpesa() == null) return;
             Spesa spesa = item.getSpesa();
             Context context = binding.getRoot().getContext();
 
@@ -150,7 +155,9 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             );
 
             // Titolo e Importo
-            binding.tvTitoloSpesa.setText(spesa.getTitolo());
+            binding.tvTitoloSpesa.setText(
+                    com.example.paripariapp.util.SpesaUtil.formattaTitoloSpesa(context, spesa)
+            );
             binding.tvImportoSpesa.setText(
                     com.example.paripariapp.util.ImportoUtil.formatta(spesa.getImporto(), spesa.getValuta())
             );

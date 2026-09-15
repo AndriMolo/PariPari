@@ -90,11 +90,24 @@ public class StoricoSaldiFragment extends Fragment {
         binding.recyclerStoricoSaldi.setAdapter(adapter);
 
         adapter.setOnItemClickListener(item -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.titolo_storico_saldi)
-                    .setMessage(R.string.msg_saldi_rimozione_solo_spese)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
+            if (item == null || item.getSpesa() == null) return;
+            Spesa spesa = item.getSpesa();
+            if (isSettleUp(spesa)) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.titolo_annulla_saldo)
+                        .setMessage(R.string.msg_conferma_annulla_saldo)
+                        .setPositiveButton(R.string.btn_annulla_saldo, (dialog, which) -> {
+                            viewModel.eliminaSpesa(spesa.getId(), spesa.getSchedaId());
+                        })
+                        .setNegativeButton(R.string.btn_annulla, null)
+                        .show();
+            } else {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.titolo_storico_saldi)
+                        .setMessage(R.string.msg_saldi_rimozione_solo_spese)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
         });
 
         setupFiltriScheda();
@@ -239,6 +252,16 @@ public class StoricoSaldiFragment extends Fragment {
         }
 
         adapter.submitList(items);
+    }
+
+    private boolean isSettleUp(@Nullable Spesa spesa) {
+        if (spesa == null) return false;
+        String cat = spesa.getCategoria() != null ? spesa.getCategoria().trim().toLowerCase(Locale.ROOT) : "";
+        String desc = spesa.getScontrinoUrl() != null ? spesa.getScontrinoUrl().trim() : "";
+        if ("SETTLE_UP".equalsIgnoreCase(desc)) {
+            return true;
+        }
+        return cat.equals("pareggio") || cat.equals("saldo") || cat.equals("saldi");
     }
 
     private String estraiDestinatarioDalTitolo(String titolo) {

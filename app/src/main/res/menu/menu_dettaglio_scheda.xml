@@ -29,6 +29,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_personalizza_icona"
+        android:icon="@drawable/ic_edit"
+        android:title="Personalizza icona gruppo"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_lascia_scheda"
         android:icon="@android:drawable/ic_menu_close_clear_cancel"
         android:title="@string/action_lascia_scheda"

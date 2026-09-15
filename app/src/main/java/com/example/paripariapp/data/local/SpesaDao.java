@@ -109,15 +109,15 @@ public interface SpesaDao {
     @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
     List<SpesaPartecipante> getTutteQuoteBySchedaSync(String schedaId);
 
-    @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo', 'pareggio') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     List<Spesa> getTuttiSaldiSync();
 
-    @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo', 'pareggio') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     LiveData<List<Spesa>> getTuttiSaldiLive();
 
-    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo', 'pareggio') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     List<Spesa> getSaldiBySchedaSync(String schedaId);
 
-    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo', 'pareggio') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
+    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     LiveData<List<Spesa>> getSaldiBySchedaLive(String schedaId);
 }

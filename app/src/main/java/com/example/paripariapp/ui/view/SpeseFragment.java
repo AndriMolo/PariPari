@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Scheda;
+import com.example.paripariapp.data.repository.PariPariRepository;
 import com.example.paripariapp.databinding.FragmentSpeseBinding;
 import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
 import com.example.paripariapp.util.AppSnackbar;
@@ -44,6 +45,13 @@ public class SpeseFragment extends Fragment {
 
     private Scheda schedaInSospeso = null;
     private Snackbar snackbarElimina = null;
+
+    private final androidx.activity.result.ActivityResultLauncher<String> importCsvLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    eseguiImportazioneCsv(uri);
+                }
+            });
 
     @Nullable
     @Override
@@ -286,7 +294,8 @@ public class SpeseFragment extends Fragment {
     private void mostraDialogSceltaNuovaScheda() {
         String[] opzioni = new String[] {
                 getString(R.string.dialog_opzioni_nuova_scheda),
-                getString(R.string.dialog_opzioni_entra_scheda)
+                getString(R.string.dialog_opzioni_entra_scheda),
+                getString(R.string.dialog_opzioni_importa_csv)
         };
 
         new MaterialAlertDialogBuilder(requireContext())
@@ -296,10 +305,32 @@ public class SpeseFragment extends Fragment {
                         NuovaSchedaBottomSheet.newInstance().show(getChildFragmentManager(), "NuovaSchedaBottomSheet");
                     } else if (which == 1) {
                         mostraDialogCodiceAccesso();
+                    } else if (which == 2) {
+                        importCsvLauncher.launch("*/*");
                     }
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
                 .show();
+    }
+
+    private void eseguiImportazioneCsv(android.net.Uri uri) {
+        if (getContext() == null || binding == null) return;
+        AppSnackbar.show(binding.getRoot(), "Importazione file CSV in corso...");
+
+        viewModel.importaSchedaDaCsv(requireContext().getApplicationContext(), uri, new PariPariRepository.OnImportCsvCallback() {
+            @Override
+            public void onSuccess(String schedaId, String titolo) {
+                if (!isAdded() || binding == null) return;
+                AppSnackbar.show(binding.getRoot(), getString(R.string.msg_importazione_csv_successo, titolo));
+                DettaglioSchedaActivity.avvia(requireContext(), schedaId, titolo);
+            }
+
+            @Override
+            public void onError(String errore) {
+                if (!isAdded() || binding == null) return;
+                AppSnackbar.showLong(binding.getRoot(), errore);
+            }
+        });
     }
 
     private void mostraDialogCodiceAccesso() {

@@ -65,8 +65,9 @@ public class AccountGuestFragment extends Fragment {
         googleSignInLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                    Intent data = result.getData();
+                    if (data != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                         try {
                             GoogleSignInAccount account = task.getResult(ApiException.class);
                             if (account != null && account.getIdToken() != null) {
@@ -77,10 +78,15 @@ public class AccountGuestFragment extends Fragment {
                         } catch (ApiException e) {
                             Log.w(TAG, "Accesso con Google fallito: code=" + e.getStatusCode(), e);
                             if (e.getStatusCode() != GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
-                                String msg = e.getLocalizedMessage() != null ? e.getLocalizedMessage() : "Errore Google Sign-In (" + e.getStatusCode() + ")";
+                                String msg = e.getLocalizedMessage() != null ? e.getLocalizedMessage() : "Errore Google Sign-In (Code: " + e.getStatusCode() + ")";
+                                if (e.getStatusCode() == 10) {
+                                    msg = "Errore di configurazione Google (Developer Error 10). Verifica impronta SHA-1 su Firebase Console.";
+                                }
                                 AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), msg);
                             }
                         }
+                    } else if (result.getResultCode() != Activity.RESULT_CANCELED) {
+                        AppSnackbar.show(binding != null ? binding.getRoot() : requireView(), "Accesso con Google non riuscito");
                     }
                 }
         );

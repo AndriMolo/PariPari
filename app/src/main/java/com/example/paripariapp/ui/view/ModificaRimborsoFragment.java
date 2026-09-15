@@ -205,7 +205,9 @@ public class ModificaRimborsoFragment extends Fragment {
 
         List<String> nomi = new ArrayList<>();
         for (Partecipante p : partecipanti) {
-            nomi.add(p.getNome());
+            if (p.isAttivo() || (spesaCorrente != null && p.getId().equals(spesaCorrente.getPagatoDaId()))) {
+                nomi.add(p.getNome());
+            }
         }
         ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
         binding.menuPagante.setAdapter(adapter);
@@ -226,7 +228,7 @@ public class ModificaRimborsoFragment extends Fragment {
         String paganteSelezionato = binding.menuPagante.getText() != null ? binding.menuPagante.getText().toString() : "";
         List<String> destinatariDisponibili = new ArrayList<>();
         for (Partecipante p : partecipanti) {
-            if (!p.getNome().equalsIgnoreCase(paganteSelezionato)) {
+            if (p.isAttivo() && !p.getNome().equalsIgnoreCase(paganteSelezionato)) {
                 destinatariDisponibili.add(p.getNome());
             }
         }
@@ -274,8 +276,10 @@ public class ModificaRimborsoFragment extends Fragment {
 
         // 6. Destinatario (dalla quota)
         aggiornaDropdownDestinatario();
+        boolean trovataQuota = false;
         for (SpesaPartecipante q : quoteEsistenti) {
             if (q.getSpesaId().equals(spesaCorrente.getId())) {
+                trovataQuota = true;
                 for (Partecipante p : partecipanti) {
                     if (p.getId().equals(q.getPartecipanteId())) {
                         binding.menuDestinatario.setText(p.getNome(), false);
@@ -284,6 +288,10 @@ public class ModificaRimborsoFragment extends Fragment {
                 }
                 break;
             }
+        }
+
+        if (!trovataQuota) {
+            return;
         }
 
         isDataLoaded = true;
@@ -328,7 +336,12 @@ public class ModificaRimborsoFragment extends Fragment {
 
             String pulitoDa = Partecipante.pulisciNome(paganteNome);
             String pulitoA = Partecipante.pulisciNome(destinatarioNome);
-            String titolo = "Rimborso: da " + (pulitoDa.isEmpty() ? "Membro" : pulitoDa) + " a " + (pulitoA.isEmpty() ? "Membro" : pulitoA);
+            String defaultMembro = getString(R.string.membro_default);
+            String titolo = getString(
+                    R.string.formato_rimborso_titolo,
+                    pulitoDa.isEmpty() ? defaultMembro : pulitoDa,
+                    pulitoA.isEmpty() ? defaultMembro : pulitoA
+            );
 
             String desc = binding.campoDescrizione.getText() != null ? binding.campoDescrizione.getText().toString().trim() : null;
             if (desc != null && desc.isEmpty()) desc = null;

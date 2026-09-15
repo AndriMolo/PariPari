@@ -22,14 +22,25 @@
 
         <!-- Icona circolare -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_icona_container"
             style="@style/Widget_PariPari_CircleIconBadge"
             android:layout_width="48dp"
             android:layout_height="48dp">
 
+            <TextView
+                android:id="@+id/tv_emoji_scheda"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="22sp"
+                android:visibility="gone"
+                tools:text="🏕️" />
+
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
+                android:id="@+id/iv_icona_scheda"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
                 android:src="@drawable/ic_group"
                 app:tint="?attr/colorOnPrimaryContainer"
                 android:importantForAccessibility="no" />

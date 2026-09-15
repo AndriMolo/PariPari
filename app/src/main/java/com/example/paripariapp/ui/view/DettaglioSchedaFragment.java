@@ -212,21 +212,7 @@ public class DettaglioSchedaFragment extends Fragment {
                     requireContext()
             );
 
-            // Filtra i trasferimenti per mostrare solo quelli in cui l'utente corrente deve pagare o ricevere
-            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-            com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
-            String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
-            List<TrasferimentoSaldo> mieiTrasferimenti = new ArrayList<>();
-
-            if (myId != null && trasferimenti != null) {
-                for (TrasferimentoSaldo t : trasferimenti) {
-                    if (t.getDaPartecipanteId().equals(myId) || t.getAPartecipanteId().equals(myId)) {
-                        mieiTrasferimenti.add(t);
-                    }
-                }
-            }
-
-            saldoAdapter.submitList(mieiTrasferimenti);
+            saldoAdapter.submitList(trasferimenti != null ? trasferimenti : new ArrayList<>());
 
             List<CalcolatoreSaldi.BilancioMembro> bilanciMembri = CalcolatoreSaldi.calcolaListaBilanciMembri(
                     partecipantiCache,
@@ -273,6 +259,9 @@ public class DettaglioSchedaFragment extends Fragment {
                 return true;
             } else if (itemId == R.id.action_modifica_titolo) {
                 mostraDialogModificaNome();
+                return true;
+            } else if (itemId == R.id.action_personalizza_icona) {
+                BottomSheetIconaGruppo.newInstance(schedaId).show(getChildFragmentManager(), "BottomSheetIconaGruppo");
                 return true;
             } else if (itemId == R.id.action_lascia_scheda) {
                 mostraDialogLasciaScheda();
@@ -622,7 +611,9 @@ public class DettaglioSchedaFragment extends Fragment {
             } else if (categoriaSelezionata.equalsIgnoreCase(labelTutte)) {
                 matchCat = true;
             } else {
-                matchCat = !isRimborso && categoriaSelezionata.equalsIgnoreCase(s.getCategoria());
+                String catLocalizzata = com.example.paripariapp.util.CategoriaUtil.getNomeLocalizzatoCategoria(requireContext(), s.getCategoria());
+                matchCat = !isRimborso && (categoriaSelezionata.equalsIgnoreCase(s.getCategoria()) ||
+                        (catLocalizzata != null && categoriaSelezionata.equalsIgnoreCase(catLocalizzata)));
             }
 
             if (matchTesto && matchCat) {
@@ -831,10 +822,10 @@ public class DettaglioSchedaFragment extends Fragment {
 
                     try {
                         if (which == 0) {
-                            File fileCsv = EsportatoreDati.generaCsv(requireContext(), titolo, valuta, speseCache, partecipantiCache);
+                            File fileCsv = EsportatoreDati.generaCsv(requireContext(), titolo, valuta, speseCache, partecipantiCache, quoteCache);
                             EsportatoreDati.condividiFile(requireContext(), fileCsv, "text/csv", getString(R.string.btn_esporta));
                         } else {
-                            File filePdf = EsportatoreDati.generaPdf(requireContext(), titolo, valuta, speseCache, partecipantiCache);
+                            File filePdf = EsportatoreDati.generaPdf(requireContext(), titolo, valuta, speseCache, partecipantiCache, quoteCache);
                             EsportatoreDati.condividiFile(requireContext(), filePdf, "application/pdf", getString(R.string.btn_esporta));
                         }
                     } catch (Exception e) {
@@ -878,6 +869,13 @@ public class DettaglioSchedaFragment extends Fragment {
 
         membroAdapter.setOnEliminaClickListener(p -> {
             gestisciRimozioneMembro(p, null, null);
+        });
+
+        membroAdapter.setOnRiattivaClickListener(p -> {
+            viewModel.riattivaMembro(schedaId, p.getId());
+            if (binding != null) {
+                AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_riattivato, p.getNome()));
+            }
         });
 
         binding.btnAggiungiMembroTab.setOnClickListener(v -> mostraDialogOpzioniAggiungiMembro());

@@ -55,6 +55,9 @@ public class Partecipante {
     @ColumnInfo(name = "previous_user_id")
     private String previousUserId;
 
+    @ColumnInfo(name = "photo_url")
+    private String photoUrl;
+
     @NonNull
     @ColumnInfo(name = "stato", defaultValue = STATO_ATTIVO)
     private String stato = STATO_ATTIVO;
@@ -213,6 +216,14 @@ public class Partecipante {
         this.stato = stato;
     }
 
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
     public boolean isAttivo() {
         return !STATO_USCITO.equalsIgnoreCase(stato);
     }
@@ -266,7 +277,7 @@ public class Partecipante {
                                            @Nullable com.google.firebase.auth.FirebaseUser currentUser,
                                            @Nullable com.example.paripariapp.data.repository.UserPreferencesRepository prefs,
                                            @Nullable String schedaId) {
-        if (partecipanti == null || partecipanti.isEmpty() || currentUser == null) return null;
+        if (partecipanti == null || partecipanti.isEmpty()) return null;
 
         if (prefs != null && schedaId != null) {
             String savedId = prefs.getMyParticipantId(schedaId);
@@ -281,6 +292,13 @@ public class Partecipante {
 
         for (Partecipante p : partecipanti) {
             if (isCurrentUserParticipant(p, currentUser)) {
+                return p.getId();
+            }
+        }
+
+        for (Partecipante p : partecipanti) {
+            String n = pulisciNome(p.getNome()).toLowerCase(Locale.ROOT);
+            if (n.equals("io") || n.equals("me")) {
                 return p.getId();
             }
         }
@@ -321,19 +339,33 @@ public class Partecipante {
             @NonNull java.util.List<Partecipante> partecipanti,
             @Nullable com.google.firebase.auth.FirebaseUser currentUser
     ) {
+        java.util.List<Partecipante> attivi = new java.util.ArrayList<>();
+        java.util.List<Partecipante> exMembri = new java.util.ArrayList<>();
+
+        for (Partecipante p : partecipanti) {
+            if (p.isAttivo()) {
+                attivi.add(p);
+            } else {
+                exMembri.add(p);
+            }
+        }
+
         java.util.List<Partecipante> ordinati = new java.util.ArrayList<>();
-        Partecipante proprietario = trovaProprietario(scheda, partecipanti, currentUser);
+        Partecipante proprietario = trovaProprietario(scheda, attivi, currentUser);
 
         if (proprietario != null) {
             ordinati.add(proprietario);
-            for (Partecipante p : partecipanti) {
+            for (Partecipante p : attivi) {
                 if (!p.getId().equals(proprietario.getId())) {
                     ordinati.add(p);
                 }
             }
         } else {
-            ordinati.addAll(partecipanti);
+            ordinati.addAll(attivi);
         }
+
+        // Aggiungi in fondo tutti gli Ex Membri
+        ordinati.addAll(exMembri);
 
         return ordinati;
     }

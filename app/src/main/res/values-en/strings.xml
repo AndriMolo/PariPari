@@ -10,6 +10,7 @@
     <string name="nav_account">Account</string>
 
     <string name="formato_rimborso_titolo">Reimbursement: from %1$s to %2$s</string>
+    <string name="titolo_rimborso_formattato">Reimbursement: from %1$s to %2$s</string>
     <string name="membro_default">Member</string>
     <string name="btn_allega_scontrino">Attach receipt</string>
     <string name="btn_scansiona_scontrino">Scan with camera</string>
@@ -396,7 +397,12 @@
     <string name="tipo_spesa">Expense</string>
     <string name="tipo_rimborso">Reimbursement</string>
     <string name="label_ricevuto_da">To whom</string>
-    <string name="msg_saldi_rimozione_solo_spese">To edit or remove a reimbursement, please use the group Expenses screen.</string>
+    <string name="msg_saldi_rimozione_solo_spese">This reimbursement was added as a direct expense. It can only be edited or deleted from the expense list.</string>
+    <string name="btn_paga_ora_paypal">Pay now with PayPal</string>
+    <string name="btn_paga_ora_revolut">Pay now with Revolut</string>
+    <string name="titolo_annulla_saldo">Unsettle payment</string>
+    <string name="msg_conferma_annulla_saldo">Are you sure you want to unsettle this payment? The debt will return active in the group.</string>
+    <string name="btn_annulla_saldo">Unsettle</string>
 
     <string name="label_codice_6_caratteri">6-character code</string>
     <string name="handle_format">@%s</string>

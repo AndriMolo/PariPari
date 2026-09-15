@@ -64,6 +64,9 @@ public class AccountProfileFragment extends Fragment {
                 if (!user.isAnonymous()) {
                     binding.tvEmailUtente.setText(user.getEmail());
                 }
+                if (user.getPhotoUrl() != null) {
+                    com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(user.getPhotoUrl().toString(), binding.ivAvatar, R.drawable.ic_account);
+                }
             }
         });
 
@@ -110,6 +113,9 @@ public class AccountProfileFragment extends Fragment {
     }
 
     private void setupListeners() {
+        // Personalizza Avatar
+        binding.ivAvatar.setOnClickListener(v -> BottomSheetAvatarUtente.newInstance().show(getChildFragmentManager(), "BottomSheetAvatarUtente"));
+
         // Modifica nome profilo
         binding.containerNomeUtente.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
 

@@ -137,6 +137,22 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
             binding.tvTitoloScheda.setText(scheda.getTitolo());
             binding.tvValutaBadge.setText(scheda.getValutaPredefinita());
 
+            String iconaUrl = scheda.getIconaUrl();
+            if (iconaUrl != null && iconaUrl.startsWith("emoji:")) {
+                String emoji = iconaUrl.substring(6);
+                binding.tvEmojiScheda.setVisibility(android.view.View.VISIBLE);
+                binding.tvEmojiScheda.setText(emoji);
+                binding.ivIconaScheda.setVisibility(android.view.View.GONE);
+            } else if (iconaUrl != null && (iconaUrl.startsWith("http://") || iconaUrl.startsWith("https://"))) {
+                binding.tvEmojiScheda.setVisibility(android.view.View.GONE);
+                binding.ivIconaScheda.setVisibility(android.view.View.VISIBLE);
+                com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(iconaUrl, binding.ivIconaScheda, R.drawable.ic_group);
+            } else {
+                binding.tvEmojiScheda.setVisibility(android.view.View.GONE);
+                binding.ivIconaScheda.setVisibility(android.view.View.VISIBLE);
+                binding.ivIconaScheda.setImageResource(R.drawable.ic_group);
+            }
+
             updateCountOnly(count);
 
             binding.getRoot().setOnClickListener(v -> {

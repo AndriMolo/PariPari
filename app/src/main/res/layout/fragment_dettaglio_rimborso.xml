@@ -37,7 +37,7 @@
                 android:id="@+id/tv_categoria_dettaglio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
                 android:textColor="?attr/colorPrimary"
                 android:textStyle="bold"
                 tools:text="💳 Rimborso" />
@@ -48,7 +48,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
                 tools:text="Rimborso: da Mario a Luigi" />
@@ -59,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="14 Settembre 2026" />
 
@@ -83,14 +83,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/label_importo"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                        android:textAppearance="?attr/textAppearanceLabelMedium" />
 
                     <TextView
                         android:id="@+id/tv_importo_dettaglio"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline4"
+                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
                         android:textColor="?attr/colorPrimary"
                         android:textStyle="bold"
                         tools:text="50,00 EUR" />
@@ -106,7 +106,7 @@
                         android:id="@+id/tv_da_chi_pagato"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
                         android:textColor="?attr/colorOnSurface"
                         tools:text="Da chi pagato: Mario Rossi" />
 
@@ -116,7 +116,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
                         android:textColor="?attr/colorOnSurface"
                         tools:text="Chi li riceve: Luigi Bianchi" />
 
@@ -143,7 +143,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/hint_descrizione_spesa"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <TextView
@@ -151,7 +151,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
                         android:textColor="?attr/colorOnSurface"
                         tools:text="Quota cena e taxi" />
 
