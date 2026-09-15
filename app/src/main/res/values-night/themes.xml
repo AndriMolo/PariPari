@@ -1,5 +1,9 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="AppTheme" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Configurazione Splash Screen (Android 12+) -->
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">@android:color/white</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">@android:color/white</item>
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
