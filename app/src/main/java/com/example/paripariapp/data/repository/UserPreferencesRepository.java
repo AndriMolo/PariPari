@@ -180,6 +180,22 @@ public class UserPreferencesRepository {
     }
 
     /**
+     * Salva il timestamp dell'ultimo controllo notifiche per una specifica scheda.
+     */
+    public void setLastNotificationCheckTime(String schedaId, long timestamp) {
+        if (schedaId == null) return;
+        preferences.edit().putLong("last_notif_check_" + schedaId, timestamp).apply();
+    }
+
+    /**
+     * Recupera il timestamp dell'ultimo controllo notifiche per una specifica scheda (0 se mai controllato).
+     */
+    public long getLastNotificationCheckTime(String schedaId) {
+        if (schedaId == null) return 0L;
+        return preferences.getLong("last_notif_check_" + schedaId, 0L);
+    }
+
+    /**
      * Helper per estrarre il codice a 3 lettere da una stringa formattata (es. "USD - Dollaro USA" -> "USD").
      */
     public static String extractCurrencyCode(String displayCurrency) {

@@ -69,6 +69,9 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.mlkit.text.recognition)
 
+    // Android WorkManager per sincronizzazione e notifiche periodiche ad app chiusa
+    implementation(libs.work.runtime)
+
     testImplementation(libs.junit)
     testImplementation("org.json:json:20231013")
     androidTestImplementation(libs.espresso.core)

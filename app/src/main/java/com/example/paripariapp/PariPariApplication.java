@@ -7,9 +7,17 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.paripariapp.data.repository.PariPariRepository;
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
+import com.example.paripariapp.service.SyncNotificheWorker;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Classe Application principale per inizializzare il Repository,
@@ -33,6 +41,9 @@ public class PariPariApplication extends Application {
 
         // Inizializza il repository (Room DB + monitor di rete + Firestore sync)
         repository = PariPariRepository.getInstance(this);
+
+        // Avvia o mantiene programmato il Worker periodico per le notifiche anche ad app chiusa
+        pianificaSyncNotificheWorker();
 
         // Gestione del ciclo di vita foreground / background per risparmio energetico
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
@@ -73,5 +84,29 @@ public class PariPariApplication extends Application {
 
     public PariPariRepository getRepository() {
         return repository;
+    }
+
+    /**
+     * Programma il controllo periodico delle notifiche in background tramite WorkManager.
+     * Android impone un intervallo minimo di 15 minuti (PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS).
+     * ExistingPeriodicWorkPolicy.KEEP assicura che il task non venga resettato inutilmente ad ogni avvio.
+     */
+    private void pianificaSyncNotificheWorker() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(
+                SyncNotificheWorker.class,
+                15, TimeUnit.MINUTES
+        )
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "PariPariSyncNotificheWorker",
+                ExistingPeriodicWorkPolicy.KEEP,
+                workRequest
+        );
     }
 }

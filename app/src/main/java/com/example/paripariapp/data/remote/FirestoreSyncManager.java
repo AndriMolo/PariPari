@@ -914,6 +914,8 @@ public class FirestoreSyncManager {
                     isInitialBatch[0] = false;
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
+                        com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context)
+                                .setLastNotificationCheckTime(groupId, System.currentTimeMillis());
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
                             DocumentSnapshot doc = dc.getDocument();
                             String eId = doc.getId();
