@@ -204,10 +204,12 @@ public class DettaglioSchedaFragment extends Fragment {
 
         saldoAdapter.setOnItemClickListener(item -> {
             if (item == null) return;
-            String creditorePaypal = "";
-            String creditoreRevolut = "";
             com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
             String myPartId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+
+            String creditorePaypalLocal = "";
+            String creditoreRevolutLocal = "";
+            boolean handleMancante = true;
 
             if (partecipantiCache != null) {
                 com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext().getApplicationContext());
@@ -215,21 +217,59 @@ public class DettaglioSchedaFragment extends Fragment {
                     if (p.getId().equals(item.getAPartecipanteId())) {
                         boolean isCreditoreMe = p.getId().equals(myPartId) || Partecipante.isCurrentUserParticipant(p, currentUser);
 
-                        creditorePaypal = (p.getPaypalHandle() != null && !p.getPaypalHandle().trim().isEmpty())
+                        creditorePaypalLocal = (p.getPaypalHandle() != null && !p.getPaypalHandle().trim().isEmpty())
                                 ? p.getPaypalHandle().trim()
                                 : (isCreditoreMe ? prefs.getPaypalHandle() : "");
 
-                        creditoreRevolut = (p.getRevolutHandle() != null && !p.getRevolutHandle().trim().isEmpty())
+                        creditoreRevolutLocal = (p.getRevolutHandle() != null && !p.getRevolutHandle().trim().isEmpty())
                                 ? p.getRevolutHandle().trim()
                                 : (isCreditoreMe ? prefs.getRevolutHandle() : "");
+
+                        handleMancante = !isCreditoreMe
+                                && android.text.TextUtils.isEmpty(creditorePaypalLocal)
+                                && android.text.TextUtils.isEmpty(creditoreRevolutLocal);
                         break;
                     }
                 }
             }
-            InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
-                    item, schedaId, creditorePaypal, creditoreRevolut, myPartId
-            );
-            sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+
+            final String finalMyPartId = myPartId;
+            if (handleMancante && schedaId != null && item.getAPartecipanteId() != null) {
+                // Handle non presente nella cache locale: fetch aggiornato da Firestore
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("schede").document(schedaId)
+                        .collection("partecipanti").document(item.getAPartecipanteId())
+                        .get()
+                        .addOnSuccessListener(doc -> {
+                            String paypal = "";
+                            String revolut = "";
+                            if (doc.exists()) {
+                                String pp = doc.getString("paypalHandle");
+                                String rv = doc.getString("revolutHandle");
+                                if (!android.text.TextUtils.isEmpty(pp)) paypal = pp.trim();
+                                if (!android.text.TextUtils.isEmpty(rv)) revolut = rv.trim();
+                            }
+                            if (isAdded() && getContext() != null) {
+                                InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                                        item, schedaId, paypal, revolut, finalMyPartId
+                                );
+                                sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            if (isAdded() && getContext() != null) {
+                                InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                                        item, schedaId, "", "", finalMyPartId
+                                );
+                                sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                            }
+                        });
+            } else {
+                InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                        item, schedaId, creditorePaypalLocal, creditoreRevolutLocal, finalMyPartId
+                );
+                sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+            }
         });
     }
 

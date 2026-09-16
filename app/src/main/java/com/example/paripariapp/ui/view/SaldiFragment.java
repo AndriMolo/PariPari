@@ -1,9 +1,11 @@
 package com.example.paripariapp.ui.view;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -63,34 +65,82 @@ public class SaldiFragment extends Fragment {
             if (item != null && item.getTrasferimentoSaldo() != null) {
                 UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(requireContext());
                 String aId = item.getTrasferimentoSaldo().getAPartecipanteId();
+                String schedaId = item.getSchedaId();
 
                 com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
                     com.example.paripariapp.data.model.Partecipante creditore =
                             com.example.paripariapp.data.local.AppDatabase.getInstance(requireContext().getApplicationContext())
                                     .partecipanteDao().getPartecipanteById(aId);
 
-                    String paypalHandle = (creditore != null && creditore.getPaypalHandle() != null && !creditore.getPaypalHandle().trim().isEmpty())
-                            ? creditore.getPaypalHandle().trim()
-                            : (item.isCredito() ? prefs.getPaypalHandle() : "");
+                    boolean handleMancante = creditore == null
+                            || (TextUtils.isEmpty(creditore.getPaypalHandle()) && TextUtils.isEmpty(creditore.getRevolutHandle()));
 
-                    String revolutHandle = (creditore != null && creditore.getRevolutHandle() != null && !creditore.getRevolutHandle().trim().isEmpty())
-                            ? creditore.getRevolutHandle().trim()
-                            : (item.isCredito() ? prefs.getRevolutHandle() : "");
+                    if (handleMancante && schedaId != null && aId != null) {
+                        // Handle non presente nel DB locale: fetch aggiornato da Firestore
+                        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                .collection("schede").document(schedaId)
+                                .collection("partecipanti").document(aId)
+                                .get()
+                                .addOnSuccessListener(doc -> {
+                                    String paypalHandle = "";
+                                    String revolutHandle = "";
+                                    if (doc.exists()) {
+                                        String pp = doc.getString("paypalHandle");
+                                        String rv = doc.getString("revolutHandle");
+                                        if (!TextUtils.isEmpty(pp)) paypalHandle = pp.trim();
+                                        if (!TextUtils.isEmpty(rv)) revolutHandle = rv.trim();
+                                    }
+                                    final String finalPaypal = paypalHandle;
+                                    final String finalRevolut = revolutHandle;
+                                    if (isAdded() && getContext() != null) {
+                                        InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                                                item.getTrasferimentoSaldo(),
+                                                schedaId,
+                                                finalPaypal,
+                                                finalRevolut
+                                        );
+                                        sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    // Fallback: prova comunque con dati locali
+                                    String paypalHandle = item.isCredito() ? prefs.getPaypalHandle() : "";
+                                    String revolutHandle = item.isCredito() ? prefs.getRevolutHandle() : "";
+                                    if (isAdded() && getContext() != null) {
+                                        InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                                                item.getTrasferimentoSaldo(),
+                                                schedaId,
+                                                paypalHandle,
+                                                revolutHandle
+                                        );
+                                        sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                                    }
+                                });
+                    } else {
+                        String paypalHandle = (creditore != null && !TextUtils.isEmpty(creditore.getPaypalHandle()))
+                                ? creditore.getPaypalHandle().trim()
+                                : (item.isCredito() ? prefs.getPaypalHandle() : "");
 
-                    requireActivity().runOnUiThread(() -> {
-                        if (isAdded() && getContext() != null) {
-                            InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
-                                    item.getTrasferimentoSaldo(),
-                                    item.getSchedaId(),
-                                    paypalHandle,
-                                    revolutHandle
-                            );
-                            sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
-                        }
-                    });
+                        String revolutHandle = (creditore != null && !TextUtils.isEmpty(creditore.getRevolutHandle()))
+                                ? creditore.getRevolutHandle().trim()
+                                : (item.isCredito() ? prefs.getRevolutHandle() : "");
+
+                        requireActivity().runOnUiThread(() -> {
+                            if (isAdded() && getContext() != null) {
+                                InvioPagamentoBottomSheet sheet = InvioPagamentoBottomSheet.newInstance(
+                                        item.getTrasferimentoSaldo(),
+                                        schedaId,
+                                        paypalHandle,
+                                        revolutHandle
+                                );
+                                sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
+                            }
+                        });
+                    }
                 });
             }
         });
+
 
         // Click Card Verde: mostra solo chi ti deve soldi
         binding.cardDaRicevere.setOnClickListener(v -> {

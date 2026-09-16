@@ -254,22 +254,7 @@ public class AccountFragment extends Fragment {
             dialogBinding.etHandle.setSelection(currentHandle.length());
         }
 
-        dialogBinding.btnTestaLink.setOnClickListener(v -> {
-            String raw = dialogBinding.etHandle.getText() != null ? dialogBinding.etHandle.getText().toString().trim() : "";
-            if (raw.isEmpty()) {
-                AppSnackbar.show(dialogBinding.getRoot(), R.string.error_handle_vuoto);
-                return;
-            }
-            String testUrl = isPaypal
-                    ? UserPreferencesRepository.generatePaypalLink(raw, 5.0, "EUR")
-                    : UserPreferencesRepository.generateRevolutLink(raw, 5.0, "EUR");
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(testUrl));
-                startActivity(intent);
-            } catch (Exception e) {
-                AppSnackbar.show(dialogBinding.getRoot(), R.string.msg_errore_apertura_link);
-            }
-        });
+
 
         androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setView(dialogBinding.getRoot())
