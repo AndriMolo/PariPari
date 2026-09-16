@@ -236,7 +236,7 @@
 
           if (isAndroid) {
             // Su Android Chrome, l'intent URI attiva direttamente l'app PariPari
-            var intentUri = 'intent://join?code=' + encodeURIComponent(c) + '#Intent;scheme=paripari;package=com.example.paripariapp;end';
+            var intentUri = 'intent://join?code=' + encodeURIComponent(c) + '#Intent;scheme=paripari;package=com.paripari.app;end';
             window.location.replace(intentUri);
           } else {
             window.location.replace(deepLink);

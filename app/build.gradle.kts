@@ -10,7 +10,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.paripariapp"
+        applicationId = "com.paripari.app"
         minSdk = 30
         targetSdk = 37
         versionCode = 1

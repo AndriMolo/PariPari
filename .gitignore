@@ -18,3 +18,11 @@ local.properties
 .vscode/
 node_modules/
 functions/node_modules/
+
+# Firebase configuration (do not commit to public repository)
+app/google-services.json
+
+# Android Signing Keystores
+*.jks
+*.keystore
+
