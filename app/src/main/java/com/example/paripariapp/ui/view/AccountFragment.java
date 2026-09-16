@@ -174,7 +174,9 @@ public class AccountFragment extends Fragment {
                 .setTitle(R.string.label_lingua_app)
                 .setSingleChoiceItems(items, selectedIndex, (dialog, which) -> {
                     String code = languageCodes[which];
-                    viewModel.setAppLanguage(code);
+                    if (!code.equalsIgnoreCase(currentCode)) {
+                        viewModel.setAppLanguage(code);
+                    }
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)
@@ -208,7 +210,9 @@ public class AccountFragment extends Fragment {
                     } else if (which == 2) {
                         code = UserPreferencesRepository.THEME_DARK;
                     }
-                    viewModel.setAppTheme(code);
+                    if (!code.equalsIgnoreCase(currentCode)) {
+                        viewModel.setAppTheme(code);
+                    }
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.btn_annulla, null)

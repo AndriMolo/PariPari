@@ -3,8 +3,9 @@ package com.example.paripariapp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -12,12 +13,18 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.example.paripariapp.databinding.ActivityMainBinding;
 import com.example.paripariapp.ui.view.AccountFragment;
 import com.example.paripariapp.ui.view.DettaglioSchedaActivity;
 import com.example.paripariapp.ui.view.SaldiFragment;
 import com.example.paripariapp.ui.view.SpeseFragment;
 import com.example.paripariapp.ui.view.ValutaFragment;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 
 /**
  * Activity principale dell'app PariPari.
@@ -26,10 +33,13 @@ import com.example.paripariapp.ui.view.ValutaFragment;
 public class MainActivity extends AppCompatActivity {
 
     private static final String KEY_SELECTED_TAB = "key_selected_tab_id";
+    private static final String KEY_TAB_STACK = "key_tab_stack";
 
     private ActivityMainBinding binding;
     private Fragment currentFragment;
     private int currentSelectedTabId = R.id.nav_spese;
+    private final Deque<Integer> tabBackStack = new ArrayDeque<>();
+    private boolean isNavigatingBack = false;
 
     private final androidx.activity.result.ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -53,23 +63,51 @@ public class MainActivity extends AppCompatActivity {
         richiediPermessoNotificheSeNecessario();
         aggiornaFcmTokenSeLoggato();
 
+        UserPreferencesRepository prefs = UserPreferencesRepository.getInstance(this);
+
         if (savedInstanceState != null) {
             currentSelectedTabId = savedInstanceState.getInt(KEY_SELECTED_TAB, R.id.nav_spese);
+            ArrayList<Integer> savedStack = savedInstanceState.getIntegerArrayList(KEY_TAB_STACK);
+            if (savedStack != null) {
+                tabBackStack.clear();
+                tabBackStack.addAll(savedStack);
+            }
+        } else if (prefs.isPendingConfigChange()) {
+            prefs.setPendingConfigChange(false);
+            currentSelectedTabId = prefs.getLastActiveTab(R.id.nav_spese);
+            List<Integer> savedStack = prefs.getSavedTabStack();
+            tabBackStack.clear();
+            tabBackStack.addAll(savedStack);
         } else {
             currentSelectedTabId = R.id.nav_spese;
+            tabBackStack.clear();
+            prefs.setLastActiveTab(R.id.nav_spese);
+            prefs.setSavedTabStack(tabBackStack);
         }
 
         binding.bottomNavigation.setSelectedItemId(currentSelectedTabId);
         mostraFragmentTab(currentSelectedTabId);
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
-            currentSelectedTabId = item.getItemId();
-            return mostraFragmentTab(item.getItemId());
+            int itemId = item.getItemId();
+            if (itemId == currentSelectedTabId) {
+                return true;
+            }
+            if (!isNavigatingBack) {
+                tabBackStack.remove(itemId);
+                tabBackStack.addLast(currentSelectedTabId);
+                prefs.setSavedTabStack(tabBackStack);
+            }
+            currentSelectedTabId = itemId;
+            prefs.setLastActiveTab(itemId);
+            return mostraFragmentTab(itemId);
         });
 
         binding.bottomNavigation.setOnItemReselectedListener(item -> {
             // No-op
         });
+
+        setupBackPressHandler();
 
         gestisciDeepLink(getIntent());
     }
@@ -78,6 +116,35 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_SELECTED_TAB, currentSelectedTabId);
+        outState.putIntegerArrayList(KEY_TAB_STACK, new ArrayList<>(tabBackStack));
+    }
+
+    private void setupBackPressHandler() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                FragmentManager fm = getSupportFragmentManager();
+                if (fm.getBackStackEntryCount() > 0) {
+                    fm.popBackStack();
+                    return;
+                }
+
+                if (!tabBackStack.isEmpty()) {
+                    int previousTab = tabBackStack.removeLast();
+                    UserPreferencesRepository.getInstance(MainActivity.this).setSavedTabStack(tabBackStack);
+                    isNavigatingBack = true;
+                    binding.bottomNavigation.setSelectedItemId(previousTab);
+                    isNavigatingBack = false;
+                } else if (currentSelectedTabId != R.id.nav_spese) {
+                    isNavigatingBack = true;
+                    binding.bottomNavigation.setSelectedItemId(R.id.nav_spese);
+                    isNavigatingBack = false;
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
     }
 
     @Override
