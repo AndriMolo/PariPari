@@ -3,10 +3,12 @@ package com.example.paripariapp.data.repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import android.os.Looper;
 
 import com.example.paripariapp.R;
 
@@ -34,6 +36,7 @@ public class UserPreferencesRepository {
 
     private static final String KEY_PAYPAL_HANDLE = "pref_paypal_handle";
     private static final String KEY_REVOLUT_HANDLE = "pref_revolut_handle";
+    private static final String KEY_CUSTOM_AVATAR = "pref_custom_avatar_string";
 
     public static final List<String> SUPPORTED_CURRENCIES = Arrays.asList(
             "EUR - Euro",
@@ -94,6 +97,7 @@ public class UserPreferencesRepository {
     private final MutableLiveData<String> appThemeLive = new MutableLiveData<>();
     private final MutableLiveData<String> paypalHandleLive = new MutableLiveData<>();
     private final MutableLiveData<String> revolutHandleLive = new MutableLiveData<>();
+    private final MutableLiveData<String> customAvatarLive = new MutableLiveData<>();
 
     private UserPreferencesRepository(Context context) {
         this.preferences = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -111,6 +115,9 @@ public class UserPreferencesRepository {
 
         String currentRevolut = preferences.getString(KEY_REVOLUT_HANDLE, "");
         revolutHandleLive.setValue(currentRevolut);
+
+        String currentAvatar = preferences.getString(KEY_CUSTOM_AVATAR, null);
+        customAvatarLive.setValue(currentAvatar);
     }
 
     public static UserPreferencesRepository getInstance(Context context) {
@@ -515,5 +522,42 @@ public class UserPreferencesRepository {
         String clean = cleanRevolutHandle(handle);
         if (clean.isEmpty()) return "";
         return "https://revolut.me/" + clean;
+    }
+
+    /**
+     * Restituisce l'avatar personalizzato salvato localmente (es. "emoji:😎:#3F51B5" o URL).
+     */
+    @Nullable
+    public String getCustomAvatar() {
+        return preferences.getString(KEY_CUSTOM_AVATAR, null);
+    }
+
+    /**
+     * LiveData osservabile per aggiornamenti reattivi e istantanei dell'avatar nella UI.
+     */
+    public LiveData<String> getCustomAvatarLive() {
+        return customAvatarLive;
+    }
+
+    /**
+     * Salva o cancella l'avatar personalizzato ed emette immediatamente il nuovo valore.
+     */
+    public void setCustomAvatar(@Nullable String avatarData) {
+        if (avatarData == null || avatarData.trim().isEmpty()) {
+            preferences.edit().remove(KEY_CUSTOM_AVATAR).apply();
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                customAvatarLive.setValue(null);
+            } else {
+                customAvatarLive.postValue(null);
+            }
+        } else {
+            String clean = avatarData.trim();
+            preferences.edit().putString(KEY_CUSTOM_AVATAR, clean).apply();
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                customAvatarLive.setValue(clean);
+            } else {
+                customAvatarLive.postValue(clean);
+            }
+        }
     }
 }

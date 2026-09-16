@@ -125,6 +125,9 @@
     <string name="msg_login_ok">Accesso effettuato con successo!</string>
     <string name="msg_login_google_ok">Accesso con Google completato con successo!</string>
     <string name="msg_logout_ok">Disconnesso. Sei ora in modalità ospite.</string>
+    <string name="msg_avatar_aggiornato">Avatar aggiornato con successo</string>
+    <string name="msg_avatar_ripristinato">Avatar ripristinato</string>
+    <string name="msg_avatar_ripristinato_google">Ripristinata foto profilo Google (gratuita)</string>
 
     <!-- Preferenze Account -->
     <string name="label_valuta_predefinita">Valuta predefinita</string>

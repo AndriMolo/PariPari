@@ -22,6 +22,7 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.FragmentAccountProfileBinding;
 import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.example.paripariapp.util.AppSnackbar;
+import com.example.paripariapp.util.AvatarVisualUtil;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseUser;
@@ -64,14 +65,13 @@ public class AccountProfileFragment extends Fragment {
                 if (!user.isAnonymous()) {
                     binding.tvEmailUtente.setText(user.getEmail());
                 }
-                String photoUrlStr = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
-                com.example.paripariapp.util.AvatarVisualUtil.applyToImageView(
-                        requireContext(),
-                        binding.ivAvatar,
-                        photoUrlStr,
-                        displayNome
-                );
+                aggiornaAvatarProfilo(viewModel.getCustomAvatar());
             }
+        });
+
+        // Osserva reattivamente i cambi dell'avatar utente
+        viewModel.getAvatarLiveData().observe(getViewLifecycleOwner(), customAvatar -> {
+            aggiornaAvatarProfilo(customAvatar);
         });
 
         // Osserva lo stato di verifica dell'email
@@ -244,5 +244,24 @@ public class AccountProfileFragment extends Fragment {
             viewModel.stopEmailVerificationPolling();
         }
         binding = null;
+    }
+
+    private void aggiornaAvatarProfilo(@Nullable String customAvatar) {
+        if (binding == null || getContext() == null) return;
+        FirebaseUser user = viewModel.getUserLiveData().getValue();
+        String displayNome = (user != null && !TextUtils.isEmpty(user.getDisplayName()))
+                ? user.getDisplayName() : getString(R.string.default_nome_utente);
+
+        String effectiveAvatar = customAvatar;
+        if (effectiveAvatar == null && user != null && user.getPhotoUrl() != null) {
+            effectiveAvatar = user.getPhotoUrl().toString();
+        }
+
+        AvatarVisualUtil.applyToImageView(
+                requireContext(),
+                binding.ivAvatar,
+                effectiveAvatar,
+                displayNome
+        );
     }
 }

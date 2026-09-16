@@ -44,12 +44,14 @@ public class PariPariRepository {
     private final SpesaDao spesaDao;
     private final FirebaseAuth auth;
     private final FirestoreSyncManager syncManager;
+    private final UserPreferencesRepository preferencesRepository;
 
     private final MediatorLiveData<RisultatoSaldi> risultatoSaldiLiveData = new MediatorLiveData<>();
     private boolean saldiSourcesInitialized = false;
 
     private PariPariRepository(Application application) {
         this.application = application;
+        this.preferencesRepository = UserPreferencesRepository.getInstance(application);
         AppDatabase db = AppDatabase.getInstance(application);
         this.schedaDao = db.schedaDao();
         this.partecipanteDao = db.partecipanteDao();
@@ -632,6 +634,7 @@ public class PariPariRepository {
     }
 
     public void aggiornaAvatarUtente(String photoUrl) {
+        preferencesRepository.setCustomAvatar(photoUrl);
         AppDatabase.databaseWriteExecutor.execute(() -> {
             com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) {
@@ -655,12 +658,13 @@ public class PariPariRepository {
                 try {
                     com.google.firebase.auth.UserProfileChangeRequest.Builder b =
                             new com.google.firebase.auth.UserProfileChangeRequest.Builder();
-                    if (photoUrl != null && !photoUrl.trim().isEmpty()) {
+                    if (photoUrl != null && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
                         b.setPhotoUri(android.net.Uri.parse(photoUrl));
-                    } else {
+                        user.updateProfile(b.build());
+                    } else if (photoUrl == null) {
                         b.setPhotoUri(null);
+                        user.updateProfile(b.build());
                     }
-                    user.updateProfile(b.build());
                 } catch (Exception ignored) {}
             }
         });
@@ -672,6 +676,9 @@ public class PariPariRepository {
      */
     public void aggiornaAvatarSeNonPersonalizzato(String defaultPhotoUrl) {
         if (defaultPhotoUrl == null || defaultPhotoUrl.trim().isEmpty()) return;
+        if (preferencesRepository.getCustomAvatar() != null && !preferencesRepository.getCustomAvatar().trim().isEmpty()) {
+            return;
+        }
         AppDatabase.databaseWriteExecutor.execute(() -> {
             com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) {
@@ -692,6 +699,18 @@ public class PariPariRepository {
                 }
             }
         });
+    }
+
+    public String getCustomAvatar() {
+        return preferencesRepository.getCustomAvatar();
+    }
+
+    public LiveData<String> getCustomAvatarLive() {
+        return preferencesRepository.getCustomAvatarLive();
+    }
+
+    public void setCustomAvatar(@Nullable String avatar) {
+        preferencesRepository.setCustomAvatar(avatar);
     }
 
     private com.google.firebase.storage.FirebaseStorage getStorageInstance() {

@@ -1,6 +1,8 @@
 package com.example.paripariapp.util;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.util.TypedValue;
@@ -186,11 +188,22 @@ public final class AppSnackbar {
         backgroundShape.setElevation(dpToPx(context, ELEVATION_DP));
         snackbarView.setBackground(backgroundShape);
 
-        // 3. Margini flottanti (floating style)
+        // 3. Se presente una BottomNavigationView visibile nell'Activity corrente e la snackbar
+        // non è già racchiusa in un CoordinatorLayout dedicato, ancoriamo la Snackbar ad essa in modo
+        // che la sua altezza sia identica e galleggi perfettamente a 16dp sopra la barra inferiore.
+        Activity activity = findActivity(context);
+        View bottomNav = activity != null ? activity.findViewById(R.id.bottom_navigation) : null;
+        boolean hasVisibleBottomNav = bottomNav != null && bottomNav.getVisibility() == View.VISIBLE;
+
+        ViewGroup.LayoutParams layoutParams = snackbarView.getLayoutParams();
+        if (hasVisibleBottomNav && !(layoutParams instanceof CoordinatorLayout.LayoutParams)) {
+            snackbar.setAnchorView(bottomNav);
+        }
+
+        // 4. Margini flottanti (floating style)
         int marginHorizontalPx = dpToPx(context, HORIZONTAL_MARGIN_DP);
         int marginBottomPx = dpToPx(context, BOTTOM_MARGIN_DP);
 
-        ViewGroup.LayoutParams layoutParams = snackbarView.getLayoutParams();
         if (layoutParams instanceof CoordinatorLayout.LayoutParams) {
             CoordinatorLayout.LayoutParams coordParams = (CoordinatorLayout.LayoutParams) layoutParams;
             coordParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
@@ -234,5 +247,16 @@ public final class AppSnackbar {
                 dp,
                 context.getResources().getDisplayMetrics()
         );
+    }
+
+    @Nullable
+    private static Activity findActivity(@Nullable Context context) {
+        while (context instanceof ContextWrapper) {
+            if (context instanceof Activity) {
+                return (Activity) context;
+            }
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        return null;
     }
 }

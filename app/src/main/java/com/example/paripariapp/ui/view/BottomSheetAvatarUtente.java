@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.paripariapp.R;
 import com.example.paripariapp.databinding.BottomSheetAvatarUtenteBinding;
-import com.example.paripariapp.ui.viewmodel.SpeseViewModel;
+import com.example.paripariapp.ui.viewmodel.AccountViewModel;
 import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.AvatarVisualUtil;
 import com.example.paripariapp.util.ImageLoaderUtil;
@@ -37,7 +37,7 @@ import java.util.Locale;
 public class BottomSheetAvatarUtente extends BottomSheetDialogFragment {
 
     private BottomSheetAvatarUtenteBinding binding;
-    private SpeseViewModel viewModel;
+    private AccountViewModel viewModel;
 
     private enum Mode { EMOJI, INIZIALE, GOOGLE }
     private Mode currentMode = Mode.EMOJI;
@@ -61,7 +61,7 @@ public class BottomSheetAvatarUtente extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(AccountViewModel.class);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null || user.isAnonymous()) {
@@ -89,7 +89,10 @@ public class BottomSheetAvatarUtente extends BottomSheetDialogFragment {
             binding.chipTipoGoogle.setVisibility(View.VISIBLE);
         }
 
-        String currentAvatar = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
+        String currentAvatar = viewModel.getCustomAvatar();
+        if (currentAvatar == null && user.getPhotoUrl() != null) {
+            currentAvatar = user.getPhotoUrl().toString();
+        }
         if (currentAvatar != null) {
             if (currentAvatar.startsWith("emoji:")) {
                 currentMode = Mode.EMOJI;
@@ -231,9 +234,10 @@ public class BottomSheetAvatarUtente extends BottomSheetDialogFragment {
 
         binding.btnRipristinaAvatar.setOnClickListener(v -> {
             String defaultAvatar = (googlePhotoUrl != null && !googlePhotoUrl.trim().isEmpty()) ? googlePhotoUrl : null;
-            viewModel.getRepository().aggiornaAvatarUtente(defaultAvatar);
-            AppSnackbar.show(requireActivity().findViewById(android.R.id.content),
-                    googlePhotoUrl != null ? "Ripristinata foto profilo Google (gratuita)" : "Avatar ripristinato");
+            viewModel.aggiornaAvatarUtente(defaultAvatar);
+            viewModel.setSuccessMessage(googlePhotoUrl != null
+                    ? getString(R.string.msg_avatar_ripristinato_google)
+                    : getString(R.string.msg_avatar_ripristinato));
             dismiss();
         });
     }
@@ -280,8 +284,8 @@ public class BottomSheetAvatarUtente extends BottomSheetDialogFragment {
             avatarData = "initial:" + initial + ":" + selectedColor;
         }
 
-        viewModel.getRepository().aggiornaAvatarUtente(avatarData);
-        AppSnackbar.show(requireActivity().findViewById(android.R.id.content), "Avatar aggiornato con successo");
+        viewModel.aggiornaAvatarUtente(avatarData);
+        viewModel.setSuccessMessage(getString(R.string.msg_avatar_aggiornato));
         dismiss();
     }
 
