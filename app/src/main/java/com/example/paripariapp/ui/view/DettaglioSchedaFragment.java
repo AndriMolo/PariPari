@@ -543,6 +543,7 @@ public class DettaglioSchedaFragment extends Fragment {
     private void setupObservers() {
         viewModel.getQuoteDellaScheda(schedaId).observe(getViewLifecycleOwner(), quote -> {
             this.quoteCache = (quote != null) ? quote : new ArrayList<>();
+            aggiornaMieSpese();
             aggiornaSaldi();
         });
 
@@ -556,32 +557,7 @@ public class DettaglioSchedaFragment extends Fragment {
                 this.speseCache.add(item.getSpesa());
             }
 
-            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-            com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
-            String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
-
-            double mieSpeseTotale = 0.0;
-            String valutaScheda = valuta != null ? valuta : "EUR";
-            if (myId != null) {
-                for (SpesaConDettagli scd : this.tutteSpeseRaw) {
-                    if (scd.getSpesa() != null && !com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(scd.getSpesa().getCategoria())) {
-                        String spesaId = scd.getSpesa().getId();
-                        String valutaSpesa = scd.getSpesa().getValuta() != null ? scd.getSpesa().getValuta() : valutaScheda;
-                        if (quoteCache != null) {
-                            for (SpesaPartecipante q : quoteCache) {
-                                if (q.getSpesaId().equals(spesaId) && q.getPartecipanteId().equals(myId)) {
-                                    double quotaConvertita = CalcolatoreSaldi.convertiValuta(q.getQuota(), valutaSpesa, valutaScheda, requireContext());
-                                    mieSpeseTotale += quotaConvertita;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            String valutaCorrente = valuta != null ? valuta : "EUR";
-            binding.tvMieSpese.setText(String.format(Locale.getDefault(), "%.2f %s", mieSpeseTotale, valutaCorrente));
-
+            aggiornaMieSpese();
             applicaFiltriERaggruppa();
             aggiornaSaldi();
         });
@@ -609,6 +585,9 @@ public class DettaglioSchedaFragment extends Fragment {
                 binding.recyclerMembri.setVisibility(View.VISIBLE);
             }
 
+            // Ricalcola anche le mie spese: i partecipanti potrebbero arrivare
+            // dopo le spese, rendendo myId null al momento del primo calcolo.
+            aggiornaMieSpese();
             aggiornaSaldi();
         });
 
@@ -642,6 +621,38 @@ public class DettaglioSchedaFragment extends Fragment {
                 }
             }
         });
+    }
+
+    /**
+     * Ricalcola e aggiorna il campo "Speso da me".
+     * Deve essere chiamato ogni volta che cambia una delle tre cache:
+     * tutteSpeseRaw, quoteCache, partecipantiCache — in qualsiasi ordine arrivino.
+     */
+    private void aggiornaMieSpese() {
+        if (binding == null) return;
+        com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
+        String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
+
+        double mieSpeseTotale = 0.0;
+        String valutaScheda = valuta != null ? valuta : "EUR";
+        if (myId != null && tutteSpeseRaw != null && quoteCache != null) {
+            for (SpesaConDettagli scd : tutteSpeseRaw) {
+                if (scd.getSpesa() != null
+                        && !com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(scd.getSpesa().getCategoria())) {
+                    String spesaId = scd.getSpesa().getId();
+                    String valutaSpesa = scd.getSpesa().getValuta() != null ? scd.getSpesa().getValuta() : valutaScheda;
+                    for (SpesaPartecipante q : quoteCache) {
+                        if (q.getSpesaId().equals(spesaId) && q.getPartecipanteId().equals(myId)) {
+                            mieSpeseTotale += CalcolatoreSaldi.convertiValuta(q.getQuota(), valutaSpesa, valutaScheda, requireContext());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        binding.tvMieSpese.setText(String.format(Locale.getDefault(), "%.2f %s", mieSpeseTotale, valutaScheda));
     }
 
     private boolean mostraExMembri = false;
