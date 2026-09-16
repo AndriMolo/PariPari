@@ -247,7 +247,7 @@
     <string name="spesa_formato_importo">%1$.2f %2$s</string>
     <string name="spesa_pagato_da">Paid by %1$s • %2$s</string>
     <plurals name="spesa_split_persone">
-        <item quantity="one">Split among 1 person</item>
+        <item quantity="one">Split among %d person</item>
         <item quantity="other">Split among %d people</item>
     </plurals>
 

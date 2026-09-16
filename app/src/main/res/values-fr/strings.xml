@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PariPari</string>
+    <string name="app_name_brand">PariPari</string>
+
+    <!-- Bottom Navigation Labels -->
+    <string name="nav_spese">Groupes</string>
+    <string name="nav_saldi">Soldes</string>
+    <string name="nav_valuta">Devise</string>
+    <string name="nav_account">Compte</string>
+
+    <string name="formato_rimborso_titolo">Remboursement : de %1$s à %2$s</string>
+    <string name="titolo_rimborso_formattato">Remboursement : de %1$s à %2$s</string>
+    <string name="membro_default">Membre</string>
+    <string name="btn_allega_scontrino">Joindre un reçu</string>
+    <string name="btn_scansiona_scontrino">Scanner avec l\'appareil photo</string>
+    <string name="scontrino_allegato">Reçu joint</string>
+    <string name="rimuovi_scontrino">Supprimer</string>
+    <string name="ocr_in_corso">Reconnaissance du montant et de la date en cours…</string>
+    <string name="ocr_successo">Montant détecté sur le reçu : %s</string>
+    <string name="ocr_nessun_importo">Aucun montant détecté avec certitude</string>
+    <string name="error_credenziali_google">Impossible de récupérer les identifiants Google</string>
+
+    <!-- Titoli Schermate -->
+    <string name="title_saldi">Mes Soldes</string>
+    <string name="title_valuta">Convertir Devise</string>
+    <string name="title_account">Mon Compte</string>
+
+    <!-- Opzioni Scheda Home -->
+    <string name="dialog_opzioni_scheda_titolo">Choisissez une option</string>
+    <string name="dialog_opzioni_nuova_scheda">➕ Créer un nouveau groupe</string>
+    <string name="dialog_opzioni_entra_scheda">🔑 Rejoindre un groupe avec code</string>
+    <string name="dialog_opzioni_importa_csv">📂 Importer un groupe depuis un fichier CSV</string>
+    <string name="msg_importazione_csv_successo">Groupe \'%s\' importé avec succès !</string>
+
+    <!-- Empty States -->
+    <string name="empty_membri_titolo">Aucun membre dans le groupe</string>
+    <string name="empty_membri_desc">Invitez vos amis en partageant le code du groupe pour commencer à partager les dépenses !</string>
+    <string name="empty_saldi_titolo">Tout est réglé ! 👍</string>
+    <string name="empty_saldi_desc">Il n\'y a aucun solde en attente ni remboursement.</string>
+
+    <!-- Preferenza Tema -->
+    <string name="label_tema_app">Thème de l\'application</string>
+    <string name="tema_sistema">Par défaut du système</string>
+    <string name="tema_chiaro">Clair</string>
+    <string name="tema_scuro">Sombre</string>
+    <string name="msg_tema_aggiornato">Thème mis à jour</string>
+    <string name="btn_condividi_codice">Partager le code d\'invitation</string>
+    <string name="btn_aggiungi_partecipante_locale">Ajouter un membre local</string>
+
+    <!-- Schede Spese -->
+    <string name="btn_nuova_scheda">Nouveau Groupe</string>
+    <string name="title_nuova_scheda">Nouveau Groupe</string>
+    <string name="hint_nome_scheda">Nom du groupe (ex. Vacances, Dîner)</string>
+    <string name="label_partecipanti">Participants</string>
+    <string name="hint_nuovo_partecipante">Nom de l\'ami…</string>
+    <string name="btn_crea_scheda">Créer le Groupe</string>
+    <string name="error_nome_scheda_obbligatorio">Veuillez saisir le nom du groupe</string>
+    <string name="empty_schede_titolo">Aucun groupe pour le moment</string>
+    <string name="empty_schede_desc">Appuyez sur le bouton ci-dessous pour créer votre premier groupe de dépenses.</string>
+    <string name="valuta_default">EUR</string>
+    <string name="nome_gruppo_default">Groupe</string>
+
+    <!-- Spese Fragment & Unisciti Gruppo -->
+    <string name="titolo_spese">Groupes</string>
+    <string name="dialog_titolo">Entrez le code d\'invitation alphanumérique pour synchroniser les dépenses avec vos amis.</string>
+    <string name="sugg_code">Code d\'invitation</string>
+    <string name="dialog_cancel">Annuler</string>
+    <string name="error_codice_non_valido">Code non valide</string>
+
+    <!-- Gestione Plurali Partecipanti -->
+    <plurals name="label_partecipanti_count">
+        <item quantity="one">%d participant</item>
+        <item quantity="other">%d participants</item>
+    </plurals>
+
+    <!-- Convertitore Valuta -->
+    <string name="label_importo">Montant</string>
+    <string name="label_valuta_da">De la devise</string>
+    <string name="label_valuta_a">Vers la devise</string>
+    <string name="btn_inverti">⇅ Inverser</string>
+    <string name="label_risultato">Résultat</string>
+    <string name="placeholder_risultato">-</string>
+    <string name="tassi_bce_aggiornati">Taux BCE mis à jour au : %s</string>
+    <string name="error_importo_valuta">Veuillez saisir un montant valide (ex. 10 ou 12.50)</string>
+    <string name="error_importo_zero">Le montant doit être supérieur à zéro</string>
+    <string name="error_formato_numerico">Format numérique non valide</string>
+
+    <!-- Selettore Valuta Bottom Sheet -->
+    <string name="title_seleziona_valuta">Sélectionner la devise</string>
+    <string name="hint_cerca_valuta">Rechercher une devise ou un code…</string>
+    <string name="label_valute_frequenti">Les plus utilisées</string>
+    <string name="label_tutte_le_valute">Toutes les devises BCE</string>
+    <string name="empty_valute_ricerca">Aucune devise trouvée</string>
+    <string name="chip_eur">🇪🇺 EUR</string>
+    <string name="chip_usd">🇺🇸 USD</string>
+    <string name="chip_gbp">🇬🇧 GBP</string>
+    <string name="chip_chf">🇨🇭 CHF</string>
+
+    <!-- Account -->
+    <string name="cd_avatar_utente">Avatar de l\'utilisateur</string>
+    <string name="title_account_ospite">Compte invité</string>
+    <string name="desc_account_ospite">Inscrivez-vous ou connectez-vous pour enregistrer et synchroniser toutes vos dépenses dans le cloud avec vos amis.</string>
+    <string name="hint_nome">Nom</string>
+    <string name="hint_email">E-mail</string>
+    <string name="hint_password">Mot de passe</string>
+    <string name="btn_crea_account">Créer un Compte</string>
+    <string name="btn_accedi">Se Connecter</string>
+    <string name="btn_accedi_google">Se connecter avec Google</string>
+    <string name="btn_continua_google">Continuer avec Google</string>
+    <string name="label_oppure">ou</string>
+    <string name="switch_to_login">Vous avez déjà un compte ? Connectez-vous</string>
+    <string name="switch_to_register">Vous n\'avez pas de compte ? Inscrivez-vous</string>
+    <string name="btn_logout">Se Déconnecter</string>
+    <string name="default_nome_utente">Nom d\'utilisateur</string>
+    <string name="default_email_utente">email@exemple.com</string>
+
+    <!-- Errori e Notifiche Auth -->
+    <string name="error_nome_obbligatorio">Veuillez entrer votre nom</string>
+    <string name="error_email_valida">Veuillez entrer un e-mail valide</string>
+    <string name="error_password_minima">Le mot de passe doit comporter au moins 6 caractères</string>
+    <string name="msg_registrazione_ok">Compte créé avec succès !</string>
+    <string name="msg_login_ok">Connexion réussie !</string>
+    <string name="msg_login_google_ok">Connexion Google réussie !</string>
+    <string name="msg_logout_ok">Déconnecté. Vous êtes maintenant en mode invité.</string>
+    <string name="msg_avatar_aggiornato">Avatar mis à jour avec succès</string>
+    <string name="msg_avatar_ripristinato">Avatar restauré</string>
+    <string name="msg_avatar_ripristinato_google">Photo de profil Google restaurée</string>
+
+    <!-- Preferenze Account -->
+    <string name="label_valuta_predefinita">Devise par défaut</string>
+    <string name="msg_valuta_aggiornata">Devise par défaut définie sur %s</string>
+    <string name="label_lingua_app">Langue de l\'application</string>
+    <string name="msg_lingua_aggiornata">Langue définie sur %s</string>
+    <string name="lingua_sistema">Par défaut du système</string>
+
+    <!-- Dettaglio Scheda & Toolbar -->
+    <string name="dialog_titolo_modifica_scheda">Modifier le nom du groupe</string>
+    <string name="dialog_hint_nome_scheda">Nom du groupe</string>
+    <string name="msg_scheda_eliminata">Groupe supprimé</string>
+    <string name="label_totale_spese">Total des dépenses</string>
+
+    <!-- Azioni Scheda (Invita & Gestisci) -->
+    <string name="dialog_titolo_gestione_gruppo">Membres du groupe</string>
+    <string name="msg_conferma_rimuovi_membro">Voulez-vous retirer %s du groupe ?</string>
+    <string name="btn_rimuovi">Supprimer</string>
+    <string name="msg_errore_rimozione_membro">Impossible de supprimer le membre s\'il a des dépenses ou des dettes actives.</string>
+    <string name="msg_errore_uscita_debiti">Impossible de quitter le groupe : vous avez des dépenses ou des soldes en attente. Réglez vos comptes avant de partir.</string>
+    <string name="titolo_impossibile_eliminare_scheda">Groupe avec soldes en attente</string>
+    <string name="msg_errore_eliminazione_scheda_saldi">Impossible de supprimer ou de quitter ce groupe : des dépenses ou dettes ne sont pas soldées. Réglez les comptes avant de le supprimer.</string>
+    <string name="titolo_esci_gruppo">Quitter le groupe</string>
+    <string name="msg_conferma_esci_gruppo">Êtes-vous sûr de vouloir quitter ce groupe ?</string>
+    <string name="btn_esci">Quitter</string>
+    <string name="msg_sei_uscito_dal_gruppo">Vous avez quitté le groupe</string>
+    <string name="msg_sei_stato_rimosso_dal_gruppo">Vous avez été retiré du groupe</string>
+    <string name="msg_membro_rimosso">%s a été retiré du groupe</string>
+    <string name="stato_ex_membro">Ancien membre</string>
+    <string name="btn_riattiva_membro">Réactiver le membre</string>
+    <string name="msg_membro_riattivato">%s a été réactivé dans le groupe</string>
+    <string name="msg_membro_disattivato">%s a été déplacé vers les anciens membres</string>
+    <string name="btn_testa_link">Tester le lien de paiement</string>
+    <string name="error_handle_vuoto">Saisissez d\'abord votre identifiant pour tester le lien</string>
+    <string name="titolo_bilancio_membri">Bilan des Membres</string>
+    <string name="titolo_pagamenti_pareggio">Paiements d\'Équilibrage</string>
+    <string name="label_saldo_pareggio">Transfert de règlement</string>
+    <string name="simbolo_freccia">→</string>
+
+    <!-- Spese & Categorie -->
+    <string name="empty_spese_titolo">Aucune dépense enregistrée</string>
+    <string name="empty_spese_desc">Appuyez sur le bouton + ci-dessous pour ajouter une première dépense.</string>
+    <string name="btn_nuova_spesa">Nouvelle Dépense</string>
+    <string name="title_nuova_spesa">Nouvelle Dépense</string>
+    <string name="hint_descrizione_spesa">Description (ex. Dîner, Taxi)</string>
+    <string name="hint_importo_spesa">Montant</string>
+    <string name="btn_salva_spesa">Ajouter la Dépense</string>
+    <string name="error_descrizione_spesa">Veuillez entrer une description pour la dépense</string>
+    <string name="error_importo_spesa">Veuillez entrer un montant supérieur à zéro</string>
+    <string name="cat_cibo">Nourriture</string>
+    <string name="cat_spesa">Courses</string>
+    <string name="cat_trasporti">Transports</string>
+    <string name="cat_alloggio">Hébergement</string>
+    <string name="cat_svago">Loisirs</string>
+    <string name="cat_shopping">Achats</string>
+    <string name="cat_bar">Bar &amp; Boissons</string>
+    <string name="cat_salute">Santé</string>
+    <string name="cat_altro">Autre</string>
+
+    <!-- Esportazione (CSV & PDF) -->
+    <string name="btn_esporta">Exporter</string>
+    <string name="titolo_dialog_esporta">Exporter le rapport de dépenses</string>
+    <string name="opzione_esporta_csv">Fichier CSV</string>
+    <string name="opzione_esporta_pdf">Document PDF</string>
+    <string name="msg_nessuna_spesa_export">Aucune dépense à exporter</string>
+    <string name="msg_errore_esportazione">Erreur lors de la génération du fichier d\'export</string>
+    <string name="csv_intestazione">Date;Type;Description;Catégorie;Montant;Devise;PayéPar;RépartitionParts</string>
+    <string name="csv_tipo_spesa">Dépense</string>
+    <string name="csv_tutti_quote">Tous/Parts</string>
+    <string name="pdf_sottotitolo">Rapport de Dépenses du Groupe</string>
+    <string name="pdf_generato_il">Généré le %s</string>
+    <string name="pdf_sezione_spese">Liste des Dépenses (%d) :</string>
+    <string name="pdf_th_data">DATE</string>
+    <string name="pdf_th_descrizione">DESCRIPTION</string>
+    <string name="pdf_th_categoria">CATÉGORIE</string>
+    <string name="pdf_th_pagante">PAYÉ PAR</string>
+    <string name="pdf_th_importo">MONTANT</string>
+
+    <!-- Tasti e Azioni Generiche -->
+    <string name="btn_salva">Enregistrer</string>
+    <string name="btn_elimina">Supprimer</string>
+    <string name="btn_annulla">Annuler</string>
+    <string name="action_annulla">Annuler</string>
+    <string name="btn_aggiungi">Ajouter</string>
+
+    <!-- Schermata Nuova Spesa & Divisione Quote -->
+    <string name="spesa_titolo">Nouvelle Dépense</string>
+    <string name="spesa_descrizione">Description de la dépense</string>
+    <string name="spesa_importo">Montant</string>
+    <string name="spesa_valuta">Devise</string>
+    <string name="spesa_pagante">Qui a payé ?</string>
+    <string name="spesa_categoria">Catégorie</string>
+    <string name="spesa_divisione">Comment partager la dépense ?</string>
+    <string name="divisione_equa">Équitable</string>
+    <string name="divisione_percentuale">Pourcentage</string>
+    <string name="divisione_parti">Par parts</string>
+    <string name="spesa_escluso">Exclu</string>
+    <string name="spesa_salva">Enregistrer la dépense</string>
+    <string name="spesa_errore_nessun_partecipante">Sélectionnez au moins un participant pour cette dépense</string>
+    <string name="errore_mittente_destinatario_uguali">L\'émetteur et le destinataire ne peuvent pas être la même personne</string>
+    <string name="label_data_spesa">Date</string>
+
+    <!-- Modifica Spesa & Stato Pagamenti -->
+    <string name="spesa_modifica_titolo">Modifier la Dépense</string>
+    <string name="btn_elimina_spesa">Supprimer la dépense</string>
+    <string name="dialog_titolo_elimina_spesa">Supprimer la dépense</string>
+    <string name="dialog_msg_elimina_spesa">Êtes-vous sûr de vouloir supprimer cette dépense ? Cette opération est irréversible.</string>
+
+    <!-- Gestione Membri -->
+    <string name="dettaglio_rinomina_partecipante">Renommer le participant</string>
+    <string name="dettaglio_elimina_partecipante">Supprimer le participant</string>
+    <string name="dialog_titolo_modifica_nome_profilo">Modifier le nom de profil</string>
+    <string name="msg_nome_aggiornato_successo">Nom mis à jour avec succès</string>
+    <string name="msg_permesso_negato_modifica_nome">Vous ne pouvez modifier que votre propre nom ou celui des membres si vous êtes responsable du groupe.</string>
+    <string name="msg_permesso_negato_modifica_nome_altri">Vous ne pouvez modifier que votre propre nom.</string>
+    <string name="titolo_aggiungi_membro">Ajouter un Participant</string>
+    <string name="hint_nome_partecipante">Nom</string>
+    <string name="label_tuo_nome_nel_gruppo">Votre nom dans le groupe</string>
+    <string name="label_tuo_nome_profilo">Votre nom de profil</string>
+    <string name="btn_modifica">Modifier</string>
+
+    <!-- Spese -->
+    <string name="spesa_formato_importo">%1$.2f %2$s</string>
+    <string name="spesa_pagato_da">Payé par %1$s • %2$s</string>
+    <plurals name="spesa_split_persone">
+        <item quantity="one">Divisé entre %d personne</item>
+        <item quantity="other">Divisé entre %d personnes</item>
+    </plurals>
+
+    <!-- Saldi -->
+    <string name="saldi_formato_importo">%1$.2f %2$s</string>
+    <string name="saldi_descrizione_trasferimento">%1$s doit à %2$s</string>
+    <string name="btn_chiudi">Fermer</string>
+    <string name="lbl_nome_partecipante">Nom du Participant</string>
+
+    <!-- Navigazione interna alla Scheda -->
+    <string name="tab_scheda_spese">Dépenses</string>
+    <string name="tab_scheda_saldi">Soldes</string>
+    <string name="tab_scheda_membri">Membres</string>
+
+    <!-- Titoli sezioni dettaglio scheda -->
+    <string name="titolo_sezione_saldi">Équilibrage des Comptes</string>
+    <string name="titolo_sezione_membri">Participants du Groupe</string>
+
+    <!-- Ricerca e filtri -->
+    <string name="hint_ricerca_spese">Rechercher une description…</string>
+    <string name="filtro_tutte">Toutes</string>
+
+    <!-- Toolbar e azioni -->
+    <string name="action_modifica_titolo">Modifier le nom</string>
+    <string name="action_lascia_scheda">Quitter le groupe</string>
+    <string name="dialog_titolo_lascia_scheda">Quitter le groupe</string>
+    <string name="dialog_msg_lascia_scheda">Voulez-vous quitter ce groupe ? Vos données locales et vos quotes-parts seront supprimées.</string>
+    <string name="btn_lascia">Quitter</string>
+
+    <!-- Dettagli spesa nell'adapter -->
+    <string name="format_handle">"@%1$s"</string>
+    <string name="msg_errore_apertura_link">Impossible d\'ouvrir le lien</string>
+    <string name="title_condividi">Partager</string>
+
+    <!-- Saldi Globale -->
+    <string name="saldi_nessun_debito">Aucune dette ni crédit en cours !</string>
+
+    <string name="dettaglio_persone_lbl">Détail par Personne</string>
+    <string name="da_ricevere_lbl">◉ À recevoir</string>
+    <string name="da_dare_lbl">◉ À payer</string>
+    <string name="nome_sconosciuto">Inconnu</string>
+
+    <!-- Invito e Codice Gruppo -->
+    <string name="action_codice_gruppo">Code du groupe</string>
+    <string name="dialog_titolo_codice_gruppo">Code du groupe</string>
+    <string name="dialog_desc_codice_gruppo">Partagez ce code pour permettre à d\'autres de rejoindre le groupe :</string>
+    <string name="btn_condividi_link">Partager l\'invitation</string>
+    <string name="btn_copia_codice">Copier le code</string>
+    <string name="msg_codice_copiato">Code copié dans le presse-papiers</string>
+    <string name="label_inquadra_fotocamera">Scannez avec l\'appareil photo pour rejoindre</string>
+    <string name="desc_qr_code">Code QR avec lien d\'invitation</string>
+    <string name="msg_invito_condivisione">Rejoignez mon groupe \"%1$s\" sur PariPari !\n\nTouchez le lien pour entrer directement :\n%2$s\n\nOu saisissez le code d\'invitation : %3$s</string>
+    <string name="msg_unione_successo">Vous avez rejoint %1$s !</string>
+
+    <!-- Verifica Email -->
+    <string name="label_verifica_email">Vérification de l\'e-mail</string>
+    <string name="badge_non_verificata">Non vérifié</string>
+    <string name="badge_verificata">Vérifié</string>
+    <string name="msg_email_verifica_inviata">E-mail renvoyé ! Vérifiez votre dossier spam.</string>
+    <string name="msg_email_gia_verificata">Votre adresse e-mail est déjà vérifiée !</string>
+    <string name="msg_email_confermata_successo">E-mail vérifié avec succès !</string>
+    <string name="msg_profilo_aggiornato">Profil mis à jour !</string>
+    <string name="msg_errore_invio_email">Erreur lors de l\'envoi de l\'e-mail</string>
+
+    <!-- Modifica Email e Recupero Password -->
+    <string name="btn_password_dimenticata">Mot de passe oublié ?</string>
+    <string name="btn_reimposta_password">Réinitialiser le mot de passe</string>
+    <string name="cd_modifica_email">Modifier l\'adresse e-mail</string>
+    <string name="dialog_titolo_modifica_email">Modifier l\'e-mail</string>
+    <string name="dialog_desc_modifica_email">Saisissez la nouvelle adresse e-mail et votre mot de passe actuel pour confirmer.</string>
+    <string name="hint_nuova_email">Nouvel e-mail</string>
+    <string name="hint_password_attuale">Mot de passe actuel</string>
+    <string name="btn_conferma_modifica_email">Mettre à jour l\'e-mail</string>
+    <string name="msg_email_modifica_inviata">E-mail de confirmation envoyé à la nouvelle adresse ! Vérifiez vos spams pour confirmer.</string>
+    <string name="msg_password_reset_inviata">E-mail de réinitialisation envoyé ! Vérifiez votre dossier spam.</string>
+    <string name="dialog_titolo_reset_password">Réinitialiser le mot de passe</string>
+    <string name="dialog_msg_conferma_reset">Voulez-vous recevoir un e-mail de réinitialisation à l\'adresse :\n\n%1$s ?</string>
+    <string name="dialog_msg_inserisci_email_reset">Entrez votre adresse e-mail pour recevoir le lien de réinitialisation :</string>
+    <string name="error_password_vuota">Veuillez entrer votre mot de passe actuel</string>
+    <string name="error_email_uguale">Le nouvel e-mail est identique à l\'actuel</string>
+    <string name="error_inserisci_email">Veuillez entrer une adresse e-mail valide</string>
+
+    <!-- Spesa non modificabile per membro assente -->
+    <string name="msg_spesa_non_modificabile_membro_assente">Cette dépense inclut un participant qui ne fait plus partie du groupe et ne peut pas être modifiée.</string>
+    <string name="banner_spesa_non_modificabile">⚠️ Dépense non modifiable : inclut des membres qui ne sont plus dans le groupe.</string>
+    <string name="dialog_titolo_spesa_non_modificabile">Dépense non modifiable</string>
+    <string name="dialog_msg_spesa_membro_assente">Un membre ayant participé à cette dépense a quitté le groupe. La dépense ne peut plus être modifiée.</string>
+
+    <!-- Metodi di Pagamento (PayPal & Revolut) -->
+    <string name="section_metodi_pagamento">Moyens de Paiement</string>
+    <string name="label_paypal_username">Compte PayPal.me</string>
+    <string name="label_revolut_username">Compte Revolut.me</string>
+    <string name="badge_non_configurato">Non configuré</string>
+    <string name="hint_paypal_tag">Identifiant PayPal.me</string>
+    <string name="hint_revolut_tag">Identifiant Revolut.me</string>
+    <string name="helper_paypal">Uniquement le nom d\'utilisateur, sans paypal.me/</string>
+    <string name="helper_revolut">Uniquement le nom d\'utilisateur, sans revolut.me/</string>
+    <string name="msg_paypal_salvato">PayPal configuré avec succès</string>
+    <string name="msg_revolut_salvato">Revolut configuré avec succès</string>
+
+    <!-- Invio e Condivisione Pagamento nei Saldi -->
+    <string name="titolo_salda_debito">Régler la Dette</string>
+    <string name="titolo_richiedi_pagamento">Demander un Paiement</string>
+    <string name="desc_salda_debito">Vous devez %1$s à %2$s.</string>
+    <string name="desc_richiedi_pagamento">%1$s vous doit %2$s.</string>
+    <string name="titolo_bottom_sheet_pagamento">Régler le Solde</string>
+    <string name="opzione_paypal">Paiement PayPal.me</string>
+    <string name="opzione_revolut">Paiement Revolut.me</string>
+    <string name="btn_condividi">Partager</string>
+    <string name="btn_copia_link">Copier le Lien</string>
+    <string name="btn_segna_saldato">✔ Marquer comme déjà payé</string>
+    <string name="msg_link_copiato">Lien de paiement copié dans le presse-papiers</string>
+    <string name="msg_condividi_mio_paypal">Salut %1$s ! Voici mon lien PayPal pour me rembourser %2$s sur PariPari :\n%3$s</string>
+    <string name="msg_condividi_mio_revolut">Salut %1$s ! Voici mon lien Revolut pour me rembourser %2$s sur PariPari :\n%3$s</string>
+    <string name="msg_condividi_generico">Salut %1$s ! N\'oublie pas de régler ta dette de %2$s envers %3$s sur PariPari.</string>
+    <string name="avviso_pagamento_non_configurato">Vous n\'avez pas encore configuré vos liens PayPal ou Revolut. Configurez-les dans votre profil pour envoyer des liens directs !</string>
+    <string name="avviso_creditore_non_configurato">Pour payer en ligne, demandez à %1$s de renseigner son compte PayPal ou Revolut dans ses paramètres de profil. Ou payez en espèces/virement et appuyez sur \"Marquer comme déjà payé\" ci-dessus.</string>
+    <string name="btn_vai_al_profilo">Aller au Profil</string>
+
+    <!-- Storico Saldi Pagati -->
+    <string name="btn_storico_saldi">Historique</string>
+    <string name="titolo_storico_saldi">Historique des Règlements</string>
+    <string name="empty_storico_saldi_titolo">Aucun règlement enregistré</string>
+    <string name="empty_storico_saldi_desc">Les règlements et remboursements effectués apparaîtront ici.</string>
+    <string name="badge_saldato_effettuato">✔ Réglé</string>
+    <string name="msg_spesa_saldo_non_modificabile">🔒 Les enregistrements de règlement sont automatiques et ne peuvent pas être modifiés.</string>
+
+    <!-- Subentro e Join con Claim -->
+    <string name="dialog_unisciti_titolo">Rejoindre un Groupe</string>
+    <string name="dialog_unisciti_desc">Saisissez le code d\'invitation à 6 caractères partagé par l\'organisateur.</string>
+    <string name="btn_cerca_scheda">Rechercher un Groupe</string>
+    <string name="label_chi_sei_nel_gruppo">Qui êtes-vous dans ce groupe ?</string>
+    <string name="stato_gia_registrato">Déjà enregistré</string>
+    <string name="stato_tuo_profilo">Votre profil</string>
+    <string name="opzione_nuovo_membro_titolo">Rejoindre comme nouveau membre</string>
+    <string name="btn_entra_come">Entrer en tant que %s</string>
+    <string name="btn_aggiungiti_gruppo">Rejoindre le groupe</string>
+    <string name="btn_seleziona_chi_sei">Sélectionnez qui vous êtes</string>
+    <string name="btn_conferma_unione">Confirmer et entrer</string>
+
+    <!-- Identificazione account utente corrente -->
+    <string name="etichetta_io">moi</string>
+    <string name="formato_nome_con_io">%1$s (%2$s)</string>
+    <string name="label_totale_spesa">Total de la dépense</string>
+    <string name="titolo_partecipanti_quote">Participants et quotes-parts</string>
+    <string name="titolo_dettaglio_spesa">Détail de la Dépense</string>
+    <string name="label_speso_da_me">Payé par moi</string>
+    <string name="storico_pagamento_inviato">à %s</string>
+    <string name="storico_pagamento_ricevuto">de %s</string>
+    <string name="badge_inviato">envoyé</string>
+    <string name="badge_ricevuto">reçu</string>
+    <string name="tipo_spesa">Dépense</string>
+    <string name="tipo_rimborso">Remboursement</string>
+    <string name="label_ricevuto_da">À qui</string>
+    <string name="msg_saldi_rimozione_solo_spese">Ce remboursement a été saisi comme dépense directe. Il ne peut être modifié ou supprimé que depuis la liste des dépenses.</string>
+    <string name="btn_paga_ora_paypal">Payer maintenant avec PayPal</string>
+    <string name="btn_paga_ora_revolut">Payer maintenant avec Revolut</string>
+    <string name="titolo_annulla_saldo">Annuler le règlement</string>
+    <string name="msg_conferma_annulla_saldo">Êtes-vous sûr de vouloir annuler ce règlement ? La dette redeviendra active dans le groupe.</string>
+    <string name="btn_annulla_saldo">Annuler</string>
+    <string name="btn_mostra_ex_membri">Afficher les anciens membres (%d)</string>
+    <string name="btn_nascondi_ex_membri">Masquer les anciens membres</string>
+    <string name="titolo_sezione_ex_partecipanti">Anciens membres</string>
+    <string name="titolo_elimina_definitivamente">Supprimer définitivement</string>
+    <string name="msg_conferma_elimina_definitivamente_ex_membro">Êtes-vous sûr de vouloir supprimer définitivement %s ? Cette personne ne pourra plus réintégrer le groupe.</string>
+    <string name="btn_elimina_definitivamente">Supprimer définitivement</string>
+    <string name="msg_ex_membro_eliminato">%s définitivement supprimé du groupe</string>
+
+    <string name="label_codice_6_caratteri">Code à 6 caractères</string>
+    <string name="handle_format">@%s</string>
+
+    <!-- Rimborsi / Saldi -->
+    <string name="titolo_nuovo_rimborso">Nouveau Remboursement</string>
+    <string name="titolo_dettaglio_rimborso">Détail du Remboursement</string>
+    <string name="titolo_modifica_rimborso">Modifier le Remboursement</string>
+    <string name="label_descrizione_opzionale">Description (facultatif)</string>
+    <string name="label_chi_invia">Qui envoie l\'argent</string>
+    <string name="label_chi_riceve_soli">Qui le reçoit</string>
+    <string name="label_nessuna_descrizione">Aucune description</string>
+    <string name="btn_salva_rimborso">Enregistrer le Remboursement</string>
+    <string name="btn_elimina_rimborso">Supprimer le Remboursement</string>
+    <string name="format_da_chi_pagato">Payé par : %s</string>
+    <string name="format_chi_riceve">Reçu par : %s</string>
+    <string name="cat_rimborsi">Remboursements</string>
+    <string name="format_categoria_rimborso">💳 %s</string>
+    <string name="format_categoria_con_emoji">%1$s %2$s</string>
+    <string name="format_spesa_pagata_da">Dépense payée par : %s</string>
+    <string name="saldi_descrizione_trasferimento_con_importo">%1$s doit à %2$s (%3$s)</string>
+    <string name="dialog_titolo_elimina_rimborso">Supprimer le remboursement</string>
+    <string name="dialog_msg_elimina_rimborso">Êtes-vous sûr de vouloir supprimer ce remboursement ? Les soldes seront recalculés automatiquement.</string>
+
+</resources>
