@@ -873,6 +873,11 @@ public class FirestoreSyncManager {
                                     s.setCodiceInvito(codInvito);
                                     modificata = true;
                                 }
+                                String creatoreId = doc.getString("creatoreId");
+                                if (creatoreId != null && !creatoreId.equals(s.getCreatoreId())) {
+                                    s.setCreatoreId(creatoreId);
+                                    modificata = true;
+                                }
                                 if (iconaUrl != null && !iconaUrl.equals(s.getIconaUrl())) {
                                     s.setIconaUrl(iconaUrl);
                                     modificata = true;

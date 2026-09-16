@@ -57,9 +57,18 @@ public class BottomSheetAvatarUtente extends BottomSheetDialogFragment {
     }
 
     private void setupListeners() {
-        binding.cardCaricaAvatar.setOnClickListener(v -> pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
-                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                .build()));
+        binding.cardCaricaAvatar.setOnClickListener(v -> {
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Consenso Foto Profilo")
+                    .setMessage("PariPari richiede il consenso per accedere alla galleria al fine di selezionare l'immagine del tuo profilo.")
+                    .setPositiveButton("Consenti", (dialog, which) -> {
+                        pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build());
+                    })
+                    .setNegativeButton("Annulla", null)
+                    .show();
+        });
 
         binding.btnRimuoviAvatar.setOnClickListener(v -> {
             viewModel.getRepository().aggiornaAvatarUtente(null);

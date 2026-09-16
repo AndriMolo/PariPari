@@ -100,9 +100,16 @@ public class BottomSheetIconaGruppo extends BottomSheetDialogFragment {
 
     private void setupListeners() {
         binding.cardCaricaFoto.setOnClickListener(v -> {
-            pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                    .build());
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Consenso Galleria Immagini")
+                    .setMessage("PariPari richiede il consenso per accedere alla galleria al fine di selezionare la foto dell'icona del gruppo.")
+                    .setPositiveButton("Consenti", (dialog, which) -> {
+                        pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build());
+                    })
+                    .setNegativeButton("Annulla", null)
+                    .show();
         });
 
         binding.btnRipristinaIcona.setOnClickListener(v -> {

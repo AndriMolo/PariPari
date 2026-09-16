@@ -48,6 +48,17 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 }
             });
 
+    private final androidx.activity.result.ActivityResultLauncher<String> cameraPermissionLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    avviaFotocameraConUri();
+                } else {
+                    if (isAdded() && binding != null) {
+                        com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "Permesso fotocamera negato");
+                    }
+                }
+            });
+
     public static NuovaSpesaFragment newInstance(String schedaId, String valuta) {
         NuovaSpesaFragment fragment = new NuovaSpesaFragment();
         Bundle args = new Bundle();
@@ -129,22 +140,31 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
     private void setupScontrinoListeners() {
         binding.btnAllegaFotoScontrino.setOnClickListener(v -> {
-            pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
-                    .setMediaType(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                    .build());
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Consenso Galleria e Immagini")
+                    .setMessage("PariPari richiede il consenso per accedere alla galleria al fine di selezionare l'immagine dello scontrino. Verrà condivisa solo la foto da te scelta.")
+                    .setPositiveButton("Consenti", (dialog, which) -> {
+                        pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                                .setMediaType(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build());
+                    })
+                    .setNegativeButton("Annulla", null)
+                    .show();
         });
 
         binding.btnFotocameraScontrino.setOnClickListener(v -> {
-            try {
-                java.io.File photoFile = java.io.File.createTempFile("scontrino_", ".jpg", requireContext().getCacheDir());
-                cameraTempUri = androidx.core.content.FileProvider.getUriForFile(
-                        requireContext(),
-                        requireContext().getPackageName() + ".fileprovider",
-                        photoFile
-                );
-                takePictureLauncher.launch(cameraTempUri);
-            } catch (Exception e) {
-                com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "Impossibile avviare fotocamera");
+            if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA)
+                    == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                avviaFotocameraConUri();
+            } else {
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Consenso Fotocamera")
+                        .setMessage("PariPari richiede l'accesso alla fotocamera per scattare e scansionare la foto dello scontrino.")
+                        .setPositiveButton("Consenti", (dialog, which) -> {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+                        })
+                        .setNegativeButton("Annulla", null)
+                        .show();
             }
         });
 
@@ -153,6 +173,20 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             binding.cardAnteprimaScontrino.setVisibility(View.GONE);
             binding.layoutOcrProgress.setVisibility(View.GONE);
         });
+    }
+
+    private void avviaFotocameraConUri() {
+        try {
+            java.io.File photoFile = java.io.File.createTempFile("scontrino_", ".jpg", requireContext().getCacheDir());
+            cameraTempUri = androidx.core.content.FileProvider.getUriForFile(
+                    requireContext(),
+                    requireContext().getPackageName() + ".fileprovider",
+                    photoFile
+            );
+            takePictureLauncher.launch(cameraTempUri);
+        } catch (Exception e) {
+            com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "Impossibile avviare fotocamera");
+        }
     }
 
     private void gestisciImmagineScontrino(android.net.Uri uri) {
