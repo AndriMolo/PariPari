@@ -694,7 +694,7 @@ public class DettaglioSchedaFragment extends Fragment {
             if (isFiltroRimborsi) {
                 matchCat = isRimborso;
             } else if (categoriaSelezionata.equalsIgnoreCase(labelTutte)) {
-                matchCat = true;
+                matchCat = !isRimborso;
             } else {
                 String catLocalizzata = com.example.paripariapp.util.CategoriaUtil.getNomeLocalizzatoCategoria(requireContext(), s.getCategoria());
                 matchCat = !isRimborso && (categoriaSelezionata.equalsIgnoreCase(s.getCategoria()) ||

@@ -100,7 +100,6 @@ public interface SpesaDao {
             "FROM spese s " +
             "LEFT JOIN partecipanti p ON s.pagato_da_id = p.id " +
             "WHERE s.scheda_id = :schedaId AND s.sync_status != " + SyncStatus.PENDING_DELETE + " " +
-            "AND (s.categoria IS NULL OR LOWER(s.categoria) NOT IN ('pareggio', 'saldo', 'saldi')) " +
             "ORDER BY s.data_spesa DESC")
     LiveData<List<SpesaConDettagli>> getSpeseConDettagliBySchedaLive(String schedaId);
 

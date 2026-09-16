@@ -363,7 +363,7 @@ public class ModificaRimborsoFragment extends Fragment {
                     importo,
                     valuta,
                     dataSelezionataTimestamp,
-                    "Pareggio",
+                    spesaCorrente != null ? spesaCorrente.getCategoria() : "Rimborso",
                     daId,
                     desc,
                     SyncStatus.PENDING_UPDATE
