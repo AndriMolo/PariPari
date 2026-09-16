@@ -226,7 +226,7 @@ public class Partecipante {
     }
 
     public boolean isAttivo() {
-        return stato == null || STATO_ATTIVO.equalsIgnoreCase(stato);
+        return stato == null || STATO_ATTIVO.equalsIgnoreCase(stato) || STATO_OSPITE.equalsIgnoreCase(stato);
     }
 
     public boolean isExMembro() {

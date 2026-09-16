@@ -988,6 +988,15 @@ public class DettaglioSchedaFragment extends Fragment {
         });
 
         membroAdapter.setOnRiattivaClickListener(p -> {
+            if (p == null) return;
+            viewModel.riattivaMembro(schedaId, p.getId());
+            if (binding != null) {
+                AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_riattivato, p.getNome()));
+            }
+        });
+
+        exMembroAdapter.setOnRiattivaClickListener(p -> {
+            if (p == null) return;
             viewModel.riattivaMembro(schedaId, p.getId());
             if (binding != null) {
                 AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_riattivato, p.getNome()));

@@ -226,14 +226,22 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
             boolean isExMembro = !p.isAttivo();
 
             if (isExMembro) {
-                holder.binding.getRoot().setAlpha(0.5f);
+                holder.binding.getRoot().setAlpha(0.65f);
                 String nomeClean = Partecipante.pulisciNome(p.getNome());
                 String nomeDisplay = nomeClean + " (" + context.getString(R.string.stato_ex_membro) + ")";
                 holder.binding.nomePartecipante.setText(nomeDisplay);
                 holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
 
-                holder.binding.bottoneModifica.setVisibility(View.GONE);
                 if (isCapogruppo) {
+                    holder.binding.bottoneModifica.setVisibility(View.VISIBLE);
+                    holder.binding.bottoneModifica.setIconResource(R.drawable.ic_add);
+                    holder.binding.bottoneModifica.setContentDescription(context.getString(R.string.btn_riattiva_membro));
+                    holder.binding.bottoneModifica.setOnClickListener(v -> {
+                        if (onRiattivaClickListener != null) {
+                            onRiattivaClickListener.onRiattivaClick(p);
+                        }
+                    });
+
                     holder.binding.bottoneElimina.setVisibility(View.VISIBLE);
                     holder.binding.bottoneElimina.setIconResource(R.drawable.ic_delete);
                     holder.binding.bottoneElimina.setContentDescription(context.getString(R.string.btn_elimina_definitivamente));
@@ -243,6 +251,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
                         }
                     });
                 } else {
+                    holder.binding.bottoneModifica.setVisibility(View.GONE);
                     holder.binding.bottoneElimina.setVisibility(View.GONE);
                 }
             } else {
