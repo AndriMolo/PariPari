@@ -23,6 +23,7 @@ public class Partecipante {
     public static final String STATO_ATTIVO = "ATTIVO";
     public static final String STATO_USCITO = "USCITO";
     public static final String STATO_OSPITE = "OSPITE";
+    public static final String STATO_ARCHIVIATO = "ARCHIVIATO";
 
     @PrimaryKey
     @NonNull
@@ -225,11 +226,15 @@ public class Partecipante {
     }
 
     public boolean isAttivo() {
-        return !STATO_USCITO.equalsIgnoreCase(stato);
+        return stato == null || STATO_ATTIVO.equalsIgnoreCase(stato);
     }
 
     public boolean isExMembro() {
         return STATO_USCITO.equalsIgnoreCase(stato);
+    }
+
+    public boolean isArchiviatoLocale() {
+        return STATO_ARCHIVIATO.equalsIgnoreCase(stato);
     }
 
     public boolean isAutenticato() {

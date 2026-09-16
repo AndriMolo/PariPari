@@ -214,12 +214,21 @@ public class PariPariRepository {
                 boolean eLocale = !pUscito.isAutenticato();
                 boolean haSpese = haPartecipatoASpese(schedaId, partecipanteId);
 
-                if (eLocale && !haSpese) {
-                    // Membro locale senza spese: eliminazione definitiva
-                    partecipanteDao.deleteById(partecipanteId);
-                    syncManager.deletePartecipanteDefinitivamente(schedaId, partecipanteId);
+                if (eLocale) {
+                    if (haSpese) {
+                        // Membro locale con spese: archiviazione silenziosa senza mostrare tra ex membri
+                        pUscito.setStato(Partecipante.STATO_ARCHIVIATO);
+                        pUscito.setUserId(null);
+                        pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                        partecipanteDao.update(pUscito);
+                        syncManager.disattivaMembroLocale(schedaId, partecipanteId);
+                    } else {
+                        // Membro locale senza spese: eliminazione definitiva
+                        partecipanteDao.deleteById(partecipanteId);
+                        syncManager.deletePartecipanteDefinitivamente(schedaId, partecipanteId);
+                    }
                 } else {
-                    // Membro autenticato o locale con spese: passa a USCITO
+                    // Membro autenticato reale: passa a USCITO (Ex Membro)
                     if (isSelf) {
                         syncManager.detachSubcollectionListeners(schedaId);
                         try {

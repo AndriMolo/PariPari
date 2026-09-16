@@ -57,6 +57,8 @@ public class DettaglioSchedaFragment extends Fragment {
     private SpesaAdapter adapter;
     private SaldoAdapter saldoAdapter;
     private BilancioMembroAdapter bilancioMembroAdapter;
+    private MembroAdapter membroAdapter;
+    private MembroAdapter exMembroAdapter;
 
     private String schedaId;
     private String titolo;
@@ -67,7 +69,6 @@ public class DettaglioSchedaFragment extends Fragment {
     private List<SpesaPartecipante> quoteCache = new ArrayList<>();
     private final List<Spesa> speseCache = new ArrayList<>();
     private List<SpesaConDettagli> tutteSpeseRaw = new ArrayList<>();
-    private MembroAdapter membroAdapter;
 
     private String queryFiltroTesto = "";
     private String categoriaSelezionata = "";
@@ -319,7 +320,9 @@ public class DettaglioSchedaFragment extends Fragment {
             java.util.Set<String> activeIds = new java.util.HashSet<>();
             if (partecipantiCache != null) {
                 for (Partecipante p : partecipantiCache) {
-                    activeIds.add(p.getId());
+                    if (p.isAttivo()) {
+                        activeIds.add(p.getId());
+                    }
                 }
             }
 
@@ -577,7 +580,7 @@ public class DettaglioSchedaFragment extends Fragment {
         for (Partecipante p : ordinati) {
             if (p.isAttivo()) {
                 attivi.add(p);
-            } else {
+            } else if (p.isExMembro()) {
                 exMembri.add(p);
             }
         }
@@ -585,34 +588,45 @@ public class DettaglioSchedaFragment extends Fragment {
         if (binding != null) {
             if (exMembri.isEmpty()) {
                 binding.btnToggleExMembri.setVisibility(View.GONE);
+                binding.containerExMembri.setVisibility(View.GONE);
             } else {
                 binding.btnToggleExMembri.setVisibility(View.VISIBLE);
                 if (mostraExMembri) {
                     binding.btnToggleExMembri.setText(R.string.btn_nascondi_ex_membri);
+                    binding.containerExMembri.setVisibility(View.VISIBLE);
                 } else {
                     binding.btnToggleExMembri.setText(getString(R.string.btn_mostra_ex_membri, exMembri.size()));
+                    binding.containerExMembri.setVisibility(View.GONE);
                 }
             }
         }
 
         String currentSchedaId = (schedaCorrente != null) ? schedaCorrente.getId() : null;
         membroAdapter.setSchedaId(currentSchedaId);
+        if (exMembroAdapter != null) {
+            exMembroAdapter.setSchedaId(currentSchedaId);
+        }
 
         com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
                 com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
         String myId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, currentSchedaId);
         if (myId != null) {
             membroAdapter.setCurrentMyId(myId);
+            if (exMembroAdapter != null) {
+                exMembroAdapter.setCurrentMyId(myId);
+            }
         }
 
         boolean isCapogruppo = (proprietario != null && isMe(proprietario));
         membroAdapter.setCapogruppo(isCapogruppo);
-
-        List<Partecipante> daMostrare = new ArrayList<>(attivi);
-        if (mostraExMembri) {
-            daMostrare.addAll(exMembri);
+        if (exMembroAdapter != null) {
+            exMembroAdapter.setCapogruppo(isCapogruppo);
         }
-        membroAdapter.submitList(daMostrare);
+
+        membroAdapter.submitList(attivi);
+        if (exMembroAdapter != null) {
+            exMembroAdapter.submitList(exMembri);
+        }
     }
 
     private boolean calcolaIsCapogruppo(Scheda scheda, List<Partecipante> partecipanti) {
@@ -819,7 +833,7 @@ public class DettaglioSchedaFragment extends Fragment {
                             getActivity().finish();
                         }
                     } else {
-                        viewModel.eliminaPartecipante(p.getId());
+                        viewModel.esciDalGruppo(schedaId, p.getId());
                         if (binding != null) {
                             AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_rimosso, p.getNome()));
                         }
@@ -876,15 +890,35 @@ public class DettaglioSchedaFragment extends Fragment {
             binding.recyclerSpese.setAdapter(null);
             binding.recyclerSaldi.setAdapter(null);
             binding.recyclerMembri.setAdapter(null);
+            binding.recyclerExMembri.setAdapter(null);
         }
         super.onDestroyView();
         binding = null;
+    }
+
+    private void gestisciEliminazioneDefinitivaExMembro(Partecipante p) {
+        if (p == null) return;
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.titolo_elimina_definitivamente)
+                .setMessage(getString(R.string.msg_conferma_elimina_definitivamente_ex_membro, p.getNome()))
+                .setPositiveButton(R.string.btn_elimina_definitivamente, (dialog, which) -> {
+                    viewModel.eliminaPartecipanteDefinitivamente(schedaId, p.getId());
+                    if (binding != null) {
+                        AppSnackbar.show(binding.getRoot(), getString(R.string.msg_ex_membro_eliminato, p.getNome()));
+                    }
+                })
+                .setNegativeButton(R.string.btn_annulla, null)
+                .show();
     }
 
     private void setupRecyclerMembri() {
         membroAdapter = new MembroAdapter();
         binding.recyclerMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerMembri.setAdapter(membroAdapter);
+
+        exMembroAdapter = new MembroAdapter();
+        binding.recyclerExMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerExMembri.setAdapter(exMembroAdapter);
 
         membroAdapter.setOnNomeModificatoListener((p, nuovoNome) -> {
             boolean isMe = isMe(p);
@@ -899,21 +933,18 @@ public class DettaglioSchedaFragment extends Fragment {
         });
 
         membroAdapter.setOnEliminaClickListener(p -> {
+            if (p == null) return;
             gestisciRimozioneMembro(p, null, null);
         });
 
-        membroAdapter.setOnEliminaDefinitivamenteClickListener(p -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.titolo_elimina_definitivamente)
-                    .setMessage(getString(R.string.msg_conferma_elimina_definitivamente_ex_membro, p.getNome()))
-                    .setPositiveButton(R.string.btn_elimina_definitivamente, (dialog, which) -> {
-                        viewModel.eliminaPartecipanteDefinitivamente(schedaId, p.getId());
-                        if (binding != null) {
-                            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_ex_membro_eliminato, p.getNome()));
-                        }
-                    })
-                    .setNegativeButton(R.string.btn_annulla, null)
-                    .show();
+        exMembroAdapter.setOnEliminaClickListener(p -> {
+            if (p == null) return;
+            gestisciEliminazioneDefinitivaExMembro(p);
+        });
+
+        exMembroAdapter.setOnEliminaDefinitivamenteClickListener(p -> {
+            if (p == null) return;
+            gestisciEliminazioneDefinitivaExMembro(p);
         });
 
         membroAdapter.setOnRiattivaClickListener(p -> {

@@ -100,7 +100,9 @@ public class DettaglioRimborsoFragment extends Fragment {
             Set<String> activeIds = new HashSet<>();
             if (partecipantiCache != null) {
                 for (Partecipante p : partecipantiCache) {
-                    activeIds.add(p.getId());
+                    if (p.isAttivo()) {
+                        activeIds.add(p.getId());
+                    }
                 }
             }
 

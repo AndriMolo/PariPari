@@ -337,11 +337,36 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="60dp"
+                android:layout_marginTop="8dp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textAllCaps="false"
                 android:visibility="gone"
-                tools:text="Mostra Ex membri (2)" />
+                tools:text="Mostra Ex partecipanti (2)" />
+
+            <!-- 2. SEZIONE EX PARTECIPANTI (Nascosta di default) -->
+            <LinearLayout
+                android:id="@+id/container_ex_membri"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp"
+                android:paddingBottom="60dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/titolo_sezione_ex_partecipanti"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_ex_membri"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false" />
+            </LinearLayout>
 
             <include
                 android:id="@+id/layout_empty_membri"

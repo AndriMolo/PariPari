@@ -106,7 +106,9 @@ public class DettaglioSpesaFragment extends Fragment {
             java.util.Set<String> activeIds = new java.util.HashSet<>();
             if (partecipantiCache != null) {
                 for (Partecipante p : partecipantiCache) {
-                    activeIds.add(p.getId());
+                    if (p.isAttivo()) {
+                        activeIds.add(p.getId());
+                    }
                 }
             }
 

@@ -386,6 +386,18 @@ public class FirestoreSyncManager {
         }
     }
 
+    public void disattivaMembroLocale(String schedaId, String partecipanteId) {
+        if (schedaId != null && partecipanteId != null) {
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("stato", Partecipante.STATO_ARCHIVIATO);
+            updates.put("userId", com.google.firebase.firestore.FieldValue.delete());
+
+            firestore.collection("groups").document(schedaId)
+                    .collection("participants").document(partecipanteId)
+                    .update(updates);
+        }
+    }
+
     public void eliminaGruppoDefinitivamente(String schedaId) {
         if (schedaId == null) return;
         detachSubcollectionListeners(schedaId);
