@@ -68,11 +68,24 @@ public class PariPariRepository {
                 if (syncManager.isConnected()) {
                     syncManager.syncPendingData();
                     syncManager.startRealtimeSync();
+                    if (!user.isAnonymous()) {
+                        migraGruppiOspiteAdAccount(user);
+                    }
                 }
             } else {
                 syncManager.stopRealtimeSync();
             }
         });
+    }
+
+    /**
+     * Sincronizza ed allinea tutti i gruppi locali (inclusi quelli creati da ospite)
+     * collegandoli all'account autenticato specificato su Room e Firestore.
+     */
+    public void migraGruppiOspiteAdAccount(@Nullable FirebaseUser currentUser) {
+        if (currentUser != null && !currentUser.isAnonymous()) {
+            syncManager.migraTuttiIGruppiLocali(currentUser);
+        }
     }
 
     public static PariPariRepository getInstance(Application application) {

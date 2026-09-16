@@ -364,6 +364,7 @@ public class AccountViewModel extends AndroidViewModel {
             isGuestMode.setValue(false);
             isEmailVerifiedLive.setValue(user.isEmailVerified());
             repository.aggiornaNomeUtenteInTuttiIGruppi(nome);
+            repository.migraGruppiOspiteAdAccount(user);
 
             if (isNewAccount) {
                 user.sendEmailVerification()
@@ -407,6 +408,7 @@ public class AccountViewModel extends AndroidViewModel {
                         userLiveData.setValue(user);
                         isGuestMode.setValue(false);
                         isEmailVerifiedLive.setValue(user != null && user.isEmailVerified());
+                        repository.migraGruppiOspiteAdAccount(user);
                         successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_login_ok));
                     } else {
                         String err = task.getException() != null ? task.getException().getLocalizedMessage() : "Credenziali non valide";
@@ -477,6 +479,7 @@ public class AccountViewModel extends AndroidViewModel {
         isGuestMode.setValue(false);
         isEmailVerifiedLive.setValue(user.isEmailVerified());
         repository.aggiornaNomeUtenteInTuttiIGruppi(finalNome);
+        repository.migraGruppiOspiteAdAccount(user);
         successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_login_google_ok));
 
         // Aggiornamento asincrono non bloccante del profilo utente su Firestore
