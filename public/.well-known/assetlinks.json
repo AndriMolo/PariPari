@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.paripariapp",
+      "sha256_cert_fingerprints": [
+        "22:A7:20:CF:67:4D:F3:F8:FA:E7:0B:D5:A1:18:66:3E:20:7F:D2:0B:95:C6:02:CB:99:B2:01:0A:D2:5D:2E:13"
+      ]
+    }
+  }
+]

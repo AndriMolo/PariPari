@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PariPari - Invito al Gruppo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284C7;
+      --primary-hover: #0369A1;
+      --secondary: #7C3AED;
+      --secondary-hover: #6D28D9;
+      --bg-gradient-start: #0F172A;
+      --bg-gradient-end: #1E293B;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent-glow: rgba(2, 132, 199, 0.25);
+      --success: #10B981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at top center, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 36px 28px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 50px var(--accent-glow);
+      text-align: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-container {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #0284C7 0%, #7C3AED 100%);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+    }
+
+    .logo-icon {
+      font-size: 38px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -1px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #FFFFFF 40%, #93C5FD 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .code-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 26px;
+      position: relative;
+    }
+
+    .code-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .code-value {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 6px;
+      color: #38BDF8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      margin-bottom: 12px;
+      user-select: all;
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #E2E8F0;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-copy:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .btn-copy.copied {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--success);
+      color: #34D399;
+    }
+
+    .cta-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: linear-gradient(135deg, #0284C7 0%, #7C3AED 100%);
+      color: #FFFFFF;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.35);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-bottom: 16px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(124, 58, 237, 0.45);
+      background: linear-gradient(135deg, #0369A1 0%, #6D28D9 100%);
+    }
+
+    .cta-button:active {
+      transform: translateY(0);
+    }
+
+    .info-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .info-footer a {
+      color: #38BDF8;
+      text-decoration: none;
+    }
+
+    .badge-auto-open {
+      display: inline-block;
+      font-size: 12px;
+      color: #38BDF8;
+      margin-top: 10px;
+      opacity: 0.85;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+    <div class="logo-container">
+      <span class="logo-icon">P</span>
+    </div>
+
+    <h1>PariPari</h1>
+    <p class="subtitle" id="page-subtitle">
+      Sei stato invitato a unirti a un gruppo per dividere le spese in modo semplice e trasparente!
+    </p>
+
+    <!-- Box Codice Invito -->
+    <div class="code-card" id="code-container">
+      <div class="code-label">Codice Invito</div>
+      <div class="code-value" id="invite-code">------</div>
+      <button class="btn-copy" id="btn-copy" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span id="copy-text">Copia Codice</span>
+      </button>
+    </div>
+
+    <!-- Bottone di Apertura App -->
+    <a href="#" class="cta-button" id="btn-open-app">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <span>Apri in PariPari</span>
+    </a>
+
+    <div class="badge-auto-open" id="auto-open-status">
+      Reindirizzamento all'applicazione in corso...
+    </div>
+
+    <div class="info-footer">
+      Non hai ancora l'app? Apri <strong>PariPari</strong> sul tuo dispositivo Android e inserisci il codice di invito nella sezione "Unisciti a un gruppo".
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      // Estrai il codice dai parametri URL (?code=...) o dal path (/join/...)
+      const urlParams = new URLSearchParams(window.location.search);
+      let code = urlParams.get('code');
+
+      if (!code) {
+        // Fallback: controllo path /join/XYZ
+        const match = window.location.pathname.match(/\/join\/([A-Za-z0-9]+)/);
+        if (match && match[1]) {
+          code = match[1];
+        }
+      }
+
+      const codeElement = document.getElementById('invite-code');
+      const btnOpenApp = document.getElementById('btn-open-app');
+      const btnCopy = document.getElementById('btn-copy');
+      const copyText = document.getElementById('copy-text');
+      const autoOpenStatus = document.getElementById('auto-open-status');
+      const codeContainer = document.getElementById('code-container');
+
+      if (code) {
+        code = code.trim().toUpperCase();
+        codeElement.textContent = code;
+
+        const deepLinkUri = 'paripari://join?code=' + encodeURIComponent(code);
+        btnOpenApp.href = deepLinkUri;
+
+        // Tentativo di apertura automatica dell'app
+        try {
+          window.location.href = deepLinkUri;
+          setTimeout(function () {
+            if (autoOpenStatus) {
+              autoOpenStatus.textContent = 'Se l\'app non si è aperta automaticamente, tocca "Apri in PariPari".';
+            }
+          }, 2000);
+        } catch (e) {
+          console.warn('Redirect automatico fallito:', e);
+        }
+      } else {
+        codeContainer.classList.add('hidden');
+        btnOpenApp.href = 'paripari://join';
+        if (autoOpenStatus) {
+          autoOpenStatus.classList.add('hidden');
+        }
+      }
+
+      // Gestione Copia Codice
+      btnCopy.addEventListener('click', function () {
+        if (!code) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(onCopied).catch(fallbackCopy);
+        } else {
+          fallbackCopy();
+        }
+      });
+
+      function fallbackCopy() {
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          onCopied();
+        } catch (err) {
+          console.error('Impossibile copiare il codice:', err);
+        }
+        document.body.removeChild(textarea);
+      }
+
+      function onCopied() {
+        btnCopy.classList.add('copied');
+        copyText.textContent = 'Codice Copiato!';
+        setTimeout(function () {
+          btnCopy.classList.remove('copied');
+          copyText.textContent = 'Copia Codice';
+        }, 2500);
+      }
+    })();
+  </script>
+</body>
+</html>
