@@ -25,8 +25,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
@@ -162,44 +164,30 @@ public class FirestoreSyncManager {
             data.put("iconaUrl", scheda.getIconaUrl());
         }
 
+        List<String> membriUids = new ArrayList<>();
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser != null) {
+            membriUids.add(currentUser.getUid());
+        }
+        if (partecipanti != null) {
+            for (Partecipante p : partecipanti) {
+                if (p.getUserId() != null && !p.getUserId().trim().isEmpty() && !membriUids.contains(p.getUserId())) {
+                    membriUids.add(p.getUserId());
+                }
+            }
+        }
+        data.put("membriUids", membriUids);
+
         WriteBatch batch = firestore.batch();
         DocumentReference ref = firestore.collection("groups").document(scheda.getId());
         batch.set(ref, data);
 
         if (partecipanti != null) {
-            FirebaseUser currentUser = auth.getCurrentUser();
             for (Partecipante p : partecipanti) {
                 DocumentReference pRef = ref.collection("participants").document(p.getId());
-                Map<String, Object> pData = new HashMap<>();
-                pData.put("nome", p.getNome());
-                pData.put("email", p.getEmail());
                 boolean isCreator = (currentUser != null && Partecipante.isCurrentUserParticipant(p, currentUser))
                         || (scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(p.getId()));
-                if (isCreator && currentUser != null) {
-                    pData.put("userId", currentUser.getUid());
-                    pData.put("isAutenticato", !currentUser.isAnonymous());
-                    if (currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
-                        pData.put("email", currentUser.getEmail().trim());
-                    }
-                } else {
-                    pData.put("isAutenticato", false);
-                }
-                if (p.getPreviousUserId() != null) {
-                    pData.put("previousUserId", p.getPreviousUserId());
-                }
-                if (p.getStato() != null) {
-                    pData.put("stato", p.getStato());
-                }
-                if (p.getPaypalHandle() != null) {
-                    pData.put("paypalHandle", p.getPaypalHandle());
-                }
-                if (p.getRevolutHandle() != null) {
-                    pData.put("revolutHandle", p.getRevolutHandle());
-                }
-                if (p.getPhotoUrl() != null) {
-                    pData.put("photoUrl", p.getPhotoUrl());
-                }
-                batch.set(pRef, pData);
+                batch.set(pRef, creaMappaPartecipante(p, isCreator, currentUser));
             }
         }
 
@@ -215,28 +203,28 @@ public class FirestoreSyncManager {
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento scheda differito: " + e.getMessage()));
     }
 
-    public void uploadPartecipante(Partecipante p) {
-        if (auth.getCurrentUser() == null) return;
-
+    /**
+     * Costruisce la mappa dati per Firestore di un partecipante, garantendo coerenza
+     * tra uploadScheda, migraSchedaAdAccount e uploadPartecipante senza duplicazione di codice.
+     */
+    private Map<String, Object> creaMappaPartecipante(@NonNull Partecipante p, boolean isCurrentUser, @Nullable FirebaseUser currentUser) {
         Map<String, Object> data = new HashMap<>();
         data.put("nome", p.getNome());
-        data.put("email", p.getEmail());
+        if (p.getEmail() != null) {
+            data.put("email", p.getEmail());
+        }
 
-        FirebaseUser currentUser = auth.getCurrentUser();
-        List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(p.getSchedaId());
-        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
-                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
-        String myPartId = Partecipante.findCurrentUserId(localParts, currentUser, prefs, p.getSchedaId());
-        boolean isMe = (myPartId != null && myPartId.equals(p.getId())) || Partecipante.isCurrentUserParticipant(p, currentUser);
-
-        if (isMe && currentUser != null) {
+        if (isCurrentUser && currentUser != null) {
             data.put("userId", currentUser.getUid());
             data.put("isAutenticato", !currentUser.isAnonymous());
-            if (currentUser.getEmail() != null && !currentUser.getEmail().isEmpty()) {
-                data.put("email", currentUser.getEmail());
+            if (currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
+                data.put("email", currentUser.getEmail().trim());
             }
-        } else if (isMe) {
-            data.put("isAutenticato", false);
+        } else {
+            if (p.getUserId() != null) {
+                data.put("userId", p.getUserId());
+            }
+            data.put("isAutenticato", p.getUserId() != null && !p.getUserId().trim().isEmpty());
         }
 
         if (p.getPreviousUserId() != null) {
@@ -254,10 +242,184 @@ public class FirestoreSyncManager {
         if (p.getPhotoUrl() != null) {
             data.put("photoUrl", p.getPhotoUrl());
         }
+        return data;
+    }
+
+    /**
+     * Sincronizza e migra una scheda e i suoi partecipanti all'account autenticato corrente.
+     * Garantisce che creatoreId e membriUids su Firestore siano aggiornati correttamente,
+     * consentendo a qualsiasi altro dispositivo dell'utente di scaricare e visualizzare il gruppo.
+     */
+    public void migraSchedaAdAccount(@NonNull Scheda scheda, @NonNull Partecipante myPart, @NonNull FirebaseUser currentUser) {
+        if (!networkMonitor.isConnected()) return;
+
+        DocumentReference gRef = firestore.collection("groups").document(scheda.getId());
+        gRef.get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, groupDoc -> {
+            List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(scheda.getId());
+            List<String> membriUids = new ArrayList<>();
+            membriUids.add(currentUser.getUid());
+            if (localParts != null) {
+                for (Partecipante p : localParts) {
+                    if (p.getUserId() != null && !p.getUserId().trim().isEmpty() && !membriUids.contains(p.getUserId())) {
+                        membriUids.add(p.getUserId());
+                    }
+                }
+            }
+
+            boolean isCreator = (scheda.getCreatoreId() == null || scheda.getCreatoreId().isEmpty()
+                    || scheda.getCreatoreId().equals(myPart.getId())
+                    || (myPart.getUserId() != null && myPart.getUserId().equals(scheda.getCreatoreId()))
+                    || currentUser.getUid().equals(scheda.getCreatoreId())
+                    || (localParts != null && !localParts.isEmpty() && localParts.get(0).getId().equals(myPart.getId())));
+
+            Map<String, Object> gData = new HashMap<>();
+            gData.put("titolo", scheda.getTitolo());
+            gData.put("descrizione", scheda.getDescrizione() != null ? scheda.getDescrizione() : "");
+            gData.put("valutaPredefinita", scheda.getValutaPredefinita() != null ? scheda.getValutaPredefinita() : "EUR");
+            gData.put("dataAggiornamento", System.currentTimeMillis());
+            if (scheda.getCodiceInvito() != null) {
+                gData.put("codiceInvito", scheda.getCodiceInvito());
+            }
+            if (scheda.getIconaUrl() != null) {
+                gData.put("iconaUrl", scheda.getIconaUrl());
+            }
+            gData.put("membriUids", membriUids);
+
+            if (!groupDoc.exists() || isCreator) {
+                gData.put("creatoreId", currentUser.getUid());
+            } else {
+                String remCreator = groupDoc.getString("creatoreId");
+                if (remCreator == null || remCreator.isEmpty()) {
+                    gData.put("creatoreId", currentUser.getUid());
+                }
+            }
+            if (!groupDoc.exists()) {
+                gData.put("dataCreazione", scheda.getDataCreazione());
+            }
+
+            WriteBatch batch = firestore.batch();
+            batch.set(gRef, gData, SetOptions.merge());
+
+            if (localParts != null) {
+                for (Partecipante p : localParts) {
+                    DocumentReference pRef = gRef.collection("participants").document(p.getId());
+                    boolean isMe = p.getId().equals(myPart.getId());
+                    batch.set(pRef, creaMappaPartecipante(p, isMe, currentUser), SetOptions.merge());
+                }
+            }
+
+            batch.commit().addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
+                Log.i(TAG, "Gruppo " + scheda.getId() + " migrato/sincronizzato con successo per l'utente " + currentUser.getUid());
+                schedaDao.updateSyncStatus(scheda.getId(), SyncStatus.SYNCED);
+                if (localParts != null) {
+                    for (Partecipante p : localParts) {
+                        partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED);
+                    }
+                }
+                // Assicura che anche tutte le spese e quote locali siano caricate su Firestore
+                List<Spesa> speseLocali = spesaDao.getSpeseBySchedaSync(scheda.getId());
+                if (speseLocali != null) {
+                    for (Spesa s : speseLocali) {
+                        uploadSpesaConQuote(s, spesaDao.getQuoteBySpesaSync(s.getId()));
+                    }
+                }
+            }).addOnFailureListener(e -> Log.w(TAG, "Errore commit migrazione scheda: " + e.getMessage()));
+        }).addOnFailureListener(e -> Log.w(TAG, "Errore lettura scheda per migrazione: " + e.getMessage()));
+    }
+
+    /**
+     * Scorre tutte le schede locali in Room ed esegue la migrazione/allineamento
+     * di ciascuna verso l'account autenticato specificato.
+     */
+    public void migraTuttiIGruppiLocali(@NonNull FirebaseUser currentUser) {
+        if (currentUser.isAnonymous()) return;
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            List<Scheda> schede = schedaDao.getAllSchedeSync();
+            if (schede == null || schede.isEmpty()) return;
+
+            com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                    com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
+
+            for (Scheda s : schede) {
+                List<Partecipante> partecipanti = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
+                if (partecipanti == null || partecipanti.isEmpty()) continue;
+
+                Partecipante myPart = null;
+                String savedPartId = prefs.getMyParticipantId(s.getId());
+                if (savedPartId != null) {
+                    for (Partecipante p : partecipanti) {
+                        if (p.getId().equals(savedPartId)) {
+                            myPart = p;
+                            break;
+                        }
+                    }
+                }
+                if (myPart == null) {
+                    String foundId = Partecipante.findCurrentUserId(partecipanti, currentUser, prefs, s.getId());
+                    if (foundId != null) {
+                        for (Partecipante p : partecipanti) {
+                            if (p.getId().equals(foundId)) {
+                                myPart = p;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (myPart == null && s.getCreatoreId() != null) {
+                    for (Partecipante p : partecipanti) {
+                        if (p.getId().equals(s.getCreatoreId())) {
+                            myPart = p;
+                            break;
+                        }
+                    }
+                }
+                if (myPart == null) {
+                    myPart = partecipanti.get(0);
+                }
+
+                boolean partModificato = false;
+                if (myPart.getUserId() == null || !myPart.getUserId().equals(currentUser.getUid())) {
+                    myPart.setUserId(currentUser.getUid());
+                    myPart.setSyncStatus(SyncStatus.SYNCED);
+                    partModificato = true;
+                }
+                if (currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()
+                        && (myPart.getEmail() == null || !myPart.getEmail().equalsIgnoreCase(currentUser.getEmail().trim()))) {
+                    myPart.setEmail(currentUser.getEmail().trim());
+                    partModificato = true;
+                }
+
+                if (partModificato) {
+                    partecipanteDao.insert(myPart);
+                }
+                prefs.setMyParticipantId(s.getId(), myPart.getId());
+
+                if (s.getCreatoreId() == null || s.getCreatoreId().isEmpty() || s.getCreatoreId().equals(myPart.getId())) {
+                    s.setCreatoreId(myPart.getId());
+                    schedaDao.update(s);
+                }
+
+                if (isConnected()) {
+                    migraSchedaAdAccount(s, myPart, currentUser);
+                }
+            }
+        });
+    }
+
+    public void uploadPartecipante(Partecipante p) {
+        if (auth.getCurrentUser() == null) return;
+
+        FirebaseUser currentUser = auth.getCurrentUser();
+        List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(p.getSchedaId());
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
+        String myPartId = Partecipante.findCurrentUserId(localParts, currentUser, prefs, p.getSchedaId());
+        boolean isMe = (myPartId != null && myPartId.equals(p.getId())) || Partecipante.isCurrentUserParticipant(p, currentUser);
 
         firestore.collection("groups").document(p.getSchedaId())
                 .collection("participants").document(p.getId())
-                .set(data, SetOptions.merge())
+                .set(creaMappaPartecipante(p, isMe, currentUser), SetOptions.merge())
                 .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> partecipanteDao.updateSyncStatus(p.getId(), SyncStatus.SYNCED))
                 .addOnFailureListener(e -> Log.d(TAG, "Caricamento partecipante differito: " + e.getMessage()));
     }
@@ -447,6 +609,10 @@ public class FirestoreSyncManager {
             updates.put("previousUserId", auth.getCurrentUser().getUid());
             updates.put("userId", com.google.firebase.firestore.FieldValue.delete());
 
+            firestore.collection("groups").document(schedaId)
+                    .update("membriUids", FieldValue.arrayRemove(auth.getCurrentUser().getUid()))
+                    .addOnFailureListener(e -> Log.d(TAG, "Rimozione da membriUids non bloccante: " + e.getMessage()));
+
             pRef.update(updates).addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> {
                 firestore.collection("groups").document(schedaId).get()
                         .addOnSuccessListener(AppDatabase.databaseWriteExecutor, groupDoc -> {
@@ -500,6 +666,11 @@ public class FirestoreSyncManager {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             if (!networkMonitor.isConnected() || auth.getCurrentUser() == null) return;
 
+            FirebaseUser cu = auth.getCurrentUser();
+            if (cu != null && !cu.isAnonymous()) {
+                migraTuttiIGruppiLocali(cu);
+            }
+
             // Schede in attesa
             List<Scheda> schedePendenti = schedaDao.getPendingSyncSchede();
             if (schedePendenti != null) {
@@ -543,88 +714,116 @@ public class FirestoreSyncManager {
         });
     }
 
+    private void processGroupSnapshots(QuerySnapshot snapshots) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            for (DocumentChange dc : snapshots.getDocumentChanges()) {
+                DocumentSnapshot doc = dc.getDocument();
+                String groupId = doc.getId();
+
+                switch (dc.getType()) {
+                    case ADDED:
+                        String titoloAdd = doc.getString("titolo");
+                        String descAdd = doc.getString("descrizione");
+                        String valutaAdd = doc.getString("valutaPredefinita");
+                        String creatoreId = doc.getString("creatoreId");
+                        Long dataCreaz = doc.getLong("dataCreazione");
+                        Long dataAggAdd = doc.getLong("dataAggiornamento");
+                        String codInvitoAdd = doc.getString("codiceInvito");
+                        String iconaUrlAdd = doc.getString("iconaUrl");
+
+                        if (titoloAdd != null) {
+                            Scheda schedaEsistente = schedaDao.getSchedaById(groupId);
+                            if (schedaEsistente == null) {
+                                Scheda nuovaScheda = new Scheda(
+                                        groupId,
+                                        titoloAdd,
+                                        descAdd != null ? descAdd : "",
+                                        valutaAdd != null ? valutaAdd : "EUR",
+                                        creatoreId != null ? creatoreId : "",
+                                        dataCreaz != null ? dataCreaz : System.currentTimeMillis(),
+                                        dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
+                                        SyncStatus.SYNCED
+                                );
+                                nuovaScheda.setCodiceInvito(codInvitoAdd);
+                                if (iconaUrlAdd != null) {
+                                    nuovaScheda.setIconaUrl(iconaUrlAdd);
+                                }
+                                schedaDao.insert(nuovaScheda);
+                            } else {
+                                schedaDao.updateTitolo(
+                                        groupId,
+                                        titoloAdd,
+                                        dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
+                                        SyncStatus.SYNCED
+                                );
+                                if (codInvitoAdd != null) {
+                                    schedaDao.updateCodiceInvito(groupId, codInvitoAdd);
+                                }
+                                if (iconaUrlAdd != null && !iconaUrlAdd.equals(schedaEsistente.getIconaUrl())) {
+                                    schedaEsistente.setIconaUrl(iconaUrlAdd);
+                                    schedaDao.update(schedaEsistente);
+                                }
+                            }
+                            attachSubcollectionListeners(groupId);
+                        }
+                        break;
+
+                    case MODIFIED:
+                        String titoloMod = doc.getString("titolo");
+                        Long dataAggMod = doc.getLong("dataAggiornamento");
+                        String codInvitoMod = doc.getString("codiceInvito");
+                        String iconaUrlMod = doc.getString("iconaUrl");
+                        if (titoloMod != null) {
+                            schedaDao.updateTitolo(
+                                    groupId,
+                                    titoloMod,
+                                    dataAggMod != null ? dataAggMod : System.currentTimeMillis(),
+                                    SyncStatus.SYNCED
+                            );
+                        }
+                        if (codInvitoMod != null) {
+                            schedaDao.updateCodiceInvito(groupId, codInvitoMod);
+                        }
+                        if (iconaUrlMod != null) {
+                            Scheda sMod = schedaDao.getSchedaById(groupId);
+                            if (sMod != null && !iconaUrlMod.equals(sMod.getIconaUrl())) {
+                                sMod.setIconaUrl(iconaUrlMod);
+                                schedaDao.update(sMod);
+                            }
+                        }
+                        break;
+
+                    case REMOVED:
+                        Log.w(TAG, "Scheda rimossa da remoto: " + groupId);
+                        break;
+                }
+            }
+        });
+    }
+
     public synchronized void startRealtimeSync() {
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser == null) return;
 
         stopRealtimeSync();
 
-        ListenerRegistration reg = firestore.collection("groups")
+        // 1. Ascolta gruppi creati da currentUser
+        ListenerRegistration regCreator = firestore.collection("groups")
                 .whereEqualTo("creatoreId", currentUser.getUid())
                 .addSnapshotListener((snapshots, error) -> {
                     if (error != null || snapshots == null) return;
-
-                    AppDatabase.databaseWriteExecutor.execute(() -> {
-                        for (DocumentChange dc : snapshots.getDocumentChanges()) {
-                            DocumentSnapshot doc = dc.getDocument();
-                            String groupId = doc.getId();
-
-                            switch (dc.getType()) {
-                                case ADDED:
-                                    String titoloAdd = doc.getString("titolo");
-                                    String descAdd = doc.getString("descrizione");
-                                    String valutaAdd = doc.getString("valutaPredefinita");
-                                    String creatoreId = doc.getString("creatoreId");
-                                    Long dataCreaz = doc.getLong("dataCreazione");
-                                    Long dataAggAdd = doc.getLong("dataAggiornamento");
-                                    String codInvitoAdd = doc.getString("codiceInvito");
-
-                                    if (titoloAdd != null) {
-                                        Scheda schedaEsistente = schedaDao.getSchedaById(groupId);
-                                        if (schedaEsistente == null) {
-                                            Scheda nuovaScheda = new Scheda(
-                                                    groupId,
-                                                    titoloAdd,
-                                                    descAdd != null ? descAdd : "",
-                                                    valutaAdd != null ? valutaAdd : "EUR",
-                                                    creatoreId != null ? creatoreId : "",
-                                                    dataCreaz != null ? dataCreaz : System.currentTimeMillis(),
-                                                    dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
-                                                    SyncStatus.SYNCED
-                                            );
-                                            nuovaScheda.setCodiceInvito(codInvitoAdd);
-                                            schedaDao.insert(nuovaScheda);
-                                        } else {
-                                            schedaDao.updateTitolo(
-                                                    groupId,
-                                                    titoloAdd,
-                                                    dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
-                                                    SyncStatus.SYNCED
-                                            );
-                                            if (codInvitoAdd != null) {
-                                                schedaDao.updateCodiceInvito(groupId, codInvitoAdd);
-                                            }
-                                        }
-                                        attachSubcollectionListeners(groupId);
-                                    }
-                                    break;
-
-                                case MODIFIED:
-                                    String titoloMod = doc.getString("titolo");
-                                    Long dataAggMod = doc.getLong("dataAggiornamento");
-                                    String codInvitoMod = doc.getString("codiceInvito");
-                                    if (titoloMod != null) {
-                                        schedaDao.updateTitolo(
-                                                groupId,
-                                                titoloMod,
-                                                dataAggMod != null ? dataAggMod : System.currentTimeMillis(),
-                                                SyncStatus.SYNCED
-                                        );
-                                    }
-                                    if (codInvitoMod != null) {
-                                        schedaDao.updateCodiceInvito(groupId, codInvitoMod);
-                                    }
-                                    break;
-
-                                case REMOVED:
-                                    Log.w(TAG, "Scheda rimossa da remoto: " + groupId);
-                                    break;
-                            }
-                        }
-                    });
+                    processGroupSnapshots(snapshots);
                 });
+        activeListeners.add(regCreator);
 
-        activeListeners.add(reg);
+        // 2. Ascolta gruppi di cui currentUser è membro (membriUids array)
+        ListenerRegistration regMembri = firestore.collection("groups")
+                .whereArrayContains("membriUids", currentUser.getUid())
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null || snapshots == null) return;
+                    processGroupSnapshots(snapshots);
+                });
+        activeListeners.add(regMembri);
 
         // Aggancia i listener per tutte le schede già presenti localmente
         AppDatabase.databaseWriteExecutor.execute(() -> {
@@ -685,8 +884,13 @@ public class FirestoreSyncManager {
                                         partecipanteDao.insert(p);
                                     }
                                     if (pUserId != null && !pUserId.trim().isEmpty()) {
+                                        FirebaseUser cu = auth.getCurrentUser();
+                                        if (cu != null && pUserId.equals(cu.getUid())) {
+                                            com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context)
+                                                    .setMyParticipantId(groupId, pId);
+                                        }
                                         Scheda s = schedaDao.getSchedaById(groupId);
-                                        if (s != null && pUserId.equals(s.getCreatoreId())) {
+                                        if (s != null && (pUserId.equals(s.getCreatoreId()) || (cu != null && cu.getUid().equals(s.getCreatoreId())))) {
                                             schedaDao.updateCreatoreId(groupId, pId);
                                         }
                                     }
@@ -1278,6 +1482,11 @@ public class FirestoreSyncManager {
                     if (myJoinedPartId != null) {
                         com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context)
                                 .setMyParticipantId(groupId, myJoinedPartId);
+                    }
+
+                    if (currentUid != null && !currentUid.trim().isEmpty()) {
+                        groupDoc.getReference().update("membriUids", FieldValue.arrayUnion(currentUid))
+                                .addOnFailureListener(e -> Log.d(TAG, "Aggiornamento membriUids su join non bloccante: " + e.getMessage()));
                     }
 
                     partecipanteDao.insertAll(partiScaricati);
