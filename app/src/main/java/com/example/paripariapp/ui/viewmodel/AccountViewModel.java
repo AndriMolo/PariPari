@@ -74,8 +74,17 @@ public class AccountViewModel extends AndroidViewModel {
             isGuestMode.setValue(guest);
             boolean verified = (user != null && !user.isAnonymous() && user.isEmailVerified());
             isEmailVerifiedLive.setValue(verified);
+            if (guest) {
+                preferencesRepository.setCustomAvatar(null);
+            } else {
+                caricaDatiUtenteDaFirestore(user.getUid());
+            }
         };
         auth.addAuthStateListener(authListener);
+
+        if (initialUser != null && !initialUser.isAnonymous()) {
+            caricaDatiUtenteDaFirestore(initialUser.getUid());
+        }
 
         // Assicura che ci sia almeno un utente anonimo all'avvio
         ensureUserSession();
@@ -118,8 +127,42 @@ public class AccountViewModel extends AndroidViewModel {
         return successMessage;
     }
 
+    public void setSuccessMessage(String msg) {
+        successMessage.setValue(msg);
+    }
+
     public void clearSuccessMessage() {
         successMessage.setValue(null);
+    }
+
+    public LiveData<String> getAvatarLiveData() {
+        return preferencesRepository.getCustomAvatarLive();
+    }
+
+    public String getCustomAvatar() {
+        return preferencesRepository.getCustomAvatar();
+    }
+
+    public PariPariRepository getRepository() {
+        return repository;
+    }
+
+    public void aggiornaAvatarUtente(String photoUrl) {
+        repository.aggiornaAvatarUtente(photoUrl);
+    }
+
+    private void caricaDatiUtenteDaFirestore(String uid) {
+        if (uid == null) return;
+        firestore.collection("users").document(uid).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        String photoUrl = documentSnapshot.getString("photoUrl");
+                        if (photoUrl != null && !photoUrl.trim().isEmpty()) {
+                            preferencesRepository.setCustomAvatar(photoUrl);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> Log.w(TAG, "Caricamento avatar da Firestore fallito: " + e.getMessage()));
     }
 
     public void clearErrorMessage() {
@@ -440,6 +483,11 @@ public class AccountViewModel extends AndroidViewModel {
         Map<String, Object> userData = new HashMap<>();
         userData.put("nome", finalNome);
         userData.put("email", email);
+        if (user.getPhotoUrl() != null) {
+            String photoStr = user.getPhotoUrl().toString();
+            userData.put("photoUrl", photoStr);
+            repository.aggiornaAvatarSeNonPersonalizzato(photoStr);
+        }
         userData.put("updatedAt", FieldValue.serverTimestamp());
 
         firestore.collection("users").document(user.getUid())
@@ -676,6 +724,7 @@ public class AccountViewModel extends AndroidViewModel {
      */
     public void logout() {
         stopEmailVerificationPolling();
+        preferencesRepository.setCustomAvatar(null);
         auth.signOut();
         auth.signInAnonymously();
         successMessage.setValue(getApplication().getString(com.example.paripariapp.R.string.msg_logout_ok));

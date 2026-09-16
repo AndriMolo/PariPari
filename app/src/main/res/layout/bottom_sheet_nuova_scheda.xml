@@ -22,6 +22,46 @@
         android:textStyle="bold"
         android:layout_marginBottom="20dp" />
 
+    <!-- Selezione Icona ed Emoji per la Scheda -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_icona_nuova_scheda"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <TextView
+                android:id="@+id/tv_emoji_nuova_scheda"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="22sp"
+                tools:text="🏖️" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:scrollbars="none"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/container_emoji_nuova_scheda"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+    </LinearLayout>
+
     <!-- Nome della Scheda (Obbligatorio) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_nome_scheda"

@@ -54,10 +54,10 @@ public class BilancioMembroAdapter extends ListAdapter<BilancioMembro, BilancioM
         BilancioMembro item = getItem(position);
         holder.binding.nomeMembro.setText(item.getNomePartecipante());
 
-        String iniziale = !item.getNomePartecipante().isEmpty()
-                ? String.valueOf(item.getNomePartecipante().charAt(0)).toUpperCase(Locale.getDefault())
-                : "?";
-        holder.binding.avatarIniziale.setText(iniziale);
+        com.example.paripariapp.util.AvatarVisualUtil.applyInitialToTextView(
+                holder.binding.avatarIniziale,
+                item.getNomePartecipante()
+        );
 
         double saldo = item.getSaldoNetto();
         String valuta = item.getValuta() != null ? item.getValuta() : "EUR";

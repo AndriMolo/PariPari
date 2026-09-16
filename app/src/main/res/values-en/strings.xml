@@ -123,6 +123,9 @@
     <string name="msg_login_ok">Logged in successfully!</string>
     <string name="msg_login_google_ok">Successfully signed in with Google!</string>
     <string name="msg_logout_ok">Logged out. You are now in guest mode.</string>
+    <string name="msg_avatar_aggiornato">Avatar updated successfully</string>
+    <string name="msg_avatar_ripristinato">Avatar restored</string>
+    <string name="msg_avatar_ripristinato_google">Google profile photo restored</string>
 
     <!-- Preferenze Account -->
     <string name="label_valuta_predefinita">Default currency</string>

@@ -44,12 +44,14 @@ public class PariPariRepository {
     private final SpesaDao spesaDao;
     private final FirebaseAuth auth;
     private final FirestoreSyncManager syncManager;
+    private final UserPreferencesRepository preferencesRepository;
 
     private final MediatorLiveData<RisultatoSaldi> risultatoSaldiLiveData = new MediatorLiveData<>();
     private boolean saldiSourcesInitialized = false;
 
     private PariPariRepository(Application application) {
         this.application = application;
+        this.preferencesRepository = UserPreferencesRepository.getInstance(application);
         AppDatabase db = AppDatabase.getInstance(application);
         this.schedaDao = db.schedaDao();
         this.partecipanteDao = db.partecipanteDao();
@@ -632,6 +634,7 @@ public class PariPariRepository {
     }
 
     public void aggiornaAvatarUtente(String photoUrl) {
+        preferencesRepository.setCustomAvatar(photoUrl);
         AppDatabase.databaseWriteExecutor.execute(() -> {
             com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
             if (user != null) {
@@ -651,8 +654,63 @@ public class PariPariRepository {
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                         .collection("users").document(uid)
                         .set(userData, com.google.firebase.firestore.SetOptions.merge());
+
+                try {
+                    com.google.firebase.auth.UserProfileChangeRequest.Builder b =
+                            new com.google.firebase.auth.UserProfileChangeRequest.Builder();
+                    if (photoUrl != null && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
+                        b.setPhotoUri(android.net.Uri.parse(photoUrl));
+                        user.updateProfile(b.build());
+                    } else if (photoUrl == null) {
+                        b.setPhotoUri(null);
+                        user.updateProfile(b.build());
+                    }
+                } catch (Exception ignored) {}
             }
         });
+    }
+
+    /**
+     * Imposta la foto profilo predefinita (es. Google account) se l'utente non ha già personalizzato
+     * il proprio avatar con emoji o iniziale stilizzata.
+     */
+    public void aggiornaAvatarSeNonPersonalizzato(String defaultPhotoUrl) {
+        if (defaultPhotoUrl == null || defaultPhotoUrl.trim().isEmpty()) return;
+        if (preferencesRepository.getCustomAvatar() != null && !preferencesRepository.getCustomAvatar().trim().isEmpty()) {
+            return;
+        }
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                String uid = user.getUid();
+                List<Partecipante> partecipanti = partecipanteDao.getAllPartecipantiSync();
+                boolean giaPersonalizzato = false;
+                if (partecipanti != null) {
+                    for (Partecipante p : partecipanti) {
+                        if (uid.equals(p.getUserId()) && p.getPhotoUrl() != null && !p.getPhotoUrl().trim().isEmpty()) {
+                            // Se ha già un avatar (emoji o URL custom), non sovrascrivere
+                            giaPersonalizzato = true;
+                            break;
+                        }
+                    }
+                }
+                if (!giaPersonalizzato) {
+                    aggiornaAvatarUtente(defaultPhotoUrl);
+                }
+            }
+        });
+    }
+
+    public String getCustomAvatar() {
+        return preferencesRepository.getCustomAvatar();
+    }
+
+    public LiveData<String> getCustomAvatarLive() {
+        return preferencesRepository.getCustomAvatarLive();
+    }
+
+    public void setCustomAvatar(@Nullable String avatar) {
+        preferencesRepository.setCustomAvatar(avatar);
     }
 
     private com.google.firebase.storage.FirebaseStorage getStorageInstance() {

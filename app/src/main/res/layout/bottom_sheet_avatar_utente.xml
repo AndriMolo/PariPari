@@ -2,6 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -16,7 +17,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Personalizza Foto Profilo"
+        android:text="Personalizza Avatar"
         android:textAppearance="?attr/textAppearanceTitleLarge"
         android:textStyle="bold"
         android:textColor="?attr/colorOnSurface"
@@ -25,97 +26,207 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Carica una tua foto profilata o ripristina l'iniziale predefinita."
+        android:text="Scegli un'emoji o la tua iniziale con uno sfondo colorato."
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="16dp" />
 
-    <!-- Indicatore Caricamento Foto -->
+    <!-- Anteprima Avatar Live -->
     <LinearLayout
-        android:id="@+id/container_caricamento_avatar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_badge_valuta"
-        android:visibility="gone">
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
 
-        <ProgressBar
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="12dp" />
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_anteprima_avatar"
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            app:cardCornerRadius="42dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Caricamento foto profilata in corso..."
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorPrimary"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- OPZIONE 1: Carica Foto Profilo -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_carica_avatar"
-        style="@style/Widget_PariPari_CardItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
+            <TextView
+                android:id="@+id/tv_anteprima_emoji"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="38sp"
+                tools:text="🍕" />
 
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_account"
-                app:tint="?attr/colorPrimary"
+                android:id="@+id/iv_anteprima_foto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
                 android:importantForAccessibility="no" />
 
-            <LinearLayout
-                android:layout_width="0dp"
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tv_anteprima_etichetta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Anteprima Avatar"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+
+    <!-- Scelta Tipo: Emoji vs Iniziale -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_tipo_avatar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_tipo_emoji"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Emoji" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_tipo_iniziale"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Iniziale Nome" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_tipo_google"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Foto Google"
+            android:visibility="gone" />
+
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Selezione Colore di Sfondo -->
+    <TextView
+        android:id="@+id/tv_label_colore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Colore di sfondo"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <HorizontalScrollView
+        android:id="@+id/scroll_colori"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:id="@+id/container_colori_palette"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
+    <!-- Selezione Emoji (mostrato quando selezionato tab Emoji) -->
+    <LinearLayout
+        android:id="@+id/layout_sezione_emoji"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Categorie Emoji -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:layout_marginBottom="8dp">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_categoria_emoji"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="16dp">
+                app:singleSelection="true">
 
-                <TextView
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_cat_persone"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Carica foto profilo"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:checked="true"
+                    android:text="Personaggi" />
 
-                <TextView
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_cat_cibo"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Scegli un'immagine personale (JPEG/PNG/WebP, max 2MB)"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-            </LinearLayout>
+                    android:text="Cibo" />
 
-        </LinearLayout>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_cat_viaggi"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Viaggi" />
 
-    </com.google.android.material.card.MaterialCardView>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_cat_svago"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Svago" />
 
-    <!-- OPZIONE 2: Rimuovi Foto / Ripristina Iniziale -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_cat_casa"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Casa" />
+
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
+                android:id="@+id/container_emoji_opzioni"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Pulsanti Azione -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_rimuovi_avatar"
+        android:id="@+id/btn_salva_avatar"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:text="Salva Avatar"
+        app:cornerRadius="14dp"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_ripristina_avatar"
         style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Rimuovi foto profilo (Usa iniziale)"
+        android:text="Ripristina iniziale predefinita"
         android:textColor="?attr/colorError"
         app:icon="@drawable/ic_delete"
         app:iconTint="?attr/colorError" />

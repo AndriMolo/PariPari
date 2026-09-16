@@ -66,10 +66,10 @@ public class BilancioPersonaAdapter extends ListAdapter<BilancioPersonaItem, Bil
         holder.binding.tvNomePersona.setText(item.getNomePersona());
         holder.binding.tvDettaglioGruppo.setText(item.getNomeGruppo());
 
-        String iniziale = !item.getNomePersona().isEmpty()
-                ? String.valueOf(item.getNomePersona().charAt(0)).toUpperCase(Locale.getDefault())
-                : "?";
-        holder.binding.tvAvatar.setText(iniziale);
+        com.example.paripariapp.util.AvatarVisualUtil.applyInitialToTextView(
+                holder.binding.tvAvatar,
+                item.getNomePersona()
+        );
 
         if (item.isCredito()) {
             holder.binding.tvImportoSaldo.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.credit_green));

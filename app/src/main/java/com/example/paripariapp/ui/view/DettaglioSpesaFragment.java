@@ -246,44 +246,8 @@ public class DettaglioSpesaFragment extends Fragment {
         String pagatoreNome = spesaCorrente.getNomePagatore() != null ? spesaCorrente.getNomePagatore() : getString(R.string.nome_sconosciuto);
         binding.tvPagatoDaDettaglio.setText(getString(R.string.format_spesa_pagata_da, pagatoreNome));
 
-        // Scontrino / Ricevuta allegata
-        if (spesa.getScontrinoUrl() != null && !spesa.getScontrinoUrl().trim().isEmpty()) {
-            String url = spesa.getScontrinoUrl().trim();
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-                binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
-                com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
-                    try {
-                        java.io.InputStream in = new java.net.URL(url).openStream();
-                        android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
-                        if (in != null) in.close();
-                        if (bmp != null && getActivity() != null) {
-                            getActivity().runOnUiThread(() -> {
-                                if (binding != null) {
-                                    binding.ivScontrinoDettaglio.setImageBitmap(bmp);
-                                }
-                            });
-                        }
-                    } catch (Exception e) {
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> {
-                                if (binding != null) {
-                                    binding.cardScontrinoDettaglio.setVisibility(View.GONE);
-                                }
-                            });
-                        }
-                    }
-                });
-            } else {
-                try {
-                    binding.ivScontrinoDettaglio.setImageURI(android.net.Uri.parse(url));
-                    binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
-                } catch (Exception e) {
-                    binding.cardScontrinoDettaglio.setVisibility(View.GONE);
-                }
-            }
-        } else {
-            binding.cardScontrinoDettaglio.setVisibility(View.GONE);
-        }
+        // Scontrino Digitale / Ricevuta allegata
+        mostraScontrinoDigitale(spesa, valutaSpesa);
 
         // Quote partecipanti
         setupQuoteRecycler(spesa, valutaSpesa, gruppoVal);
@@ -302,6 +266,107 @@ public class DettaglioSpesaFragment extends Fragment {
         QuoteDettaglioAdapter adapter = new QuoteDettaglioAdapter(quoteDellaSpesa, partecipantiCache, valutaSpesa, gruppoVal);
         binding.recyclerQuoteDettaglio.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerQuoteDettaglio.setAdapter(adapter);
+    }
+
+    private void mostraScontrinoDigitale(Spesa spesa, String valutaSpesa) {
+        if (binding == null) return;
+        binding.containerVociScontrino.removeAllViews();
+
+        String scontrinoJson = spesa.getScontrinoJson();
+        if (scontrinoJson != null && !scontrinoJson.trim().isEmpty()) {
+            com.example.paripariapp.data.model.ScontrinoDigitale scontrino =
+                    com.example.paripariapp.data.model.ScontrinoDigitale.fromJson(scontrinoJson);
+
+            if (scontrino != null) {
+                binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
+                binding.ivScontrinoDettaglio.setVisibility(View.GONE);
+
+                String esercente = scontrino.getEsercente() != null ? scontrino.getEsercente() : "Scontrino Digitale";
+                binding.tvTitoloScontrinoDettaglio.setText(esercente);
+
+                StringBuilder sottotitolo = new StringBuilder();
+                if (scontrino.getDataFormatted() != null && !scontrino.getDataFormatted().isEmpty()) {
+                    sottotitolo.append(scontrino.getDataFormatted());
+                }
+                if (scontrino.getMetodoPagamento() != null && !scontrino.getMetodoPagamento().isEmpty()) {
+                    if (sottotitolo.length() > 0) sottotitolo.append(" • ");
+                    sottotitolo.append(scontrino.getMetodoPagamento());
+                }
+                if (sottotitolo.length() == 0) sottotitolo.append("OCR On-Device locale");
+                binding.tvEsercenteDataScontrino.setText(sottotitolo.toString());
+
+                // Quadratura
+                if (scontrino.isQuadrato()) {
+                    binding.tvBadgeQuadratura.setVisibility(View.VISIBLE);
+                    binding.tvBadgeQuadratura.setText("✓ Quadratura 100%");
+                    binding.tvBadgeQuadratura.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.credit_green));
+                } else if (scontrino.getDiscrepanza() != 0.0 && scontrino.getTotale() != null) {
+                    binding.tvBadgeQuadratura.setVisibility(View.VISIBLE);
+                    binding.tvBadgeQuadratura.setText(String.format(Locale.US, "Diff: %+.2f €", scontrino.getDiscrepanza()));
+                    binding.tvBadgeQuadratura.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.warning_orange));
+                } else {
+                    binding.tvBadgeQuadratura.setVisibility(View.GONE);
+                }
+
+                // Voci
+                List<com.example.paripariapp.data.model.ScontrinoDigitale.VoceScontrino> voci = scontrino.getVoci();
+                if (voci != null && !voci.isEmpty()) {
+                    for (com.example.paripariapp.data.model.ScontrinoDigitale.VoceScontrino v : voci) {
+                        android.widget.LinearLayout row = new android.widget.LinearLayout(requireContext());
+                        row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+                        row.setPadding(0, 8, 0, 8);
+
+                        android.widget.TextView tvNome = new android.widget.TextView(requireContext());
+                        android.widget.LinearLayout.LayoutParams pNome = new android.widget.LinearLayout.LayoutParams(
+                                0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                        );
+                        tvNome.setLayoutParams(pNome);
+                        tvNome.setTextSize(14);
+                        tvNome.setTextColor(com.google.android.material.color.MaterialColors.getColor(tvNome, com.google.android.material.R.attr.colorOnSurface));
+                        String desc = (v.getQuantita() > 1 ? String.format(Locale.US, "%.0fx ", v.getQuantita()) : "") + v.getDescrizione();
+                        tvNome.setText(desc);
+
+                        android.widget.TextView tvPrezzo = new android.widget.TextView(requireContext());
+                        tvPrezzo.setTextSize(14);
+                        tvPrezzo.setTypeface(null, android.graphics.Typeface.BOLD);
+                        tvPrezzo.setTextColor(com.google.android.material.color.MaterialColors.getColor(tvPrezzo, com.google.android.material.R.attr.colorOnSurface));
+                        tvPrezzo.setText(String.format(Locale.US, "%.2f %s", v.getPrezzoTotale(), scontrino.getValuta()));
+
+                        row.addView(tvNome);
+                        row.addView(tvPrezzo);
+                        binding.containerVociScontrino.addView(row);
+                    }
+                }
+
+                // Totale scontrino
+                if (scontrino.getTotale() != null) {
+                    binding.divisoreTotaleScontrino.setVisibility(View.VISIBLE);
+                    binding.layoutTotaleScontrinoRow.setVisibility(View.VISIBLE);
+                    binding.tvTotaleScontrinoValore.setText(
+                            String.format(Locale.US, "%.2f %s", scontrino.getTotale(), scontrino.getValuta())
+                    );
+                } else {
+                    binding.divisoreTotaleScontrino.setVisibility(View.GONE);
+                    binding.layoutTotaleScontrinoRow.setVisibility(View.GONE);
+                }
+                return;
+            }
+        }
+
+        // Fallback per vecchie foto remote (legacy http/https)
+        String url = spesa.getScontrinoUrl();
+        if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+            binding.cardScontrinoDettaglio.setVisibility(View.VISIBLE);
+            binding.tvTitoloScontrinoDettaglio.setText(R.string.scontrino_allegato);
+            binding.tvEsercenteDataScontrino.setText("Immagine cloud legacy");
+            binding.tvBadgeQuadratura.setVisibility(View.GONE);
+            binding.divisoreTotaleScontrino.setVisibility(View.GONE);
+            binding.layoutTotaleScontrinoRow.setVisibility(View.GONE);
+            binding.ivScontrinoDettaglio.setVisibility(View.VISIBLE);
+            com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(url, binding.ivScontrinoDettaglio, R.drawable.ic_receipt);
+        } else {
+            binding.cardScontrinoDettaglio.setVisibility(View.GONE);
+        }
     }
 
     @Override

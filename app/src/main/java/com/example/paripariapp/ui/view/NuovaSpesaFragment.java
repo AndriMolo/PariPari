@@ -33,6 +33,8 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
     private boolean isRimborso = false;
     private android.net.Uri scontrinoUri = null;
     private android.net.Uri cameraTempUri = null;
+    private java.io.File cameraTempFile = null;
+    private com.example.paripariapp.data.model.ScontrinoDigitale scontrinoDigitaleCorrente = null;
 
     private final androidx.activity.result.ActivityResultLauncher<androidx.activity.result.PickVisualMediaRequest> pickMediaLauncher =
             registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(), uri -> {
@@ -170,18 +172,25 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
         binding.btnRimuoviScontrino.setOnClickListener(v -> {
             scontrinoUri = null;
-            binding.cardAnteprimaScontrino.setVisibility(View.GONE);
-            binding.layoutOcrProgress.setVisibility(View.GONE);
+            scontrinoDigitaleCorrente = null;
+            eliminaFotoTemporanea();
+            if (binding != null) {
+                binding.ivAnteprimaScontrino.setImageDrawable(null);
+                binding.cardAnteprimaScontrino.setVisibility(View.GONE);
+                binding.layoutOcrProgress.setVisibility(View.GONE);
+            }
         });
+
+        binding.cardAnteprimaScontrino.setOnClickListener(v -> mostraDettaglioVociScontrino());
     }
 
     private void avviaFotocameraConUri() {
         try {
-            java.io.File photoFile = java.io.File.createTempFile("scontrino_", ".jpg", requireContext().getCacheDir());
+            cameraTempFile = java.io.File.createTempFile("scontrino_", ".jpg", requireContext().getCacheDir());
             cameraTempUri = androidx.core.content.FileProvider.getUriForFile(
                     requireContext(),
                     requireContext().getPackageName() + ".fileprovider",
-                    photoFile
+                    cameraTempFile
             );
             takePictureLauncher.launch(cameraTempUri);
         } catch (Exception e) {
@@ -199,15 +208,16 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         com.example.paripariapp.util.ScontrinoOcrUtil.analizzaScontrino(requireContext(), uri, new com.example.paripariapp.util.ScontrinoOcrUtil.OcrCallback() {
             @Override
             public void onSuccess(com.example.paripariapp.util.ScontrinoOcrUtil.RisultatoOcr risultato) {
+                // Elimina subito la foto temporanea dalla cache per risparmiare spazio sul dispositivo
+                eliminaFotoTemporanea();
+
                 if (!isAdded() || binding == null) return;
                 binding.layoutOcrProgress.setVisibility(View.GONE);
 
+                scontrinoDigitaleCorrente = risultato.scontrinoDigitale;
+
                 if (risultato.importo != null && risultato.importo > 0.0) {
                     binding.campoImporto.setText(String.format(java.util.Locale.US, "%.2f", risultato.importo));
-                    binding.tvOcrStatus.setText(getString(R.string.ocr_successo, String.format(java.util.Locale.US, "%.2f €", risultato.importo)));
-                    com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), getString(R.string.ocr_successo, String.format(java.util.Locale.US, "%.2f €", risultato.importo)));
-                } else {
-                    binding.tvOcrStatus.setText(R.string.ocr_nessun_importo);
                 }
 
                 if (risultato.dataTimestamp != null) {
@@ -222,15 +232,94 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                         binding.campoDescrizione.setText(risultato.esercenteSuggerito);
                     }
                 }
+
+                aggiornaAnteprimaScontrinoDigitale();
             }
 
             @Override
             public void onError(Exception e) {
+                eliminaFotoTemporanea();
                 if (!isAdded() || binding == null) return;
                 binding.layoutOcrProgress.setVisibility(View.GONE);
                 binding.tvOcrStatus.setText(R.string.scontrino_allegato);
             }
         });
+    }
+
+    private void eliminaFotoTemporanea() {
+        if (cameraTempFile != null && cameraTempFile.exists()) {
+            try {
+                cameraTempFile.delete();
+            } catch (Exception ignored) {}
+            cameraTempFile = null;
+        }
+    }
+
+    private void aggiornaAnteprimaScontrinoDigitale() {
+        if (binding == null) return;
+        if (scontrinoDigitaleCorrente == null) {
+            binding.tvOcrStatus.setText(R.string.scontrino_allegato);
+            return;
+        }
+
+        int numVoci = scontrinoDigitaleCorrente.getVoci().size();
+        String totaleStr = scontrinoDigitaleCorrente.getTotale() != null
+                ? String.format(java.util.Locale.US, "%.2f €", scontrinoDigitaleCorrente.getTotale()) : "";
+
+        StringBuilder info = new StringBuilder();
+        info.append(numVoci).append(" voci digitalizzate");
+        if (!totaleStr.isEmpty()) {
+            info.append(" • Tot: ").append(totaleStr);
+        }
+        if (scontrinoDigitaleCorrente.isQuadrato()) {
+            info.append(" • ✓ Verificato");
+        } else if (scontrinoDigitaleCorrente.getDiscrepanza() != 0.0) {
+            info.append(String.format(java.util.Locale.US, " • Diff: %+.2f €", scontrinoDigitaleCorrente.getDiscrepanza()));
+        }
+
+        binding.tvOcrStatus.setText(info.toString());
+        com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "🧾 Scontrino digitalizzato (" + numVoci + " voci)");
+    }
+
+    private void mostraDettaglioVociScontrino() {
+        if (scontrinoDigitaleCorrente == null || !isAdded()) return;
+
+        StringBuilder sb = new StringBuilder();
+        if (scontrinoDigitaleCorrente.getEsercente() != null) {
+            sb.append("Esercente: ").append(scontrinoDigitaleCorrente.getEsercente()).append("\n");
+        }
+        if (scontrinoDigitaleCorrente.getDataFormatted() != null && !scontrinoDigitaleCorrente.getDataFormatted().isEmpty()) {
+            sb.append("Data: ").append(scontrinoDigitaleCorrente.getDataFormatted()).append("\n");
+        }
+        sb.append("----------------------------\n");
+
+        if (scontrinoDigitaleCorrente.getVoci().isEmpty()) {
+            sb.append("Nessuna voce dettagliata rilevata.\n");
+        } else {
+            for (com.example.paripariapp.data.model.ScontrinoDigitale.VoceScontrino v : scontrinoDigitaleCorrente.getVoci()) {
+                String prefix = v.getQuantita() > 1 ? String.format(java.util.Locale.US, "%.0fx ", v.getQuantita()) : "";
+                sb.append(prefix).append(v.getDescrizione())
+                        .append(" : ")
+                        .append(String.format(java.util.Locale.US, "%.2f €", v.getPrezzoTotale()))
+                        .append("\n");
+            }
+        }
+        sb.append("----------------------------\n");
+        if (scontrinoDigitaleCorrente.getTotale() != null) {
+            sb.append(String.format(java.util.Locale.US, "Totale rilevato: %.2f €\n", scontrinoDigitaleCorrente.getTotale()));
+        }
+        sb.append(String.format(java.util.Locale.US, "Somma voci: %.2f €\n", scontrinoDigitaleCorrente.calcolaSommaVoci()));
+        if (scontrinoDigitaleCorrente.isQuadrato()) {
+            sb.append("✓ Somma e totale quadrano perfettamente.\n");
+        } else {
+            sb.append(String.format(java.util.Locale.US, "⚠ Discrepanza: %+.2f € (possibile coperto/sconto)\n", scontrinoDigitaleCorrente.getDiscrepanza()));
+        }
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Scontrino Digitalizzato")
+                .setMessage(sb.toString())
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void aggiornaDropdownDestinatario() {
@@ -346,39 +435,13 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 DatiFormValidi dati = validaEdEstraiDatiForm(spesaId, SyncStatus.PENDING_INSERT);
                 if (dati == null) return;
 
-                if (scontrinoUri != null) {
-                    binding.azioneSalva.setEnabled(false);
-                    binding.layoutOcrProgress.setVisibility(View.VISIBLE);
-                    binding.tvOcrStatus.setText("Caricamento scontrino...");
-
-                    com.example.paripariapp.util.ScontrinoOcrUtil.comprimiECarica(
-                            requireContext(),
-                            scontrinoUri,
-                            schedaId,
-                            spesaId,
-                            new com.example.paripariapp.util.ScontrinoOcrUtil.UploadCallback() {
-                                @Override
-                                public void onSuccess(String downloadUrl) {
-                                    if (!isAdded()) return;
-                                    requireActivity().runOnUiThread(() -> salvaSpesaFinale(spesaId, dati, downloadUrl));
-                                }
-
-                                @Override
-                                public void onError(Exception e) {
-                                    if (!isAdded()) return;
-                                    // Fallback locale in caso di assenza rete/permessi storage
-                                    requireActivity().runOnUiThread(() -> salvaSpesaFinale(spesaId, dati, scontrinoUri.toString()));
-                                }
-                            }
-                    );
-                } else {
-                    salvaSpesaFinale(spesaId, dati, null);
-                }
+                String scontrinoJson = scontrinoDigitaleCorrente != null ? scontrinoDigitaleCorrente.toJson() : null;
+                salvaSpesaFinale(spesaId, dati, scontrinoJson);
             }
         });
     }
 
-    private void salvaSpesaFinale(String spesaId, DatiFormValidi dati, @Nullable String scontrinoUrl) {
+    private void salvaSpesaFinale(String spesaId, DatiFormValidi dati, @Nullable String scontrinoJson) {
         Spesa spesa = new Spesa(
                 spesaId,
                 schedaId,
@@ -388,9 +451,10 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 dati.timestamp,
                 dati.categoria,
                 dati.pagatoreId,
-                scontrinoUrl,
+                null,
                 SyncStatus.PENDING_INSERT
         );
+        spesa.setScontrinoJson(scontrinoJson);
 
         viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
         com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
@@ -402,7 +466,16 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
     @Override
     public void onDestroyView() {
+        if (binding != null) {
+            binding.ivAnteprimaScontrino.setImageDrawable(null);
+        }
         super.onDestroyView();
         binding = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        eliminaFotoTemporanea();
     }
 }

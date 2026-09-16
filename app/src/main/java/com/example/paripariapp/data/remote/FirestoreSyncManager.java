@@ -280,6 +280,13 @@ public class FirestoreSyncManager {
             data.put("scontrinoUrl", null);
         }
 
+        String scontrinoJson = spesa.getScontrinoJson();
+        if (scontrinoJson != null && !scontrinoJson.trim().isEmpty()) {
+            data.put("scontrinoJson", scontrinoJson);
+        } else {
+            data.put("scontrinoJson", null);
+        }
+
         WriteBatch batch = firestore.batch();
         DocumentReference spesaRef = firestore.collection("groups").document(spesa.getSchedaId())
                 .collection("expenses").document(spesa.getId());
@@ -717,6 +724,7 @@ public class FirestoreSyncManager {
                                     String categoria = doc.getString("categoria");
                                     String pagatoDaId = doc.getString("pagatoDaId");
                                     String scontrinoUrl = doc.getString("scontrinoUrl");
+                                    String scontrinoJson = doc.getString("scontrinoJson");
 
                                     if (titolo != null && importo != null) {
                                         Spesa spesa = new Spesa(
@@ -731,6 +739,7 @@ public class FirestoreSyncManager {
                                                 scontrinoUrl,
                                                 SyncStatus.SYNCED
                                         );
+                                        spesa.setScontrinoJson(scontrinoJson);
                                         spesaDao.insert(spesa);
 
                                         final List<SpesaPartecipante> quoteInMem = new ArrayList<>();
@@ -1285,9 +1294,10 @@ public class FirestoreSyncManager {
                                         String eCat = eDoc.getString("categoria");
                                         String ePagato = eDoc.getString("pagatoDaId");
                                         String eScontrino = eDoc.getString("scontrinoUrl");
+                                        String eScontrinoJson = eDoc.getString("scontrinoJson");
 
                                         if (eTit != null && eImp != null) {
-                                            speseScaricate.add(new Spesa(
+                                            Spesa sDownload = new Spesa(
                                                     eDoc.getId(),
                                                     groupId,
                                                     eTit,
@@ -1298,7 +1308,9 @@ public class FirestoreSyncManager {
                                                     ePagato != null ? ePagato : "",
                                                     eScontrino,
                                                     SyncStatus.SYNCED
-                                            ));
+                                            );
+                                            sDownload.setScontrinoJson(eScontrinoJson);
+                                            speseScaricate.add(sDownload);
 
                                             eDoc.getReference().collection("shares").get()
                                                     .addOnSuccessListener(AppDatabase.databaseWriteExecutor, sSnaps -> {

@@ -53,6 +53,9 @@ public class Spesa {
     @ColumnInfo(name = "scontrino_url")
     private String scontrinoUrl;
 
+    @ColumnInfo(name = "scontrino_json")
+    private String scontrinoJson;
+
     @ColumnInfo(name = "sync_status")
     private int syncStatus;
 
@@ -166,6 +169,14 @@ public class Spesa {
 
     public void setScontrinoUrl(String scontrinoUrl) {
         this.scontrinoUrl = scontrinoUrl;
+    }
+
+    public String getScontrinoJson() {
+        return scontrinoJson;
+    }
+
+    public void setScontrinoJson(String scontrinoJson) {
+        this.scontrinoJson = scontrinoJson;
     }
 
     public int getSyncStatus() {

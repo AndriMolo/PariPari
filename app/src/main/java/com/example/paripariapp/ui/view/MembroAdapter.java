@@ -148,15 +148,17 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
                 Partecipante.isCurrentUserParticipant(p, currentUser);
 
         String photoUrl = p.getPhotoUrl();
-        if (photoUrl != null && (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))) {
+        com.example.paripariapp.util.AvatarVisualUtil.AvatarConfig cfg =
+                com.example.paripariapp.util.AvatarVisualUtil.parse(photoUrl, p.getNome());
+
+        if (cfg.isImage) {
             holder.binding.avatarIniziale.setVisibility(View.GONE);
             holder.binding.ivAvatarFoto.setVisibility(View.VISIBLE);
-            com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(photoUrl, holder.binding.ivAvatarFoto, R.drawable.ic_account);
+            com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(cfg.imageUrl, holder.binding.ivAvatarFoto, R.drawable.ic_account);
         } else {
-            holder.binding.ivAvatarFoto.setVisibility(View.GONE);
             holder.binding.avatarIniziale.setVisibility(View.VISIBLE);
-            String iniziale = !p.getNome().isEmpty() ? String.valueOf(p.getNome().charAt(0)).toUpperCase(java.util.Locale.getDefault()) : "?";
-            holder.binding.avatarIniziale.setText(iniziale);
+            holder.binding.ivAvatarFoto.setVisibility(View.GONE);
+            com.example.paripariapp.util.AvatarVisualUtil.applyAvatarConfigToTextView(holder.binding.avatarIniziale, cfg);
         }
 
         boolean isEditing = Objects.equals(p.getId(), editingParticipantId);
