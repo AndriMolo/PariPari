@@ -85,7 +85,7 @@ public interface SpesaDao {
     @Query("SELECT COUNT(*) FROM spese WHERE sync_status != " + SyncStatus.PENDING_DELETE)
     LiveData<Integer> getCountSpeseLive();
 
-    @Query("SELECT SUM(importo) FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " AND (categoria IS NULL OR LOWER(categoria) NOT IN ('saldi', 'saldo', 'pareggio'))")
+    @Query("SELECT SUM(importo) FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " AND (categoria IS NULL OR LOWER(categoria) NOT IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi'))")
     LiveData<Double> getTotaleSpeseBySchedaLive(String schedaId);
 
     @Query("SELECT * FROM spese WHERE id = :id LIMIT 1")
@@ -100,6 +100,7 @@ public interface SpesaDao {
             "FROM spese s " +
             "LEFT JOIN partecipanti p ON s.pagato_da_id = p.id " +
             "WHERE s.scheda_id = :schedaId AND s.sync_status != " + SyncStatus.PENDING_DELETE + " " +
+            "AND (s.categoria IS NULL OR LOWER(s.categoria) NOT IN ('pareggio', 'saldo', 'saldi')) " +
             "ORDER BY s.data_spesa DESC")
     LiveData<List<SpesaConDettagli>> getSpeseConDettagliBySchedaLive(String schedaId);
 
@@ -120,4 +121,10 @@ public interface SpesaDao {
 
     @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND LOWER(categoria) IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
     LiveData<List<Spesa>> getSaldiBySchedaLive(String schedaId);
+
+    @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND pagato_da_id = :partecipanteId AND sync_status != " + SyncStatus.PENDING_DELETE + " LIMIT 1")
+    Spesa getPrimaSpesaPagataDaPartecipanteSync(String schedaId, String partecipanteId);
+
+    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId AND q.partecipante_id = :partecipanteId AND q.quota > 0 LIMIT 1")
+    SpesaPartecipante getPrimaQuotaPartecipanteSync(String schedaId, String partecipanteId);
 }

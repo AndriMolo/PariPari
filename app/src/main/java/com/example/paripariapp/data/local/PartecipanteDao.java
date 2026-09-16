@@ -25,6 +25,18 @@ public interface PartecipanteDao {
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato != 'USCITO') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     LiveData<List<Partecipante>> getPartecipantiAttiviBySchedaLive(String schedaId);
 
+    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato != 'USCITO') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
+    List<Partecipante> getPartecipantiAttiviBySchedaSync(String schedaId);
+
+    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND stato = 'USCITO' AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
+    LiveData<List<Partecipante>> getExMembriBySchedaLive(String schedaId);
+
+    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND stato = 'USCITO' AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
+    List<Partecipante> getExMembriBySchedaSync(String schedaId);
+
+    @Query("SELECT COUNT(*) FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato != 'USCITO') AND sync_status != " + SyncStatus.PENDING_DELETE)
+    int countPartecipantiAttiviBySchedaSync(String schedaId);
+
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     List<Partecipante> getPartecipantiBySchedaSync(String schedaId);
 

@@ -45,6 +45,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
     private OnEliminaClickListener onEliminaClickListener;
     private OnRiattivaClickListener onRiattivaClickListener;
+    private OnEliminaDefinitivamenteClickListener onEliminaDefinitivamenteClickListener;
     private OnNomeModificatoListener onNomeModificatoListener;
     private boolean isCapogruppo = false;
     private FirebaseUser currentUser;
@@ -57,6 +58,10 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
     public interface OnRiattivaClickListener {
         void onRiattivaClick(Partecipante partecipante);
+    }
+
+    public interface OnEliminaDefinitivamenteClickListener {
+        void onEliminaDefinitivamenteClick(Partecipante partecipante);
     }
 
     public interface OnNomeModificatoListener {
@@ -73,6 +78,10 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
     public void setOnRiattivaClickListener(OnRiattivaClickListener listener) {
         this.onRiattivaClickListener = listener;
+    }
+
+    public void setOnEliminaDefinitivamenteClickListener(OnEliminaDefinitivamenteClickListener listener) {
+        this.onEliminaDefinitivamenteClickListener = listener;
     }
 
     public void setOnNomeModificatoListener(OnNomeModificatoListener listener) {
@@ -222,14 +231,18 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
                 holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
 
                 holder.binding.bottoneModifica.setVisibility(View.GONE);
-                holder.binding.bottoneElimina.setVisibility(View.VISIBLE);
-                holder.binding.bottoneElimina.setIconResource(R.drawable.ic_check);
-                holder.binding.bottoneElimina.setContentDescription(context.getString(R.string.btn_riattiva_membro));
-                holder.binding.bottoneElimina.setOnClickListener(v -> {
-                    if (onRiattivaClickListener != null) {
-                        onRiattivaClickListener.onRiattivaClick(p);
-                    }
-                });
+                if (isCapogruppo) {
+                    holder.binding.bottoneElimina.setVisibility(View.VISIBLE);
+                    holder.binding.bottoneElimina.setIconResource(R.drawable.ic_delete);
+                    holder.binding.bottoneElimina.setContentDescription(context.getString(R.string.btn_elimina_definitivamente));
+                    holder.binding.bottoneElimina.setOnClickListener(v -> {
+                        if (onEliminaDefinitivamenteClickListener != null) {
+                            onEliminaDefinitivamenteClickListener.onEliminaDefinitivamenteClick(p);
+                        }
+                    });
+                } else {
+                    holder.binding.bottoneElimina.setVisibility(View.GONE);
+                }
             } else {
                 holder.binding.getRoot().setAlpha(1.0f);
                 String nomeDisplay = Partecipante.formattaNomePerVisualizzazione(context, p, isMe);

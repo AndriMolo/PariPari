@@ -168,18 +168,63 @@ public class PariPariRepository {
         });
     }
 
+    public boolean haPartecipatoASpese(String schedaId, String partecipanteId) {
+        Spesa spesaPagata = spesaDao.getPrimaSpesaPagataDaPartecipanteSync(schedaId, partecipanteId);
+        if (spesaPagata != null) return true;
+        SpesaPartecipante quota = spesaDao.getPrimaQuotaPartecipanteSync(schedaId, partecipanteId);
+        return quota != null && Math.abs(quota.getQuota()) > 0.001;
+    }
+
+    public void eliminaPartecipanteDefinitivamente(String schedaId, String partecipanteId) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            partecipanteDao.deleteById(partecipanteId);
+            syncManager.deletePartecipanteDefinitivamente(schedaId, partecipanteId);
+        });
+    }
+
     public void esciDalGruppo(String schedaId, String partecipanteId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            Scheda scheda = schedaDao.getSchedaById(schedaId);
-            List<Partecipante> partecipanti = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
+            List<Partecipante> partecipantiAttivi = partecipanteDao.getPartecipantiAttiviBySchedaSync(schedaId);
 
-            if (scheda != null && partecipanti != null) {
-                Partecipante pUscito = partecipanteDao.getPartecipanteById(partecipanteId);
-                if (pUscito != null) {
-                    FirebaseUser currentUser = auth.getCurrentUser();
-                    boolean isSelf = Partecipante.isCurrentUserParticipant(pUscito, currentUser);
+            int altriAutenticati = 0;
+            if (partecipantiAttivi != null) {
+                for (Partecipante p : partecipantiAttivi) {
+                    if (!p.getId().equals(partecipanteId) && p.isAutenticato()) {
+                        altriAutenticati++;
+                    }
+                }
+            }
+
+            // SE NON CI SONO ALTRI UTENTI REALI AUTENTICATI NEL GRUPPO:
+            // L'uscita del capogruppo cancella il gruppo sia dal DB locale che da Firestore!
+            if (altriAutenticati == 0) {
+                syncManager.eliminaGruppoDefinitivamente(schedaId);
+                spesaDao.deleteBySchedaId(schedaId);
+                partecipanteDao.deleteBySchedaId(schedaId);
+                schedaDao.deleteById(schedaId);
+                return;
+            }
+
+            Scheda scheda = schedaDao.getSchedaById(schedaId);
+            Partecipante pUscito = partecipanteDao.getPartecipanteById(partecipanteId);
+
+            if (pUscito != null) {
+                FirebaseUser currentUser = auth.getCurrentUser();
+                boolean isSelf = Partecipante.isCurrentUserParticipant(pUscito, currentUser);
+                boolean eLocale = !pUscito.isAutenticato();
+                boolean haSpese = haPartecipatoASpese(schedaId, partecipanteId);
+
+                if (eLocale && !haSpese) {
+                    // Membro locale senza spese: eliminazione definitiva
+                    partecipanteDao.deleteById(partecipanteId);
+                    syncManager.deletePartecipanteDefinitivamente(schedaId, partecipanteId);
+                } else {
+                    // Membro autenticato o locale con spese: passa a USCITO
                     if (isSelf) {
                         syncManager.detachSubcollectionListeners(schedaId);
+                        try {
+                            com.google.firebase.messaging.FirebaseMessaging.getInstance().unsubscribeFromTopic("group_" + schedaId);
+                        } catch (Exception ignored) {}
                     }
 
                     pUscito.setStato(Partecipante.STATO_USCITO);
@@ -187,37 +232,29 @@ public class PariPariRepository {
                     pUscito.setUserId(null);
                     pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
                     partecipanteDao.update(pUscito);
+                    syncManager.esciDalGruppo(schedaId, partecipanteId);
 
-                    boolean eraCreatore = (scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(partecipanteId));
-                    if (eraCreatore) {
-                        String nuovoCreatoreId = null;
-                        for (Partecipante p : partecipanti) {
-                            if (!p.getId().equals(partecipanteId) && p.isAttivo() && p.isAutenticato()) {
-                                nuovoCreatoreId = p.getId();
+                    if (isSelf) {
+                        spesaDao.deleteBySchedaId(schedaId);
+                        partecipanteDao.deleteBySchedaId(schedaId);
+                        schedaDao.deleteById(schedaId);
+                    }
+                }
+
+                // Passaggio creatore al primo membro attivo autenticato
+                if (scheda != null && scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(partecipanteId)) {
+                    List<Partecipante> attiviRimasti = partecipanteDao.getPartecipantiAttiviBySchedaSync(schedaId);
+                    if (attiviRimasti != null) {
+                        for (Partecipante p : attiviRimasti) {
+                            if (!p.getId().equals(partecipanteId) && p.isAutenticato()) {
+                                scheda.setCreatoreId(p.getId());
+                                scheda.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                                schedaDao.update(scheda);
                                 break;
                             }
                         }
-                        if (nuovoCreatoreId == null) {
-                            for (Partecipante p : partecipanti) {
-                                if (!p.getId().equals(partecipanteId) && p.isAttivo()) {
-                                    nuovoCreatoreId = p.getId();
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (nuovoCreatoreId != null) {
-                            scheda.setCreatoreId(nuovoCreatoreId);
-                            scheda.setSyncStatus(SyncStatus.PENDING_UPDATE);
-                            schedaDao.update(scheda);
-                        }
                     }
                 }
-            }
-
-            // 2. Poi su Firestore
-            if (auth.getCurrentUser() != null && syncManager.isConnected()) {
-                syncManager.esciDalGruppo(schedaId, partecipanteId);
             }
         });
     }
@@ -562,13 +599,17 @@ public class PariPariRepository {
             }
 
             com.google.firebase.storage.StorageReference ref =
-                    com.google.firebase.storage.FirebaseStorage.getInstance().getReference()
+                    getStorageInstance().getReference()
                             .child("group_icons/" + schedaId + ".jpg");
 
             ref.putBytes(imageBytes)
                     .continueWithTask(task -> {
-                        if (!task.isSuccessful() && task.getException() != null) {
-                            throw task.getException();
+                        if (!task.isSuccessful()) {
+                            if (task.getException() != null) {
+                                throw task.getException();
+                            } else {
+                                throw new Exception("Upload fallito. Verifica le regole di Firebase Storage.");
+                            }
                         }
                         return ref.getDownloadUrl();
                     })
@@ -577,7 +618,7 @@ public class PariPariRepository {
                         aggiornaIconaScheda(schedaId, url);
                         mainHandler.post(() -> callback.onSuccess(url));
                     })
-                    .addOnFailureListener(e -> mainHandler.post(() -> callback.onError(e.getMessage())));
+                    .addOnFailureListener(e -> mainHandler.post(() -> callback.onError(e != null && e.getMessage() != null ? e.getMessage() : "Errore durante l'upload")));
         });
     }
 
@@ -605,6 +646,14 @@ public class PariPariRepository {
         });
     }
 
+    private com.google.firebase.storage.FirebaseStorage getStorageInstance() {
+        try {
+            return com.google.firebase.storage.FirebaseStorage.getInstance("gs://paripari-app-2026.firebasestorage.app");
+        } catch (Exception e) {
+            return com.google.firebase.storage.FirebaseStorage.getInstance();
+        }
+    }
+
     public void uploadAvatarUtente(android.content.Context context, android.net.Uri fileUri, OnUploadCallback callback) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
@@ -621,13 +670,17 @@ public class PariPariRepository {
             }
 
             com.google.firebase.storage.StorageReference ref =
-                    com.google.firebase.storage.FirebaseStorage.getInstance().getReference()
+                    getStorageInstance().getReference()
                             .child("avatars/" + user.getUid() + ".jpg");
 
             ref.putBytes(imageBytes)
                     .continueWithTask(task -> {
-                        if (!task.isSuccessful() && task.getException() != null) {
-                            throw task.getException();
+                        if (!task.isSuccessful()) {
+                            if (task.getException() != null) {
+                                throw task.getException();
+                            } else {
+                                throw new Exception("Upload fallito. Verifica le regole di Firebase Storage.");
+                            }
                         }
                         return ref.getDownloadUrl();
                     })
@@ -636,7 +689,7 @@ public class PariPariRepository {
                         aggiornaAvatarUtente(url);
                         mainHandler.post(() -> callback.onSuccess(url));
                     })
-                    .addOnFailureListener(e -> mainHandler.post(() -> callback.onError(e.getMessage())));
+                    .addOnFailureListener(e -> mainHandler.post(() -> callback.onError(e.getMessage() != null ? e.getMessage() : "Errore durante l'upload")));
         });
     }
 

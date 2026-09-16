@@ -81,6 +81,10 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.deletePartecipante(partecipanteId);
     }
 
+    public void eliminaPartecipanteDefinitivamente(String schedaId, String partecipanteId) {
+        repository.eliminaPartecipanteDefinitivamente(schedaId, partecipanteId);
+    }
+
     public void aggiornaNomePartecipante(String partecipanteId, String nuovoNome) {
         repository.aggiornaNomePartecipante(partecipanteId, nuovoNome);
     }

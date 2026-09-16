@@ -403,6 +403,12 @@
     <string name="titolo_annulla_saldo">Unsettle payment</string>
     <string name="msg_conferma_annulla_saldo">Are you sure you want to unsettle this payment? The debt will return active in the group.</string>
     <string name="btn_annulla_saldo">Unsettle</string>
+    <string name="btn_mostra_ex_membri">Show Ex members (%d)</string>
+    <string name="btn_nascondi_ex_membri">Hide Ex members</string>
+    <string name="titolo_elimina_definitivamente">Delete permanently</string>
+    <string name="msg_conferma_elimina_definitivamente_ex_membro">Are you sure you want to permanently delete %s? They will no longer be able to rejoin the group.</string>
+    <string name="btn_elimina_definitivamente">Delete permanently</string>
+    <string name="msg_ex_membro_eliminato">%s permanently deleted</string>
 
     <string name="label_codice_6_caratteri">6-character code</string>
     <string name="handle_format">@%s</string>

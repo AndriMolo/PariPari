@@ -124,10 +124,16 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
     private void setupObservers() {
         viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), lista -> {
             if (lista == null) return;
-            this.partecipanti = lista;
+            List<Partecipante> attivi = new ArrayList<>();
+            for (Partecipante p : lista) {
+                if (p.isAttivo()) {
+                    attivi.add(p);
+                }
+            }
+            this.partecipanti = attivi;
 
             final List<String> nomi = new ArrayList<>();
-            for (Partecipante p : lista) {
+            for (Partecipante p : attivi) {
                 nomi.add(p.getNome());
             }
             ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);

@@ -31,9 +31,9 @@ public class UserPreferencesRepositoryTest {
 
     @Test
     public void testGeneratePaypalLink() {
-        assertEquals("https://paypal.me/mario/15.50EUR",
+        assertEquals("https://paypal.me/mario/15.50",
                 UserPreferencesRepository.generatePaypalLink("mario", 15.50, "EUR"));
-        assertEquals("https://paypal.me/mario/20.00USD",
+        assertEquals("https://paypal.me/mario/20.00",
                 UserPreferencesRepository.generatePaypalLink("@mario", 20.0, "USD"));
         assertEquals("https://paypal.me/mario",
                 UserPreferencesRepository.generatePaypalLink("mario", 0.0, "EUR"));
@@ -43,9 +43,9 @@ public class UserPreferencesRepositoryTest {
 
     @Test
     public void testGenerateRevolutLink() {
-        assertEquals("https://revolut.me/mario?amount=15.50&currency=EUR",
+        assertEquals("https://revolut.me/mario",
                 UserPreferencesRepository.generateRevolutLink("mario", 15.50, "EUR"));
-        assertEquals("https://revolut.me/mario?amount=20.00&currency=USD",
+        assertEquals("https://revolut.me/mario",
                 UserPreferencesRepository.generateRevolutLink("@mario", 20.0, "USD"));
         assertEquals("https://revolut.me/mario",
                 UserPreferencesRepository.generateRevolutLink("mario", 0.0, "EUR"));

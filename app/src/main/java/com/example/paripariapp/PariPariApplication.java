@@ -59,10 +59,7 @@ public class PariPariApplication extends Application {
                 startedActivitiesCount--;
                 if (startedActivitiesCount <= 0) {
                     startedActivitiesCount = 0;
-                    if (repository != null) {
-                        Log.d(TAG, "App in background: sospensione sincronizzazione real-time per risparmio batteria/CPU");
-                        repository.stopRealtimeSync();
-                    }
+                    Log.d(TAG, "App in background: mantenimento sincronizzazione real-time attiva per notifiche");
                 }
             }
 

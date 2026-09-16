@@ -561,6 +561,8 @@ public class DettaglioSchedaFragment extends Fragment {
         });
     }
 
+    private boolean mostraExMembri = false;
+
     private void aggiornaMembriAdapter() {
         if (membroAdapter == null || partecipantiCache == null) return;
 
@@ -568,6 +570,30 @@ public class DettaglioSchedaFragment extends Fragment {
                 com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
         Partecipante proprietario = Partecipante.trovaProprietario(schedaCorrente, partecipantiCache, currentUser);
         List<Partecipante> ordinati = Partecipante.ordinaConProprietarioInCima(schedaCorrente, partecipantiCache, currentUser);
+
+        List<Partecipante> attivi = new ArrayList<>();
+        List<Partecipante> exMembri = new ArrayList<>();
+
+        for (Partecipante p : ordinati) {
+            if (p.isAttivo()) {
+                attivi.add(p);
+            } else {
+                exMembri.add(p);
+            }
+        }
+
+        if (binding != null) {
+            if (exMembri.isEmpty()) {
+                binding.btnToggleExMembri.setVisibility(View.GONE);
+            } else {
+                binding.btnToggleExMembri.setVisibility(View.VISIBLE);
+                if (mostraExMembri) {
+                    binding.btnToggleExMembri.setText(R.string.btn_nascondi_ex_membri);
+                } else {
+                    binding.btnToggleExMembri.setText(getString(R.string.btn_mostra_ex_membri, exMembri.size()));
+                }
+            }
+        }
 
         String currentSchedaId = (schedaCorrente != null) ? schedaCorrente.getId() : null;
         membroAdapter.setSchedaId(currentSchedaId);
@@ -581,7 +607,12 @@ public class DettaglioSchedaFragment extends Fragment {
 
         boolean isCapogruppo = (proprietario != null && isMe(proprietario));
         membroAdapter.setCapogruppo(isCapogruppo);
-        membroAdapter.submitList(new ArrayList<>(ordinati));
+
+        List<Partecipante> daMostrare = new ArrayList<>(attivi);
+        if (mostraExMembri) {
+            daMostrare.addAll(exMembri);
+        }
+        membroAdapter.submitList(daMostrare);
     }
 
     private boolean calcolaIsCapogruppo(Scheda scheda, List<Partecipante> partecipanti) {
@@ -871,11 +902,30 @@ public class DettaglioSchedaFragment extends Fragment {
             gestisciRimozioneMembro(p, null, null);
         });
 
+        membroAdapter.setOnEliminaDefinitivamenteClickListener(p -> {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.titolo_elimina_definitivamente)
+                    .setMessage(getString(R.string.msg_conferma_elimina_definitivamente_ex_membro, p.getNome()))
+                    .setPositiveButton(R.string.btn_elimina_definitivamente, (dialog, which) -> {
+                        viewModel.eliminaPartecipanteDefinitivamente(schedaId, p.getId());
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_ex_membro_eliminato, p.getNome()));
+                        }
+                    })
+                    .setNegativeButton(R.string.btn_annulla, null)
+                    .show();
+        });
+
         membroAdapter.setOnRiattivaClickListener(p -> {
             viewModel.riattivaMembro(schedaId, p.getId());
             if (binding != null) {
                 AppSnackbar.show(binding.getRoot(), getString(R.string.msg_membro_riattivato, p.getNome()));
             }
+        });
+
+        binding.btnToggleExMembri.setOnClickListener(v -> {
+            mostraExMembri = !mostraExMembri;
+            aggiornaMembriAdapter();
         });
 
         binding.btnAggiungiMembroTab.setOnClickListener(v -> mostraDialogOpzioniAggiungiMembro());

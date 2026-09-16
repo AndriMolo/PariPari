@@ -224,20 +224,24 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
     private void setupObserverPartecipanti() {
         viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), lista -> {
             if (lista == null) return;
-            this.partecipanti = lista;
-
-            final List<String> nomi = new ArrayList<>();
+            List<Partecipante> attivi = new ArrayList<>();
             for (Partecipante p : lista) {
                 if (p.isAttivo()) {
-                    nomi.add(p.getNome());
+                    attivi.add(p);
                 }
+            }
+            this.partecipanti = attivi;
+
+            final List<String> nomi = new ArrayList<>();
+            for (Partecipante p : attivi) {
+                nomi.add(p.getNome());
             }
             ArrayAdapter<String> adapter = SpesaUiHelper.creaDropdownAdapter(requireContext(), nomi);
             binding.menuPagante.setAdapter(adapter);
 
             String defaultPagatoreNome = null;
             com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-            for (Partecipante p : lista) {
+            for (Partecipante p : attivi) {
                 if (Partecipante.isCurrentUserParticipant(p, currentUser)) {
                     defaultPagatoreNome = p.getNome();
                     break;

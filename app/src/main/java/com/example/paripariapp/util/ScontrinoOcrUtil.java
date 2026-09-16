@@ -199,13 +199,24 @@ public class ScontrinoOcrUtil {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos);
                 byte[] data = baos.toByteArray();
 
-                StorageReference storageRef = FirebaseStorage.getInstance().getReference();
+                FirebaseStorage storageInstance;
+                try {
+                    storageInstance = FirebaseStorage.getInstance("gs://paripari-app-2026.firebasestorage.app");
+                } catch (Exception e) {
+                    storageInstance = FirebaseStorage.getInstance();
+                }
+
+                StorageReference storageRef = storageInstance.getReference();
                 StorageReference receiptRef = storageRef.child("scontrini/" + schedaId + "/" + spesaId + ".jpg");
 
                 receiptRef.putBytes(data)
                         .continueWithTask(task -> {
-                            if (!task.isSuccessful() && task.getException() != null) {
-                                throw task.getException();
+                            if (!task.isSuccessful()) {
+                                if (task.getException() != null) {
+                                    throw task.getException();
+                                } else {
+                                    throw new Exception("Upload scontrino fallito.");
+                                }
                             }
                             return receiptRef.getDownloadUrl();
                         })

@@ -411,6 +411,12 @@
     <string name="titolo_annulla_saldo">Annulla saldo</string>
     <string name="msg_conferma_annulla_saldo">Sei sicuro di voler annullare questo saldo? Il debito tornerà attivo nel gruppo.</string>
     <string name="btn_annulla_saldo">Annulla saldo</string>
+    <string name="btn_mostra_ex_membri">Mostra Ex membri (%d)</string>
+    <string name="btn_nascondi_ex_membri">Nascondi Ex membri</string>
+    <string name="titolo_elimina_definitivamente">Elimina definitivamente</string>
+    <string name="msg_conferma_elimina_definitivamente_ex_membro">Sei sicuro di voler eliminare definitivamente %s? Non potrà più rientrare nel gruppo.</string>
+    <string name="btn_elimina_definitivamente">Elimina definitivamente</string>
+    <string name="msg_ex_membro_eliminato">%s eliminato definitivamente dal gruppo</string>
 
     <string name="label_codice_6_caratteri">Codice a 6 caratteri</string>
     <string name="handle_format">@%s</string>

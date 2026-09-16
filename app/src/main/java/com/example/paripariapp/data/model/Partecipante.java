@@ -228,6 +228,10 @@ public class Partecipante {
         return !STATO_USCITO.equalsIgnoreCase(stato);
     }
 
+    public boolean isExMembro() {
+        return STATO_USCITO.equalsIgnoreCase(stato);
+    }
+
     public boolean isAutenticato() {
         return userId != null && !userId.trim().isEmpty();
     }

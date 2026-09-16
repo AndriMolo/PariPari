@@ -375,11 +375,47 @@ public class FirestoreSyncManager {
     }
 
     public void deletePartecipante(String partecipanteId, @Nullable String schedaId) {
-        if (schedaId != null && auth.getCurrentUser() != null && networkMonitor.isConnected()) {
+        deletePartecipanteDefinitivamente(schedaId, partecipanteId);
+    }
+
+    public void deletePartecipanteDefinitivamente(@Nullable String schedaId, String partecipanteId) {
+        if (schedaId != null && partecipanteId != null) {
             firestore.collection("groups").document(schedaId)
                     .collection("participants").document(partecipanteId)
                     .delete();
         }
+    }
+
+    public void eliminaGruppoDefinitivamente(String schedaId) {
+        if (schedaId == null) return;
+        detachSubcollectionListeners(schedaId);
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().unsubscribeFromTopic("group_" + schedaId);
+        } catch (Exception ignored) {}
+
+        DocumentReference gRef = firestore.collection("groups").document(schedaId);
+
+        gRef.collection("participants").get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
+            if (pSnaps != null) {
+                WriteBatch batch = firestore.batch();
+                for (DocumentSnapshot doc : pSnaps.getDocuments()) {
+                    batch.delete(doc.getReference());
+                }
+                batch.commit();
+            }
+        });
+
+        gRef.collection("expenses").get().addOnSuccessListener(AppDatabase.databaseWriteExecutor, eSnaps -> {
+            if (eSnaps != null) {
+                WriteBatch batch = firestore.batch();
+                for (DocumentSnapshot doc : eSnaps.getDocuments()) {
+                    batch.delete(doc.getReference());
+                }
+                batch.commit();
+            }
+        });
+
+        gRef.delete().addOnFailureListener(e -> Log.w(TAG, "Eliminazione gruppo remoto fallita", e));
     }
 
     public void esciDalGruppo(String schedaId, String partecipanteId) {
@@ -405,16 +441,24 @@ public class FirestoreSyncManager {
                                     firestore.collection("groups").document(schedaId)
                                             .collection("participants").get()
                                             .addOnSuccessListener(AppDatabase.databaseWriteExecutor, pSnaps -> {
-                                                if (pSnaps == null || pSnaps.isEmpty()) {
-                                                    firestore.collection("groups").document(schedaId).delete();
-                                                } else {
-                                                    DocumentSnapshot nextP = pSnaps.getDocuments().get(0);
-                                                    String newCreatore = nextP.getString("userId");
-                                                    if (newCreatore == null || newCreatore.isEmpty()) {
-                                                        newCreatore = nextP.getId();
+                                                String nuovoCreatore = null;
+                                                if (pSnaps != null && !pSnaps.isEmpty()) {
+                                                    for (DocumentSnapshot doc : pSnaps.getDocuments()) {
+                                                        String uId = doc.getString("userId");
+                                                        String st = doc.getString("stato");
+                                                        if (uId != null && !uId.isEmpty() && !doc.getId().equals(partecipanteId) && !"USCITO".equalsIgnoreCase(st)) {
+                                                            nuovoCreatore = uId;
+                                                            break;
+                                                        }
                                                     }
+                                                }
+
+                                                if (nuovoCreatore != null) {
                                                     firestore.collection("groups").document(schedaId)
-                                                            .update("creatoreId", newCreatore);
+                                                            .update("creatoreId", nuovoCreatore);
+                                                } else {
+                                                    // Nessun altro utente reale autenticato presente: cancella l'intero gruppo orfano da Firestore!
+                                                    eliminaGruppoDefinitivamente(schedaId);
                                                 }
                                             });
                                 }
@@ -677,15 +721,15 @@ public class FirestoreSyncManager {
                                         );
                                         spesaDao.insert(spesa);
 
+                                        final List<SpesaPartecipante> quoteInMem = new ArrayList<>();
                                         doc.getReference().collection("shares").get()
                                                 .addOnSuccessListener(AppDatabase.databaseWriteExecutor, shareSnaps -> {
                                                     if (shareSnaps != null) {
-                                                        List<SpesaPartecipante> quote = new ArrayList<>();
                                                         for (DocumentSnapshot sDoc : shareSnaps.getDocuments()) {
                                                             Double quota = sDoc.getDouble("quota");
                                                             Double quotaPagata = sDoc.getDouble("quotaPagata");
                                                             if (quota != null) {
-                                                                quote.add(new SpesaPartecipante(
+                                                                quoteInMem.add(new SpesaPartecipante(
                                                                         eId,
                                                                         sDoc.getId(),
                                                                         quota,
@@ -694,47 +738,67 @@ public class FirestoreSyncManager {
                                                                 ));
                                                             }
                                                         }
-                                                        if (!quote.isEmpty()) {
+                                                        if (!quoteInMem.isEmpty()) {
                                                             spesaDao.deleteQuoteBySpesaId(eId);
-                                                            spesaDao.insertQuote(quote);
+                                                            spesaDao.insertQuote(quoteInMem);
                                                         }
                                                     }
+
+                                                    // Notifica NATIVA in Java per gli altri membri SOLO se il cambio avviene in tempo reale
+                                                    if (!isFirstBatch && !doc.getMetadata().hasPendingWrites()) {
+                                                        Scheda s = schedaDao.getSchedaById(groupId);
+                                                        String nomeGruppo = (s != null && s.getTitolo() != null) ? s.getTitolo() : "Gruppo";
+
+                                                        Partecipante pPagante = (pagatoDaId != null && !pagatoDaId.isEmpty()) ? partecipanteDao.getPartecipanteById(pagatoDaId) : null;
+                                                        String nomePagatore = (pPagante != null && pPagante.getNome() != null) ? pPagante.getNome() : "Un partecipante";
+
+                                                        boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(categoria);
+                                                        String valutaStr = valuta != null ? valuta : "EUR";
+                                                        String importoFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", importo, valutaStr);
+
+                                                        String notifTitolo;
+                                                        String notifMessaggio;
+
+                                                        if (isRimborso) {
+                                                            if (dc.getType() == DocumentChange.Type.ADDED) {
+                                                                notifTitolo = "Pagamento saldato in \"" + nomeGruppo + "\"";
+                                                            } else {
+                                                                notifTitolo = "Rimborso modificato in \"" + nomeGruppo + "\"";
+                                                            }
+                                                            notifMessaggio = importoFmt + " Da " + nomePagatore + " Pagati.";
+                                                        } else {
+                                                            if (dc.getType() == DocumentChange.Type.ADDED) {
+                                                                notifTitolo = "Nuova spesa in \"" + nomeGruppo + "\"";
+                                                            } else {
+                                                                notifTitolo = "Spesa modificata in \"" + nomeGruppo + "\"";
+                                                            }
+
+                                                            List<Partecipante> partGroup = partecipanteDao.getPartecipantiBySchedaSync(groupId);
+                                                            FirebaseUser currentUser = auth.getCurrentUser();
+                                                            com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                                                                    com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
+                                                            String myPartId = Partecipante.findCurrentUserId(partGroup, currentUser, prefs, groupId);
+
+                                                            double miaQuota = 0.0;
+                                                            if (myPartId != null && !quoteInMem.isEmpty()) {
+                                                                for (SpesaPartecipante q : quoteInMem) {
+                                                                    if (q.getPartecipanteId().equals(myPartId)) {
+                                                                        miaQuota = q.getQuota();
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                            if (miaQuota <= 0.001 && !quoteInMem.isEmpty()) {
+                                                                miaQuota = importo / quoteInMem.size();
+                                                            }
+
+                                                            String quotaFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", miaQuota, valutaStr);
+                                                            notifMessaggio = titolo + ". La tua Quota: " + quotaFmt;
+                                                        }
+
+                                                        com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
+                                                    }
                                                 });
-
-                                        // Notifica NATIVA in Java per gli altri membri SOLO se il cambio avviene in tempo reale (non nel primo caricamento iniziale)
-                                        if (!isFirstBatch && !doc.getMetadata().hasPendingWrites()) {
-                                            Scheda s = schedaDao.getSchedaById(groupId);
-                                            String nomeGruppo = (s != null && s.getTitolo() != null) ? s.getTitolo() : "Gruppo";
-
-                                            Partecipante pPagante = (pagatoDaId != null && !pagatoDaId.isEmpty()) ? partecipanteDao.getPartecipanteById(pagatoDaId) : null;
-                                            String nomePagatore = (pPagante != null && pPagante.getNome() != null) ? pPagante.getNome() : "Un partecipante";
-
-                                            boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(categoria);
-                                            String importoFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", importo, valuta != null ? valuta : "EUR");
-
-                                            String notifTitolo;
-                                            String notifMessaggio;
-
-                                            if (dc.getType() == DocumentChange.Type.ADDED) {
-                                                if (isRimborso) {
-                                                    notifTitolo = "Pagamento saldato in \"" + nomeGruppo + "\"";
-                                                    notifMessaggio = nomePagatore + " ha registrato un rimborso di " + importoFmt;
-                                                } else {
-                                                    notifTitolo = "Nuova spesa in \"" + nomeGruppo + "\"";
-                                                    notifMessaggio = nomePagatore + " ha aggiunto \"" + titolo + "\" (" + importoFmt + ")";
-                                                }
-                                                com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
-                                            } else if (dc.getType() == DocumentChange.Type.MODIFIED) {
-                                                if (isRimborso) {
-                                                    notifTitolo = "Rimborso modificato in \"" + nomeGruppo + "\"";
-                                                    notifMessaggio = "Il rimborso di " + importoFmt + " (" + titolo + ") è stato modificato";
-                                                } else {
-                                                    notifTitolo = "Spesa modificata in \"" + nomeGruppo + "\"";
-                                                    notifMessaggio = nomePagatore + " ha modificato \"" + titolo + "\" (" + importoFmt + ")";
-                                                }
-                                                com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
-                                            }
-                                        }
                                     }
                                     break;
                                 case REMOVED:
@@ -745,10 +809,9 @@ public class FirestoreSyncManager {
                                         Scheda sRem = schedaDao.getSchedaById(groupId);
                                         String nomeGruppoRem = (sRem != null && sRem.getTitolo() != null) ? sRem.getTitolo() : "Gruppo";
                                         boolean isRimborsoRem = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesaEliminata.getCategoria());
-                                        String importoFmtRem = String.format(java.util.Locale.getDefault(), "%.2f %s", spesaEliminata.getImporto(), spesaEliminata.getValuta() != null ? spesaEliminata.getValuta() : "EUR");
 
                                         String notifTitoloRem = isRimborsoRem ? "Rimborso eliminato in \"" + nomeGruppoRem + "\"" : "Spesa eliminata in \"" + nomeGruppoRem + "\"";
-                                        String notifMessaggioRem = isRimborsoRem ? "Il rimborso di " + importoFmtRem + " è stato eliminato" : "La spesa \"" + spesaEliminata.getTitolo() + "\" (" + importoFmtRem + ") è stata eliminata";
+                                        String notifMessaggioRem = spesaEliminata.getTitolo() + " rimosso: bilancio ricalcolato";
 
                                         com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitoloRem, notifMessaggioRem, groupId);
                                     }

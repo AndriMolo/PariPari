@@ -177,7 +177,13 @@ public class ModificaRimborsoFragment extends Fragment {
         if (schedaId != null) {
             viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), lista -> {
                 if (lista == null) return;
-                this.partecipanti = lista;
+                List<Partecipante> attivi = new ArrayList<>();
+                for (Partecipante p : lista) {
+                    if (p.isAttivo()) {
+                        attivi.add(p);
+                    }
+                }
+                this.partecipanti = attivi;
                 popolaDropdownPartecipanti();
             });
 
