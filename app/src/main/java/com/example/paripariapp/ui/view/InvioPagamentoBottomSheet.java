@@ -228,9 +228,14 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
             binding.btnVaiProfilo.setVisibility(View.GONE);
         }
 
-        binding.btnCondividiGenerico.setOnClickListener(v -> condivideMessaggio(
-                getString(R.string.msg_condividi_generico, daNome, strImportoValuta, aNome)
-        ));
+        if (isDebitore) {
+            binding.btnCondividiGenerico.setVisibility(View.GONE);
+        } else {
+            binding.btnCondividiGenerico.setVisibility(View.VISIBLE);
+            binding.btnCondividiGenerico.setOnClickListener(v -> condivideMessaggio(
+                    getString(R.string.msg_condividi_generico, daNome, strImportoValuta, aNome)
+            ));
+        }
 
         binding.btnVaiProfilo.setOnClickListener(v -> {
             dismiss();
