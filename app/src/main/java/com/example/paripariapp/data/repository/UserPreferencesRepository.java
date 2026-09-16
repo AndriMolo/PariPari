@@ -34,6 +34,7 @@ public class UserPreferencesRepository {
 
     private static final String KEY_PAYPAL_HANDLE = "pref_paypal_handle";
     private static final String KEY_REVOLUT_HANDLE = "pref_revolut_handle";
+    private static final String KEY_GUEST_DISPLAY_NAME = "pref_guest_display_name";
 
     public static final List<String> SUPPORTED_CURRENCIES = Arrays.asList(
             "EUR - Euro",
@@ -94,6 +95,7 @@ public class UserPreferencesRepository {
     private final MutableLiveData<String> appThemeLive = new MutableLiveData<>();
     private final MutableLiveData<String> paypalHandleLive = new MutableLiveData<>();
     private final MutableLiveData<String> revolutHandleLive = new MutableLiveData<>();
+    private final MutableLiveData<String> guestDisplayNameLive = new MutableLiveData<>();
 
     private UserPreferencesRepository(Context context) {
         this.preferences = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -111,6 +113,9 @@ public class UserPreferencesRepository {
 
         String currentRevolut = preferences.getString(KEY_REVOLUT_HANDLE, "");
         revolutHandleLive.setValue(currentRevolut);
+
+        String currentGuestName = preferences.getString(KEY_GUEST_DISPLAY_NAME, "");
+        guestDisplayNameLive.setValue(currentGuestName);
     }
 
     public static UserPreferencesRepository getInstance(Context context) {
@@ -515,5 +520,20 @@ public class UserPreferencesRepository {
         String clean = cleanRevolutHandle(handle);
         if (clean.isEmpty()) return "";
         return "https://revolut.me/" + clean;
+    }
+
+    public String getGuestDisplayName() {
+        return preferences.getString(KEY_GUEST_DISPLAY_NAME, "");
+    }
+
+    public LiveData<String> getGuestDisplayNameLive() {
+        return guestDisplayNameLive;
+    }
+
+    public void setGuestDisplayName(String displayName) {
+        if (displayName == null) return;
+        String clean = displayName.trim();
+        preferences.edit().putString(KEY_GUEST_DISPLAY_NAME, clean).apply();
+        guestDisplayNameLive.postValue(clean);
     }
 }

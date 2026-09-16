@@ -39,6 +39,7 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         public boolean areContentsTheSame(@NonNull Partecipante oldItem, @NonNull Partecipante newItem) {
             return Objects.equals(oldItem.getNome(), newItem.getNome()) &&
                     Objects.equals(oldItem.getEmail(), newItem.getEmail()) &&
+                    Objects.equals(oldItem.getStato(), newItem.getStato()) &&
                     Objects.equals(oldItem.getSchedaId(), newItem.getSchedaId());
         }
     };
@@ -230,7 +231,15 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
                 holder.binding.nomePartecipante.setText(nomeDisplay);
                 holder.binding.nomePartecipante.setVisibility(View.VISIBLE);
 
-                holder.binding.bottoneModifica.setVisibility(View.GONE);
+                holder.binding.bottoneModifica.setVisibility(View.VISIBLE);
+                holder.binding.bottoneModifica.setIconResource(R.drawable.ic_add);
+                holder.binding.bottoneModifica.setContentDescription(context.getString(R.string.btn_riattiva_membro));
+                holder.binding.bottoneModifica.setOnClickListener(v -> {
+                    if (onRiattivaClickListener != null) {
+                        onRiattivaClickListener.onRiattivaClick(p);
+                    }
+                });
+
                 if (isCapogruppo) {
                     holder.binding.bottoneElimina.setVisibility(View.VISIBLE);
                     holder.binding.bottoneElimina.setIconResource(R.drawable.ic_delete);
@@ -251,6 +260,8 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
 
                 boolean canEdit = isMe || isCapogruppo;
                 holder.binding.bottoneModifica.setVisibility(canEdit ? View.VISIBLE : View.GONE);
+                holder.binding.bottoneModifica.setIconResource(R.drawable.ic_edit);
+                holder.binding.bottoneModifica.setContentDescription(context.getString(R.string.dettaglio_rinomina_partecipante));
                 holder.binding.bottoneModifica.setOnClickListener(v -> {
                     editingParticipantId = p.getId();
                     notifyItemRangeChanged(0, getItemCount());

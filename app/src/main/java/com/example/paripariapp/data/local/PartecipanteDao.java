@@ -22,10 +22,10 @@ public interface PartecipanteDao {
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     LiveData<List<Partecipante>> getPartecipantiBySchedaLive(String schedaId);
 
-    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato = 'ATTIVO') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
+    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato = 'ATTIVO' OR stato = 'OSPITE') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     LiveData<List<Partecipante>> getPartecipantiAttiviBySchedaLive(String schedaId);
 
-    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato = 'ATTIVO') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
+    @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato = 'ATTIVO' OR stato = 'OSPITE') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     List<Partecipante> getPartecipantiAttiviBySchedaSync(String schedaId);
 
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND stato = 'USCITO' AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
@@ -34,7 +34,7 @@ public interface PartecipanteDao {
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND stato = 'USCITO' AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")
     List<Partecipante> getExMembriBySchedaSync(String schedaId);
 
-    @Query("SELECT COUNT(*) FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato = 'ATTIVO') AND sync_status != " + SyncStatus.PENDING_DELETE)
+    @Query("SELECT COUNT(*) FROM partecipanti WHERE scheda_id = :schedaId AND (stato IS NULL OR stato = 'ATTIVO' OR stato = 'OSPITE') AND sync_status != " + SyncStatus.PENDING_DELETE)
     int countPartecipantiAttiviBySchedaSync(String schedaId);
 
     @Query("SELECT * FROM partecipanti WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY nome ASC")

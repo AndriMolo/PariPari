@@ -241,11 +241,14 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
     private MembroGruppoPreview cercaMembroPerRelink(@Nullable FirestoreSyncManager.GruppoPreview preview) {
         if (preview == null || preview.getMembri() == null) return null;
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) return null;
-        String currentUid = currentUser.getUid();
+        String currentUid = currentUser != null ? currentUser.getUid() : null;
+        String guestName = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext()).getGuestDisplayName();
 
         for (MembroGruppoPreview m : preview.getMembri()) {
-            if (m.isMyProfile(currentUid)) {
+            if (currentUid != null && m.isMyProfile(currentUid)) {
+                return m;
+            }
+            if (!guestName.isEmpty() && m.getNome() != null && m.getNome().equalsIgnoreCase(guestName)) {
                 return m;
             }
         }

@@ -140,9 +140,50 @@ public class PariPariRepository {
 
     public void insertPartecipante(Partecipante partecipante) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            partecipanteDao.insert(partecipante);
-            if (syncManager.isConnected() && auth.getCurrentUser() != null) {
-                syncManager.uploadPartecipante(partecipante);
+            String schedaId = partecipante.getSchedaId();
+            String nomePulito = Partecipante.pulisciNome(partecipante.getNome());
+            String userId = partecipante.getUserId();
+
+            Partecipante exEsistente = null;
+            List<Partecipante> tutti = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
+            if (tutti != null) {
+                for (Partecipante p : tutti) {
+                    if (p.isExMembro()) {
+                        if (userId != null && !userId.trim().isEmpty() &&
+                                (userId.equals(p.getUserId()) || userId.equals(p.getPreviousUserId()))) {
+                            exEsistente = p;
+                            break;
+                        }
+                        if (nomePulito.equalsIgnoreCase(Partecipante.pulisciNome(p.getNome()))) {
+                            exEsistente = p;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (exEsistente != null) {
+                if (userId != null && !userId.trim().isEmpty()) {
+                    exEsistente.setUserId(userId);
+                    exEsistente.setStato(Partecipante.STATO_ATTIVO);
+                } else if (exEsistente.getPreviousUserId() != null) {
+                    exEsistente.setUserId(exEsistente.getPreviousUserId());
+                    exEsistente.setStato(Partecipante.STATO_ATTIVO);
+                } else {
+                    exEsistente.setStato(Partecipante.STATO_OSPITE);
+                }
+                exEsistente.setNome(nomePulito);
+                if (partecipante.getEmail() != null) exEsistente.setEmail(partecipante.getEmail());
+                exEsistente.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                partecipanteDao.update(exEsistente);
+                if (syncManager.isConnected() && auth.getCurrentUser() != null) {
+                    syncManager.uploadPartecipante(exEsistente);
+                }
+            } else {
+                partecipanteDao.insert(partecipante);
+                if (syncManager.isConnected() && auth.getCurrentUser() != null) {
+                    syncManager.uploadPartecipante(partecipante);
+                }
             }
         });
     }
@@ -150,11 +191,8 @@ public class PariPariRepository {
     public void deletePartecipante(String partecipanteId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
-            spesaDao.deleteQuoteByPartecipanteId(partecipanteId);
-            partecipanteDao.deleteById(partecipanteId);
-
             if (p != null) {
-                syncManager.deletePartecipante(partecipanteId, p.getSchedaId());
+                esciDalGruppo(p.getSchedaId(), partecipanteId);
             }
         });
     }
@@ -211,43 +249,30 @@ public class PariPariRepository {
             if (pUscito != null) {
                 FirebaseUser currentUser = auth.getCurrentUser();
                 boolean isSelf = Partecipante.isCurrentUserParticipant(pUscito, currentUser);
-                boolean eLocale = !pUscito.isAutenticato();
-                boolean haSpese = haPartecipatoASpese(schedaId, partecipanteId);
 
-                if (eLocale) {
-                    if (haSpese) {
-                        // Membro locale con spese: archiviazione silenziosa senza mostrare tra ex membri
-                        pUscito.setStato(Partecipante.STATO_ARCHIVIATO);
-                        pUscito.setUserId(null);
-                        pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
-                        partecipanteDao.update(pUscito);
-                        syncManager.disattivaMembroLocale(schedaId, partecipanteId);
-                    } else {
-                        // Membro locale senza spese: eliminazione definitiva
-                        partecipanteDao.deleteById(partecipanteId);
-                        syncManager.deletePartecipanteDefinitivamente(schedaId, partecipanteId);
-                    }
-                } else {
-                    // Membro autenticato reale: passa a USCITO (Ex Membro)
-                    if (isSelf) {
-                        syncManager.detachSubcollectionListeners(schedaId);
-                        try {
-                            com.google.firebase.messaging.FirebaseMessaging.getInstance().unsubscribeFromTopic("group_" + schedaId);
-                        } catch (Exception ignored) {}
-                    }
+                if (isSelf) {
+                    syncManager.detachSubcollectionListeners(schedaId);
+                    try {
+                        com.google.firebase.messaging.FirebaseMessaging.getInstance().unsubscribeFromTopic("group_" + schedaId);
+                    } catch (Exception ignored) {}
+                }
 
-                    pUscito.setStato(Partecipante.STATO_USCITO);
-                    pUscito.setPreviousUserId(currentUser != null ? currentUser.getUid() : null);
+                if (pUscito.getUserId() != null) {
+                    pUscito.setPreviousUserId(pUscito.getUserId());
                     pUscito.setUserId(null);
-                    pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
-                    partecipanteDao.update(pUscito);
-                    syncManager.esciDalGruppo(schedaId, partecipanteId);
+                } else if (currentUser != null && isSelf) {
+                    pUscito.setPreviousUserId(currentUser.getUid());
+                }
 
-                    if (isSelf) {
-                        spesaDao.deleteBySchedaId(schedaId);
-                        partecipanteDao.deleteBySchedaId(schedaId);
-                        schedaDao.deleteById(schedaId);
-                    }
+                pUscito.setStato(Partecipante.STATO_USCITO);
+                pUscito.setSyncStatus(SyncStatus.PENDING_UPDATE);
+                partecipanteDao.update(pUscito);
+                syncManager.esciDalGruppo(schedaId, partecipanteId);
+
+                if (isSelf) {
+                    spesaDao.deleteBySchedaId(schedaId);
+                    partecipanteDao.deleteBySchedaId(schedaId);
+                    schedaDao.deleteById(schedaId);
                 }
 
                 // Passaggio creatore al primo membro attivo autenticato
@@ -276,11 +301,13 @@ public class PariPariRepository {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
             if (p != null) {
-                p.setStato(Partecipante.STATO_ATTIVO);
                 FirebaseUser currentUser = auth.getCurrentUser();
                 if (p.getPreviousUserId() != null && currentUser != null && currentUser.getUid().equals(p.getPreviousUserId())) {
+                    p.setUserId(p.getPreviousUserId());
+                } else if (p.getUserId() == null && currentUser != null) {
                     p.setUserId(currentUser.getUid());
                 }
+                p.setStato(p.getUserId() != null ? Partecipante.STATO_ATTIVO : Partecipante.STATO_OSPITE);
                 p.setSyncStatus(SyncStatus.PENDING_UPDATE);
                 partecipanteDao.update(p);
 

@@ -145,12 +145,23 @@ public class AccountGuestFragment extends Fragment {
         // Aggiorna il nome dell'ospite visualizzato
         viewModel.getUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (binding == null) return;
-            if (user != null) {
-                String nome = user.getDisplayName();
-                String displayNome = !TextUtils.isEmpty(nome) ? nome : getString(R.string.default_nome_utente);
-                binding.tvNomeOspiteValore.setText(displayNome);
+            String nome = (user != null) ? user.getDisplayName() : null;
+            if (TextUtils.isEmpty(nome)) {
+                nome = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext()).getGuestDisplayName();
             }
+            String displayNome = !TextUtils.isEmpty(nome) ? nome : getString(R.string.default_nome_utente);
+            binding.tvNomeOspiteValore.setText(displayNome);
         });
+
+        com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext())
+                .getGuestDisplayNameLive().observe(getViewLifecycleOwner(), guestName -> {
+                    if (binding == null) return;
+                    FirebaseUser user = viewModel.getUserLiveData().getValue();
+                    if (user == null || TextUtils.isEmpty(user.getDisplayName())) {
+                        String displayNome = !TextUtils.isEmpty(guestName) ? guestName : getString(R.string.default_nome_utente);
+                        binding.tvNomeOspiteValore.setText(displayNome);
+                    }
+                });
 
         // Stato di caricamento (ProgressBar & pulsanti)
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), loading -> {
@@ -187,6 +198,7 @@ public class AccountGuestFragment extends Fragment {
     private void setupListeners() {
         // Modifica nome ospite
         binding.cardNomeOspite.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
+        binding.tvNomeOspiteValore.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
 
         // Apertura form da pulsanti iniziali
         binding.btnMostraRegistrazione.setOnClickListener(v -> apriFormAuth(true));
@@ -318,14 +330,18 @@ public class AccountGuestFragment extends Fragment {
     private void mostraDialogModificaNomeProfilo() {
         FirebaseUser currentUser = viewModel.getUserLiveData().getValue();
         String currentName = (currentUser != null && !TextUtils.isEmpty(currentUser.getDisplayName()))
-                ? currentUser.getDisplayName() : "";
+                ? currentUser.getDisplayName()
+                : (binding != null && binding.tvNomeOspiteValore != null && binding.tvNomeOspiteValore.getText() != null
+                   ? binding.tvNomeOspiteValore.getText().toString().trim() : "");
 
         EditText input = new EditText(requireContext());
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         input.setHint(R.string.hint_nome_partecipante);
-        input.setText(currentName);
-        if (!currentName.isEmpty()) {
-            input.setSelection(currentName.length());
+        if (!currentName.equalsIgnoreCase(getString(R.string.default_nome_utente))) {
+            input.setText(currentName);
+            if (!currentName.isEmpty()) {
+                input.setSelection(currentName.length());
+            }
         }
 
         FrameLayout container = new FrameLayout(requireContext());
@@ -338,7 +354,7 @@ public class AccountGuestFragment extends Fragment {
                 .setView(container)
                 .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
                     String nuovoNome = input.getText().toString().trim();
-                    if (!nuovoNome.isEmpty() && !nuovoNome.equals(currentName)) {
+                    if (!nuovoNome.isEmpty()) {
                         viewModel.aggiornaNomeProfilo(nuovoNome);
                     }
                 })

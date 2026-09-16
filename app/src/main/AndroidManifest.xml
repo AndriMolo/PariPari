@@ -24,7 +24,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.App.Starting"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -53,7 +53,7 @@
         <activity
             android:name=".ui.view.DettaglioSchedaActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustNothing" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

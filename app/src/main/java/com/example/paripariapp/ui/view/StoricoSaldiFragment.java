@@ -234,6 +234,11 @@ public class StoricoSaldiFragment extends Fragment {
                 myId = Partecipante.findCurrentUserId(partecipantiScheda, currentUser, prefs, s.getSchedaId());
             }
 
+            List<SpesaPartecipante> quoteSpesa = quotePerSpesaAll.get(s.getId());
+            if (myId != null && !com.example.paripariapp.util.FiltroUtenteUtil.isUtenteCoinvoltoInSpesa(s, quoteSpesa, myId)) {
+                continue;
+            }
+
             if (myId != null) {
                 if (s.getPagatoDaId().equals(myId)) {
                     isRicevuto = false;

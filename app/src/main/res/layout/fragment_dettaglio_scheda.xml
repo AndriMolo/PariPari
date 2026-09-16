@@ -29,181 +29,209 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- 1. SEZIONE SPESE -->
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/sezione_spese"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:fillViewport="true">
 
-            <!-- Card Totale -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_totale_riepilogo"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                android:orientation="vertical">
 
-                <LinearLayout
+                <!-- Card Totale Compatta (metriche affiancate orizzontalmente) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_totale_riepilogo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_totale_spese"
-                        android:textAppearance="?attr/textAppearanceLabelMedium" />
-
-                    <TextView
-                        android:id="@+id/tv_totale_scheda"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textStyle="bold"
-                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                        android:textColor="?attr/colorPrimary"
-                        tools:text="0,00 EUR" />
-
-                    <View
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="?attr/colorOutlineVariant" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/label_speso_da_me"
-                        android:textAppearance="?attr/textAppearanceLabelMedium" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="12dp"
+                        android:paddingHorizontal="16dp">
 
-                    <TextView
-                        android:id="@+id/tv_mie_spese"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textStyle="bold"
-                        android:textAppearance="?attr/textAppearanceTitleLarge"
-                        android:textColor="?attr/colorOnSurface"
-                        tools:text="120,00 EUR" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                        <!-- Metrica 1: Totale Spese -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-            <!-- Filtro Categorie a scorrimento orizzontale -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:clipToPadding="false"
-                android:paddingHorizontal="16dp"
-                android:paddingBottom="4dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/label_totale_spese"
+                                android:textAppearance="?attr/textAppearanceLabelSmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chip_group_categorie"
-                    android:layout_width="wrap_content"
+                            <TextView
+                                android:id="@+id/tv_totale_scheda"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textStyle="bold"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
+                                android:textColor="?attr/colorPrimary"
+                                tools:text="0,00 EUR" />
+                        </LinearLayout>
+
+                        <!-- Separatore Verticale -->
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="32dp"
+                            android:layout_marginHorizontal="12dp"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <!-- Metrica 2: Speso da me / La tua quota -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/label_speso_da_me"
+                                android:textAppearance="?attr/textAppearanceLabelSmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <TextView
+                                android:id="@+id/tv_mie_spese"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textStyle="bold"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
+                                android:textColor="?attr/colorOnSurface"
+                                tools:text="0,00 EUR" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Filtro Categorie a scorrimento orizzontale -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:singleLine="true"
-                    app:singleSelection="true"
-                    app:selectionRequired="false">
+                    android:scrollbars="none"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="16dp"
+                    android:paddingBottom="4dp">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_tutte"
-                        style="@style/Widget.Material3.Chip.Filter"
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_categorie"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:text="@string/filtro_tutte" />
+                        app:singleLine="true"
+                        app:singleSelection="true"
+                        app:selectionRequired="false">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_rimborsi"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_rimborsi" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_tutte"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="@string/filtro_tutte" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_cibo"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_cibo" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_rimborsi"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_rimborsi" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_spesa"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_spesa" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_cibo"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_cibo" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_trasporti"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_trasporti" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_spesa"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_spesa" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_alloggio"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_alloggio" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_trasporti"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_trasporti" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_svago"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_svago" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_alloggio"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_alloggio" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_shopping"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_shopping" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_svago"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_svago" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_bar"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_bar" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_shopping"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_shopping" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_salute"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_salute" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_bar"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_bar" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip_cat_altro"
-                        style="@style/Widget.Material3.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cat_altro" />
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_salute"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_salute" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_spese"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:clipToPadding="false"
-                android:paddingHorizontal="8dp"
-                android:paddingBottom="88dp" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_cat_altro"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cat_altro" />
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
 
-            <include
-                android:id="@+id/layout_empty_spese"
-                layout="@layout/layout_empty_state"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
-        </LinearLayout>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_spese"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="8dp"
+                    android:paddingBottom="90dp" />
+
+                <include
+                    android:id="@+id/layout_empty_spese"
+                    layout="@layout/layout_empty_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
         <!-- 2. SEZIONE SALDI -->
         <androidx.core.widget.NestedScrollView
@@ -293,88 +321,94 @@
         </androidx.core.widget.NestedScrollView>
 
         <!-- 3. SEZIONE MEMBRI -->
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/sezione_membri"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             android:visibility="gone"
-            android:padding="16dp">
+            android:fillViewport="true">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/titolo_sezione_membri"
-                    android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_aggiungi_membro_tab"
-                    style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/btn_aggiungi"
-                    app:icon="@drawable/ic_add" />
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_membri"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:clipToPadding="false"
-                android:paddingBottom="12dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_toggle_ex_membri"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textAllCaps="false"
-                android:visibility="gone"
-                tools:text="Mostra Ex partecipanti (2)" />
-
-            <!-- 2. SEZIONE EX PARTECIPANTI (Nascosta di default) -->
-            <LinearLayout
-                android:id="@+id/container_ex_membri"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginTop="8dp"
-                android:paddingBottom="60dp">
+                android:padding="16dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/titolo_sezione_ex_partecipanti"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:layout_marginBottom="8dp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/titolo_sezione_membri"
+                        android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_aggiungi_membro_tab"
+                        style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_aggiungi"
+                        app:icon="@drawable/ic_add" />
+                </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_ex_membri"
+                    android:id="@+id/recycler_membri"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
-            </LinearLayout>
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    android:paddingBottom="12dp" />
 
-            <include
-                android:id="@+id/layout_empty_membri"
-                layout="@layout/layout_empty_state"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
-        </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_toggle_ex_membri"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textAllCaps="false"
+                    android:visibility="gone"
+                    tools:text="Mostra Ex partecipanti (2)" />
+
+                <!-- 2. SEZIONE EX PARTECIPANTI (Nascosta di default) -->
+                <LinearLayout
+                    android:id="@+id/container_ex_membri"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"
+                    android:paddingBottom="80dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/titolo_sezione_ex_partecipanti"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginBottom="8dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_ex_membri"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+                </LinearLayout>
+
+                <include
+                    android:id="@+id/layout_empty_membri"
+                    layout="@layout/layout_empty_state"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
     </FrameLayout>
 

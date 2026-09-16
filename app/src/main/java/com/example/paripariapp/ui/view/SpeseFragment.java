@@ -46,8 +46,8 @@ public class SpeseFragment extends Fragment {
     private Scheda schedaInSospeso = null;
     private Snackbar snackbarElimina = null;
 
-    private final androidx.activity.result.ActivityResultLauncher<String> importCsvLauncher =
-            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.GetContent(), uri -> {
+    private final androidx.activity.result.ActivityResultLauncher<String[]> importCsvLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
                     eseguiImportazioneCsv(uri);
                 }
@@ -306,7 +306,15 @@ public class SpeseFragment extends Fragment {
                     } else if (which == 1) {
                         mostraDialogCodiceAccesso();
                     } else if (which == 2) {
-                        importCsvLauncher.launch("*/*");
+                        importCsvLauncher.launch(new String[]{
+                                "text/csv",
+                                "text/comma-separated-values",
+                                "text/plain",
+                                "application/csv",
+                                "application/excel",
+                                "application/vnd.ms-excel",
+                                "*/*"
+                        });
                     }
                 })
                 .setNegativeButton(R.string.btn_annulla, null)

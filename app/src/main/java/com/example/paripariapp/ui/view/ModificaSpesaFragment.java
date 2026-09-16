@@ -45,6 +45,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
     private String spesaId;
     private Spesa spesaCorrente;
     private List<SpesaPartecipante> quoteEsistenti = new ArrayList<>();
+    private List<Partecipante> tuttiIPartecipanti = new ArrayList<>();
 
     private boolean isDataLoaded = false;
     private boolean isQuoteLoaded = false;
@@ -124,6 +125,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
     private void setupObservers() {
         viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), lista -> {
             if (lista == null) return;
+            this.tuttiIPartecipanti = lista;
             List<Partecipante> attivi = new ArrayList<>();
             for (Partecipante p : lista) {
                 if (p.isAttivo()) {
@@ -172,35 +174,38 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
             impostaData(spesaCorrente.getDataSpesa());
         }
 
-        // Verifica presenza di partecipanti assenti
-        Set<String> activeParticipantIds = new HashSet<>();
-        for (Partecipante p : partecipanti) {
-            activeParticipantIds.add(p.getId());
+        // Verifica presenza di ex-membri o partecipanti non attivi
+        Map<String, Partecipante> pMap = new HashMap<>();
+        for (Partecipante p : tuttiIPartecipanti) {
+            pMap.put(p.getId(), p);
         }
 
-        boolean haPartecipantiAssenti = false;
-        if (spesaCorrente.getPagatoDaId() != null && !activeParticipantIds.contains(spesaCorrente.getPagatoDaId())) {
-            haPartecipantiAssenti = true;
-            binding.menuPagante.setText(getString(R.string.nome_sconosciuto), false);
-        } else {
-            for (Partecipante p : partecipanti) {
-                if (p.getId().equals(spesaCorrente.getPagatoDaId())) {
-                    binding.menuPagante.setText(p.getNome(), false);
-                    break;
-                }
+        boolean haExMembro = false;
+        Partecipante pagatore = pMap.get(spesaCorrente.getPagatoDaId());
+        if (pagatore == null || pagatore.isExMembro()) {
+            haExMembro = true;
+            if (pagatore != null) {
+                binding.menuPagante.setText(pagatore.getNome() + " (" + getString(R.string.stato_ex_membro) + ")", false);
+            } else {
+                binding.menuPagante.setText(getString(R.string.nome_sconosciuto), false);
             }
+        } else {
+            binding.menuPagante.setText(pagatore.getNome(), false);
         }
 
         if (quoteEsistenti != null) {
             for (SpesaPartecipante q : quoteEsistenti) {
-                if (q.getPartecipanteId() != null && !activeParticipantIds.contains(q.getPartecipanteId())) {
-                    haPartecipantiAssenti = true;
-                    break;
+                if (q.getQuota() > 0.001) {
+                    Partecipante pQuota = pMap.get(q.getPartecipanteId());
+                    if (pQuota == null || pQuota.isExMembro()) {
+                        haExMembro = true;
+                        break;
+                    }
                 }
             }
         }
 
-        this.isReadOnly = haPartecipantiAssenti;
+        this.isReadOnly = haExMembro;
 
         if (spesaCorrente.getCategoria() != null) {
             binding.menuCategoria.setText(spesaCorrente.getCategoria(), false);

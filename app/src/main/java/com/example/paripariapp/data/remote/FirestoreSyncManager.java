@@ -908,7 +908,7 @@ public class FirestoreSyncManager {
     }
 
     private interface AuthSessionCallback {
-        void onAuthenticated(@NonNull FirebaseUser user);
+        void onAuthenticated(@Nullable FirebaseUser user);
         void onError(@NonNull String errorMessage);
     }
 
@@ -930,11 +930,10 @@ public class FirestoreSyncManager {
                 callback.onAuthenticated(auth.getCurrentUser());
             } else {
                 Exception e = task.getException();
-                String err = (e != null && e.getLocalizedMessage() != null)
-                        ? e.getLocalizedMessage()
-                        : "Impossibile autenticare la sessione ospite";
-                Log.w(TAG, "Accesso anonimo on-demand non riuscito: " + err);
-                callback.onError("Errore autenticazione ospite: " + err);
+                String err = (e != null && e.getLocalizedMessage() != null) ? e.getLocalizedMessage() : "Sessione ospite";
+                Log.w(TAG, "Accesso anonimo Firebase non riuscito, procedo in modalità Ospite anonimo locale: " + err);
+                // Consente comunque agli utenti Ospiti non autenticati di unirsi e fruire dei gruppi come Ospiti locali
+                callback.onAuthenticated(null);
             }
         });
     }
@@ -977,7 +976,7 @@ public class FirestoreSyncManager {
 
             ensureAuthenticatedSession(new AuthSessionCallback() {
                 @Override
-                public void onAuthenticated(@NonNull FirebaseUser user) {
+                public void onAuthenticated(@Nullable FirebaseUser user) {
                     eseguiRicercaAnteprima(cleanCode, callback, mainHandler);
                 }
 
@@ -1110,7 +1109,7 @@ public class FirestoreSyncManager {
 
             ensureAuthenticatedSession(new AuthSessionCallback() {
                 @Override
-                public void onAuthenticated(@NonNull FirebaseUser user) {
+                public void onAuthenticated(@Nullable FirebaseUser user) {
                     eseguiJoinGruppo(cleanCode, claimedPartecipanteId, nomePersonalizzato, callback, mainHandler);
                 }
 

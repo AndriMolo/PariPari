@@ -129,7 +129,7 @@ public class Partecipante {
                 null,
                 null,
                 null,
-                STATO_ATTIVO
+                STATO_OSPITE
         );
     }
 
@@ -198,6 +198,9 @@ public class Partecipante {
 
     public void setUserId(String userId) {
         this.userId = userId;
+        if (userId != null && !userId.trim().isEmpty() && STATO_OSPITE.equalsIgnoreCase(this.stato)) {
+            this.stato = STATO_ATTIVO;
+        }
     }
 
     public String getPreviousUserId() {
@@ -226,7 +229,7 @@ public class Partecipante {
     }
 
     public boolean isAttivo() {
-        return stato == null || STATO_ATTIVO.equalsIgnoreCase(stato);
+        return stato == null || STATO_ATTIVO.equalsIgnoreCase(stato) || STATO_OSPITE.equalsIgnoreCase(stato);
     }
 
     public boolean isExMembro() {
@@ -235,6 +238,10 @@ public class Partecipante {
 
     public boolean isArchiviatoLocale() {
         return STATO_ARCHIVIATO.equalsIgnoreCase(stato);
+    }
+
+    public boolean isOspite() {
+        return STATO_OSPITE.equalsIgnoreCase(stato) || (isAttivo() && !isAutenticato());
     }
 
     public boolean isAutenticato() {

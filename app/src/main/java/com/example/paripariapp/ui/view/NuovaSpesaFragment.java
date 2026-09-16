@@ -299,7 +299,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             binding.menuPagante.setOnClickListener(v -> binding.menuPagante.showDropDown());
             binding.menuDestinatario.setOnClickListener(v -> binding.menuDestinatario.showDropDown());
 
-            popolaRighePartecipantiComuni(lista, null, null, 0.0);
+            popolaRighePartecipantiComuni(attivi, null, null, 0.0);
             cambiaTipoDivisione(tipoDivisione);
         });
     }

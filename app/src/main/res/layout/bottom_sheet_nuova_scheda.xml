@@ -8,27 +8,34 @@
     android:orientation="vertical"
     android:paddingHorizontal="24dp"
     android:paddingTop="8dp"
-    android:paddingBottom="24dp">
+    android:paddingBottom="28dp">
 
-    <!-- Drag Handle -->
-    <View style="@style/Widget_PariPari_BottomSheetDragHandle" />
+    <!-- Drag Handle M3 -->
+    <View
+        style="@style/Widget_PariPari_BottomSheetDragHandle"
+        android:layout_marginBottom="12dp" />
 
     <!-- Titolo BottomSheet -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/title_nuova_scheda"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
         android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
         android:layout_marginBottom="20dp" />
 
     <!-- Nome della Scheda (Obbligatorio) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_nome_scheda"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_nome_scheda"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
         android:layout_marginBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -45,13 +52,17 @@
     <!-- Valuta della Scheda (Di default la preferita dell'utente) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_valuta_scheda"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/label_valuta_predefinita"
         app:startIconDrawable="@drawable/ic_valuta"
         app:endIconMode="custom"
         app:endIconDrawable="@drawable/ic_arrow_drop_down"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
         android:layout_marginBottom="20dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -71,8 +82,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/label_partecipanti"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textAppearance="?attr/textAppearanceLabelMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:layout_marginBottom="8dp" />
 
     <!-- ChipGroup con i partecipanti aggiunti (inizialmente include "Io") -->
@@ -86,13 +97,17 @@
     <!-- Input per aggiungere un nuovo partecipante al volo -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_nuovo_partecipante"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_nuovo_partecipante"
         app:endIconMode="custom"
         app:endIconDrawable="@android:drawable/ic_input_add"
         app:endIconTint="?attr/colorPrimary"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
         android:layout_marginBottom="24dp">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -106,14 +121,16 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Pulsante Crea Scheda -->
+    <!-- Pulsante Crea Scheda Material 3 -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_crea_scheda"
-        style="@style/Widget.MaterialComponents.Button"
+        style="@style/Widget.Material3.Button"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="@string/btn_crea_scheda"
         android:textAllCaps="false"
+        android:textSize="15sp"
+        android:textStyle="bold"
         app:cornerRadius="16dp" />
 
 </LinearLayout>

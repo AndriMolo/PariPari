@@ -154,10 +154,12 @@ public class CalcolatoreSaldi {
         Map<String, Double> mapBilanci = calcolaMapBilanci(partecipanti, spese, quote, valutaPredefinita, context);
 
         for (Partecipante p : partecipanti) {
-            Double val = mapBilanci.get(p.getId());
-            double saldoRaw = val != null ? val : 0.0;
-            double saldoArrotondato = Math.round(saldoRaw * 100.0) / 100.0;
-            lista.add(new BilancioMembro(p.getId(), p.getNome(), saldoArrotondato, valutaPredefinita != null ? valutaPredefinita : "EUR"));
+            if (p.isAttivo()) {
+                Double val = mapBilanci.get(p.getId());
+                double saldoRaw = val != null ? val : 0.0;
+                double saldoArrotondato = Math.round(saldoRaw * 100.0) / 100.0;
+                lista.add(new BilancioMembro(p.getId(), p.getNome(), saldoArrotondato, valutaPredefinita != null ? valutaPredefinita : "EUR"));
+            }
         }
 
         return lista;

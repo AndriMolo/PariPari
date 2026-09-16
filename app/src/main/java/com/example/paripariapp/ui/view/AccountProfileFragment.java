@@ -118,6 +118,7 @@ public class AccountProfileFragment extends Fragment {
 
         // Modifica nome profilo
         binding.containerNomeUtente.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
+        binding.tvNomeUtente.setOnClickListener(v -> mostraDialogModificaNomeProfilo());
 
         // Modifica email utente
         binding.containerEmailUtente.setOnClickListener(v -> showDialogModificaEmail());
@@ -140,14 +141,18 @@ public class AccountProfileFragment extends Fragment {
     private void mostraDialogModificaNomeProfilo() {
         FirebaseUser currentUser = viewModel.getUserLiveData().getValue();
         String currentName = (currentUser != null && !TextUtils.isEmpty(currentUser.getDisplayName()))
-                ? currentUser.getDisplayName() : "";
+                ? currentUser.getDisplayName()
+                : (binding != null && binding.tvNomeUtente != null && binding.tvNomeUtente.getText() != null
+                   ? binding.tvNomeUtente.getText().toString().trim() : "");
 
         EditText input = new EditText(requireContext());
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         input.setHint(R.string.hint_nome_partecipante);
-        input.setText(currentName);
-        if (!currentName.isEmpty()) {
-            input.setSelection(currentName.length());
+        if (!currentName.equalsIgnoreCase(getString(R.string.default_nome_utente))) {
+            input.setText(currentName);
+            if (!currentName.isEmpty()) {
+                input.setSelection(currentName.length());
+            }
         }
 
         FrameLayout container = new FrameLayout(requireContext());
@@ -160,7 +165,7 @@ public class AccountProfileFragment extends Fragment {
                 .setView(container)
                 .setPositiveButton(R.string.btn_salva, (dialog, which) -> {
                     String nuovoNome = input.getText().toString().trim();
-                    if (!nuovoNome.isEmpty() && !nuovoNome.equals(currentName)) {
+                    if (!nuovoNome.isEmpty()) {
                         viewModel.aggiornaNomeProfilo(nuovoNome);
                     }
                 })

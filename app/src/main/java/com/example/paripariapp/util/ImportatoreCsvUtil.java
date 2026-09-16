@@ -88,18 +88,19 @@ public class ImportatoreCsvUtil {
                 // 1. Parsing righe metadati (#)
                 if (lineTrim.startsWith("#")) {
                     String lineClean = lineTrim.substring(1).trim();
-                    if (lineClean.startsWith("GRUPPO;")) {
-                        String[] parts = lineClean.split(";");
+                    String upper = lineClean.toUpperCase(Locale.ROOT);
+                    if (upper.startsWith("GRUPPO;") || upper.startsWith("GRUPPO,")) {
+                        String[] parts = lineClean.split("[;,]", 2);
                         if (parts.length >= 2) {
                             nomeGruppo = pulisciCampo(parts[1]);
                         }
-                    } else if (lineClean.startsWith("VALUTA;")) {
-                        String[] parts = lineClean.split(";");
+                    } else if (upper.startsWith("VALUTA;") || upper.startsWith("VALUTA,")) {
+                        String[] parts = lineClean.split("[;,]", 2);
                         if (parts.length >= 2) {
                             valutaGruppo = pulisciCampo(parts[1]);
                         }
-                    } else if (lineClean.startsWith("MEMBRI;")) {
-                        String[] parts = lineClean.split(";");
+                    } else if (upper.startsWith("MEMBRI;") || upper.startsWith("MEMBRI,")) {
+                        String[] parts = lineClean.split("[;,]");
                         for (int i = 1; i < parts.length; i++) {
                             String m = pulisciCampo(parts[i]);
                             if (!m.isEmpty() && !nomiMembriMetadati.contains(m)) {
@@ -111,13 +112,14 @@ public class ImportatoreCsvUtil {
                 }
 
                 // 2. Riga Intestazione Tabelle
-                if (lineTrim.toLowerCase(Locale.ROOT).startsWith("data;") || lineTrim.toLowerCase(Locale.ROOT).startsWith("date;")) {
+                String lowerLine = lineTrim.toLowerCase(Locale.ROOT);
+                if (lowerLine.startsWith("data;") || lowerLine.startsWith("date;") || lowerLine.startsWith("data,") || lowerLine.startsWith("date,")) {
                     inDataSection = true;
                     continue;
                 }
 
                 // 3. Righe Dati Spese
-                if (inDataSection || lineTrim.contains(";")) {
+                if (inDataSection || lineTrim.contains(";") || lineTrim.contains(",")) {
                     String[] tokens = dividiRigaCsv(lineTrim);
                     if (tokens.length >= 5) {
                         righeDati.add(tokens);
@@ -279,11 +281,13 @@ public class ImportatoreCsvUtil {
         boolean inQuotes = false;
         StringBuilder sb = new StringBuilder();
 
+        char separatore = (riga.contains(";") || !riga.contains(",")) ? ';' : ',';
+
         for (int i = 0; i < riga.length(); i++) {
             char c = riga.charAt(i);
             if (c == '\"') {
                 inQuotes = !inQuotes;
-            } else if (c == ';' && !inQuotes) {
+            } else if (c == separatore && !inQuotes) {
                 tokens.add(sb.toString());
                 sb.setLength(0);
             } else {

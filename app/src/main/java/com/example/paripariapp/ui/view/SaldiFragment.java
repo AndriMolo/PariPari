@@ -65,9 +65,14 @@ public class SaldiFragment extends Fragment {
                 String aId = item.getTrasferimentoSaldo().getAPartecipanteId();
 
                 com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
-                    com.example.paripariapp.data.model.Partecipante creditore =
-                            com.example.paripariapp.data.local.AppDatabase.getInstance(requireContext().getApplicationContext())
-                                    .partecipanteDao().getPartecipanteById(aId);
+                    com.example.paripariapp.data.local.AppDatabase db =
+                            com.example.paripariapp.data.local.AppDatabase.getInstance(requireContext().getApplicationContext());
+
+                    List<com.example.paripariapp.data.model.Partecipante> parti = db.partecipanteDao().getPartecipantiBySchedaSync(item.getSchedaId());
+                    com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+                    String mioId = com.example.paripariapp.data.model.Partecipante.findCurrentUserId(parti, currentUser, prefs, item.getSchedaId());
+
+                    com.example.paripariapp.data.model.Partecipante creditore = db.partecipanteDao().getPartecipanteById(aId);
 
                     String paypalHandle = (creditore != null && creditore.getPaypalHandle() != null && !creditore.getPaypalHandle().trim().isEmpty())
                             ? creditore.getPaypalHandle().trim()
@@ -83,7 +88,8 @@ public class SaldiFragment extends Fragment {
                                     item.getTrasferimentoSaldo(),
                                     item.getSchedaId(),
                                     paypalHandle,
-                                    revolutHandle
+                                    revolutHandle,
+                                    mioId
                             );
                             sheet.show(getChildFragmentManager(), "invio_pagamento_dialog");
                         }

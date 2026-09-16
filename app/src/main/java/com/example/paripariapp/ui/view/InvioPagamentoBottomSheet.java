@@ -121,17 +121,20 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         String revolutHandleToUse;
 
         if (isDebitore) {
-            // Se devi dare soldi tu -> Schermata "Salda il Debito"
+            // Se devi dare soldi tu -> Schermata "Salda il Debito" con intestazione "Dai a [Nome] [Importo]"
             binding.tvTitoloPagamento.setText(R.string.titolo_salda_debito);
             binding.tvDescrizioneSaldo.setText(getString(R.string.desc_salda_debito, strImportoValuta, aNomePulito));
+            binding.btnCondividiGenerico.setVisibility(View.GONE);
         } else if (isCreditore) {
             // Se devono dare soldi a te -> Schermata "Richiedi Pagamento"
             binding.tvTitoloPagamento.setText(R.string.titolo_richiedi_pagamento);
             binding.tvDescrizioneSaldo.setText(getString(R.string.desc_richiedi_pagamento, daNomePulito, strImportoValuta));
+            binding.btnCondividiGenerico.setVisibility(View.VISIBLE);
         } else {
             // Saldo generico tra altri partecipanti
             binding.tvTitoloPagamento.setText(R.string.titolo_bottom_sheet_pagamento);
             binding.tvDescrizioneSaldo.setText(getString(R.string.saldi_descrizione_trasferimento_con_importo, daNomePulito, aNomePulito, strImportoValuta));
+            binding.btnCondividiGenerico.setVisibility(View.VISIBLE);
         }
 
         if (!TextUtils.isEmpty(creditorePaypalHandle)) {

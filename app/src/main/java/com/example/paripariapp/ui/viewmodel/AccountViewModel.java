@@ -12,6 +12,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import android.text.TextUtils;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.repository.PariPariRepository;
 import com.example.paripariapp.data.repository.UserPreferencesRepository;
 import com.google.firebase.auth.AuthCredential;
@@ -22,6 +23,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -279,12 +281,31 @@ public class AccountViewModel extends AndroidViewModel {
         final String nomePulito = nuovoNome.trim();
 
         isLoading.setValue(true);
+
+        // Salva sempre nelle preferenze locali
+        UserPreferencesRepository.getInstance(getApplication()).setGuestDisplayName(nomePulito);
+
+        // Aggiorna il nome dell'utente nei gruppi
+        repository.aggiornaNomeUtenteInTuttiIGruppi(nomePulito);
+
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
-            isLoading.setValue(false);
-            return;
+            auth.signInAnonymously().addOnCompleteListener(task -> {
+                isLoading.setValue(false);
+                if (task.isSuccessful() && auth.getCurrentUser() != null) {
+                    eseguiAggiornamentoNomeProfilo(auth.getCurrentUser(), nomePulito);
+                } else {
+                    // Anche se l'accesso anonimo fallisce/non è abilitato su Firebase,
+                    // il nome locale è stato salvato ed aggiornato!
+                    successMessage.setValue(getApplication().getString(R.string.msg_nome_aggiornato_successo));
+                }
+            });
+        } else {
+            eseguiAggiornamentoNomeProfilo(user, nomePulito);
         }
+    }
 
+    private void eseguiAggiornamentoNomeProfilo(FirebaseUser user, String nomePulito) {
         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                 .setDisplayName(nomePulito)
                 .build();
@@ -297,11 +318,12 @@ public class AccountViewModel extends AndroidViewModel {
                 update.put("nome", nomePulito);
                 update.put("updatedAt", FieldValue.serverTimestamp());
                 firestore.collection("users").document(user.getUid())
-                        .update(update)
+                        .set(update, SetOptions.merge())
                         .addOnFailureListener(e -> Log.w(TAG, "Aggiornamento nome su Firestore fallito: " + e.getMessage()));
             }
 
             repository.aggiornaNomeUtenteInTuttiIGruppi(nomePulito);
+            successMessage.setValue(getApplication().getString(R.string.msg_nome_aggiornato_successo));
         });
     }
 

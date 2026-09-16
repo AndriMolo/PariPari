@@ -408,6 +408,25 @@ public class DettaglioSchedaFragment extends Fragment {
 
         binding.recyclerSpese.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerSpese.setAdapter(adapter);
+
+        binding.recyclerSpese.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    nascondiTastiera();
+                }
+            }
+        });
+    }
+
+    private void nascondiTastiera() {
+        if (getView() != null && getContext() != null) {
+            android.view.inputmethod.InputMethodManager imm =
+                    (android.view.inputmethod.InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+            }
+        }
     }
 
     private void setupRicercaEFiltri() {

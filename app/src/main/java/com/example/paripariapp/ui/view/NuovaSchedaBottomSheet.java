@@ -68,6 +68,9 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
             nome = user.getDisplayName().trim();
         }
         if (TextUtils.isEmpty(nome)) {
+            nome = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext()).getGuestDisplayName();
+        }
+        if (TextUtils.isEmpty(nome)) {
             nome = getString(R.string.default_nome_utente);
         }
         String pulito = com.example.paripariapp.data.model.Partecipante.pulisciNome(nome);
