@@ -988,6 +988,15 @@ public class FirestoreSyncManager {
         });
     }
 
+    private static String formattaErroreFirestore(Exception e) {
+        if (e == null) return "Errore sconosciuto";
+        String msg = e.getLocalizedMessage() != null ? e.getLocalizedMessage() : e.getMessage();
+        if (msg != null && (msg.contains("PERMISSION_DENIED") || msg.toLowerCase(java.util.Locale.ROOT).contains("permission") || msg.toLowerCase(java.util.Locale.ROOT).contains("permess"))) {
+            return "Permesso negato da Firebase. Abilita 'Accesso Anonimo' su Firebase Console (Authentication ➔ Sign-in method) e imposta le Regole di Firestore.";
+        }
+        return msg != null ? msg : "Errore di connessione a Firestore";
+    }
+
     private void eseguiRicercaAnteprima(String cleanCode, OnPreviewGruppoCallback callback, Handler mainHandler) {
         firestore.collection("groups").whereEqualTo("codiceInvito", cleanCode).limit(1).get()
                 .addOnSuccessListener(AppDatabase.databaseWriteExecutor, querySnapshot -> {
@@ -1003,12 +1012,12 @@ public class FirestoreSyncManager {
                                     }
                                 })
                                 .addOnFailureListener(e ->
-                                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                                        mainHandler.post(() -> callback.onError(formattaErroreFirestore(e)))
                                 );
                     }
                 })
                 .addOnFailureListener(e ->
-                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                        mainHandler.post(() -> callback.onError(formattaErroreFirestore(e)))
                 );
     }
 
@@ -1137,12 +1146,12 @@ public class FirestoreSyncManager {
                                     }
                                 })
                                 .addOnFailureListener(e ->
-                                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                                        mainHandler.post(() -> callback.onError(formattaErroreFirestore(e)))
                                 );
                     }
                 })
                 .addOnFailureListener(e ->
-                        mainHandler.post(() -> callback.onError("Errore durante la ricerca: " + e.getLocalizedMessage()))
+                        mainHandler.post(() -> callback.onError(formattaErroreFirestore(e)))
                 );
     }
 

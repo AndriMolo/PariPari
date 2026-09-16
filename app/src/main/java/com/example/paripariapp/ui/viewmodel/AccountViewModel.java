@@ -433,6 +433,9 @@ public class AccountViewModel extends AndroidViewModel {
                     } else {
                         isLoading.setValue(false);
                         String err = task.getException() != null ? task.getException().getLocalizedMessage() : "Accesso con Google non riuscito";
+                        if (err != null && (err.contains("blocked") || err.contains("Requests from this Android client"))) {
+                            err = "Richieste bloccate da Firebase: Registra l'impronta SHA-1 di debug (12:6d:f9:f7:c6:a7:ec:fc:d4:f8:2f:46:a6:f3:79:f2:ae:99:83:4f) su Firebase Console.";
+                        }
                         errorMessage.setValue(err);
                     }
                 });
