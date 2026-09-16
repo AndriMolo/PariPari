@@ -651,6 +651,45 @@ public class PariPariRepository {
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                         .collection("users").document(uid)
                         .set(userData, com.google.firebase.firestore.SetOptions.merge());
+
+                try {
+                    com.google.firebase.auth.UserProfileChangeRequest.Builder b =
+                            new com.google.firebase.auth.UserProfileChangeRequest.Builder();
+                    if (photoUrl != null && !photoUrl.trim().isEmpty()) {
+                        b.setPhotoUri(android.net.Uri.parse(photoUrl));
+                    } else {
+                        b.setPhotoUri(null);
+                    }
+                    user.updateProfile(b.build());
+                } catch (Exception ignored) {}
+            }
+        });
+    }
+
+    /**
+     * Imposta la foto profilo predefinita (es. Google account) se l'utente non ha già personalizzato
+     * il proprio avatar con emoji o iniziale stilizzata.
+     */
+    public void aggiornaAvatarSeNonPersonalizzato(String defaultPhotoUrl) {
+        if (defaultPhotoUrl == null || defaultPhotoUrl.trim().isEmpty()) return;
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            com.google.firebase.auth.FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                String uid = user.getUid();
+                List<Partecipante> partecipanti = partecipanteDao.getAllPartecipantiSync();
+                boolean giaPersonalizzato = false;
+                if (partecipanti != null) {
+                    for (Partecipante p : partecipanti) {
+                        if (uid.equals(p.getUserId()) && p.getPhotoUrl() != null && !p.getPhotoUrl().trim().isEmpty()) {
+                            // Se ha già un avatar (emoji o URL custom), non sovrascrivere
+                            giaPersonalizzato = true;
+                            break;
+                        }
+                    }
+                }
+                if (!giaPersonalizzato) {
+                    aggiornaAvatarUtente(defaultPhotoUrl);
+                }
             }
         });
     }

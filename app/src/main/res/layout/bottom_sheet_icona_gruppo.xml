@@ -26,95 +26,51 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Scegli se caricare una foto dal dispositivo o selezionare un'emoji."
+        android:text="Scegli un'emoji e un colore di sfondo a costo 0 storage."
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="16dp" />
 
-    <!-- Indicatore Caricamento Foto -->
+    <!-- Anteprima Icona Live -->
     <LinearLayout
-        android:id="@+id/container_caricamento_foto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_badge_valuta"
-        android:visibility="gone">
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
 
-        <ProgressBar
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="12dp" />
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_anteprima_icona"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            app:cardCornerRadius="40dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp">
+
+            <TextView
+                android:id="@+id/tv_anteprima_emoji_gruppo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="36sp"
+                tools:text="🏖️" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Caricamento foto in corso..."
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorPrimary"
-            android:textStyle="bold" />
+            android:layout_marginTop="8dp"
+            android:text="Anteprima Icona Scheda"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
-    <!-- OPZIONE 1: Carica Foto dal Dispositivo -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_carica_foto"
-        style="@style/Widget_PariPari_CardItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_camera"
-                app:tint="?attr/colorPrimary"
-                android:importantForAccessibility="no" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Carica foto dal dispositivo"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Scegli un'immagine dalla galleria (JPEG/PNG/WebP, max 2MB)"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- OPZIONE 2: Scegli un'Emoji -->
+    <!-- Selezione Colore di Sfondo -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Oppure scegli un'emoji"
+        android:text="Colore di sfondo"
         android:textAppearance="?attr/textAppearanceLabelLarge"
         android:textColor="?attr/colorPrimary"
         android:textStyle="bold"
@@ -125,17 +81,103 @@
         android:layout_height="wrap_content"
         android:scrollbars="none"
         android:clipToPadding="false"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="16dp">
 
         <LinearLayout
-            android:id="@+id/container_emoji_grid"
+            android:id="@+id/container_colori_scheda"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal" />
 
     </HorizontalScrollView>
 
-    <!-- OPZIONE 3: Ripristina Predefinita -->
+    <!-- Categorie Emoji Gruppo -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scegli un'emoji"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:layout_marginBottom="8dp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_categoria_scheda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_scheda_viaggi"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Viaggi" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_scheda_cibo"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cibo &amp; Bar" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_scheda_casa"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Casa" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_scheda_svago"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Svago" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_scheda_persone"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Attività" />
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:clipToPadding="false"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:id="@+id/container_emoji_scheda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
+    <!-- Pulsanti Azione -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_salva_icona_scheda"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:text="Salva Icona Gruppo"
+        app:cornerRadius="14dp"
+        android:layout_marginBottom="8dp" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_ripristina_icona"
         style="@style/Widget.Material3.Button.TextButton"

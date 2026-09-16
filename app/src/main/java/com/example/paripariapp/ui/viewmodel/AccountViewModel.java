@@ -440,6 +440,11 @@ public class AccountViewModel extends AndroidViewModel {
         Map<String, Object> userData = new HashMap<>();
         userData.put("nome", finalNome);
         userData.put("email", email);
+        if (user.getPhotoUrl() != null) {
+            String photoStr = user.getPhotoUrl().toString();
+            userData.put("photoUrl", photoStr);
+            repository.aggiornaAvatarSeNonPersonalizzato(photoStr);
+        }
         userData.put("updatedAt", FieldValue.serverTimestamp());
 
         firestore.collection("users").document(user.getUid())

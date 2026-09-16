@@ -64,9 +64,13 @@ public class AccountProfileFragment extends Fragment {
                 if (!user.isAnonymous()) {
                     binding.tvEmailUtente.setText(user.getEmail());
                 }
-                if (user.getPhotoUrl() != null) {
-                    com.example.paripariapp.util.ImageLoaderUtil.caricaImmagine(user.getPhotoUrl().toString(), binding.ivAvatar, R.drawable.ic_account);
-                }
+                String photoUrlStr = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
+                com.example.paripariapp.util.AvatarVisualUtil.applyToImageView(
+                        requireContext(),
+                        binding.ivAvatar,
+                        photoUrlStr,
+                        displayNome
+                );
             }
         });
 

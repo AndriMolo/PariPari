@@ -95,9 +95,16 @@ public class SpeseViewModel extends AndroidViewModel {
     }
 
     public void creaScheda(String nomeScheda, String valuta, List<String> nomiPartecipanti) {
+        creaScheda(nomeScheda, valuta, null, nomiPartecipanti);
+    }
+
+    public void creaScheda(String nomeScheda, String valuta, String iconaUrl, List<String> nomiPartecipanti) {
         String schedaId = UUID.randomUUID().toString();
         Scheda nuovaScheda = Scheda.createNew(nomeScheda, "", valuta, null);
         nuovaScheda.setId(schedaId);
+        if (iconaUrl != null) {
+            nuovaScheda.setIconaUrl(iconaUrl);
+        }
 
         List<Partecipante> partecipanti = new ArrayList<>();
         if (nomiPartecipanti != null) {

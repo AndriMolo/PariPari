@@ -141,7 +141,7 @@
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_quota_partecipante" />
 
-            <!-- Sezione Ricevuta / Scontrino Allegato -->
+            <!-- Sezione Scontrino Digitale / Ricevuta -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_scontrino_dettaglio"
                 style="@style/Widget.Material3.CardView.Outlined"
@@ -157,13 +157,97 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_receipt"
+                            app:tint="?attr/colorPrimary"
+                            android:importantForAccessibility="no" />
+
+                        <TextView
+                            android:id="@+id/tv_titolo_scontrino_dettaglio"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Scontrino Digitale"
+                            android:textAppearance="?attr/textAppearanceTitleMedium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_badge_quadratura"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_badge_valuta"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="4dp"
+                            android:textSize="11sp"
+                            android:textColor="?attr/colorPrimary"
+                            android:text="Verificato"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
                     <TextView
+                        android:id="@+id/tv_esercente_data_scontrino"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/scontrino_allegato"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textStyle="bold" />
+                        android:layout_marginTop="4dp"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="Conad City • 16/09/2026" />
 
+                    <!-- Container Dinamico Singole Voci -->
+                    <LinearLayout
+                        android:id="@+id/container_voci_scontrino"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="12dp" />
+
+                    <!-- Linea divisoria totale scontrino -->
+                    <View
+                        android:id="@+id/divisore_totale_scontrino"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="?attr/colorOutlineVariant"
+                        android:visibility="gone" />
+
+                    <!-- Subtotale / Totale scontrino -->
+                    <LinearLayout
+                        android:id="@+id/layout_totale_scontrino_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Totale Scontrino"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_totale_scontrino_valore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceTitleMedium"
+                            android:textColor="?attr/colorPrimary"
+                            android:textStyle="bold"
+                            tools:text="24,50 €" />
+                    </LinearLayout>
+
+                    <!-- Legacy foto fallback (se presente url remoto) -->
                     <ImageView
                         android:id="@+id/iv_scontrino_dettaglio"
                         android:layout_width="match_parent"
@@ -171,6 +255,7 @@
                         android:layout_marginTop="12dp"
                         android:scaleType="centerCrop"
                         android:background="?attr/colorSurfaceVariant"
+                        android:visibility="gone"
                         android:contentDescription="@string/scontrino_allegato" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

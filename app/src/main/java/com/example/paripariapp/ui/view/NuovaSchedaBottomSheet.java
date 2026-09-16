@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,6 +34,8 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
     private BottomSheetNuovaSchedaBinding binding;
     private SpeseViewModel viewModel;
     private String selectedCurrencyCode;
+    private String selectedEmoji = "🏖️";
+    private String selectedColor = com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE[5];
 
     public static NuovaSchedaBottomSheet newInstance() {
         return new NuovaSchedaBottomSheet();
@@ -54,11 +57,62 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
         selectedCurrencyCode = viewModel.getDefaultCurrency();
 
+        setupEmojiSelector();
         aggiornaValutaUI();
         setupInitialChip();
         setupListeners();
 
         com.example.paripariapp.util.KeyboardUtil.showKeyboard(binding.etNomeScheda);
+    }
+
+    private void setupEmojiSelector() {
+        if (binding == null) return;
+        aggiornaIconaAnteprima();
+
+        String[] quickEmojis = new String[] { "🏖️", "🍕", "✈️", "🏠", "⚽", "🍻", "🎉", "🛒", "🚗", "☕", "⛷️", "🍿", "🏕️", "🍔", "🎮" };
+        binding.containerEmojiNuovaScheda.removeAllViews();
+
+        for (int i = 0; i < quickEmojis.length; i++) {
+            final String emoji = quickEmojis[i];
+            final String color = com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE[i % com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE.length];
+
+            TextView tv = new TextView(requireContext());
+            tv.setText(emoji);
+            tv.setTextSize(20);
+            tv.setPadding(14, 10, 14, 10);
+            tv.setBackgroundResource(R.drawable.bg_badge_valuta);
+
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.setMargins(6, 2, 6, 2);
+            tv.setLayoutParams(lp);
+
+            tv.setOnClickListener(v -> {
+                selectedEmoji = emoji;
+                selectedColor = color;
+                aggiornaIconaAnteprima();
+                com.example.paripariapp.util.HapticUtil.tick(tv);
+            });
+
+            binding.containerEmojiNuovaScheda.addView(tv);
+        }
+
+        binding.cardIconaNuovaScheda.setOnClickListener(v -> {
+            int nextIdx = (java.util.Arrays.asList(com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE).indexOf(selectedColor) + 1)
+                    % com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE.length;
+            selectedColor = com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE[nextIdx];
+            aggiornaIconaAnteprima();
+            com.example.paripariapp.util.HapticUtil.tick(binding.cardIconaNuovaScheda);
+        });
+    }
+
+    private void aggiornaIconaAnteprima() {
+        if (binding == null) return;
+        int colorInt = com.example.paripariapp.util.AvatarVisualUtil.parseColorSafe(selectedColor, android.graphics.Color.parseColor("#1976D2"));
+        binding.cardIconaNuovaScheda.setCardBackgroundColor(colorInt);
+        binding.tvEmojiNuovaScheda.setText(selectedEmoji);
     }
 
     private String getNomeCreatoreFormat() {
@@ -189,7 +243,8 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
 
         String valutaFinale = selectedCurrencyCode != null ? selectedCurrencyCode : viewModel.getDefaultCurrency();
         com.example.paripariapp.util.HapticUtil.confirm(binding.btnCreaScheda);
-        viewModel.creaScheda(nomeScheda, valutaFinale, nomiPartecipanti);
+        String iconaUrl = "emoji:" + selectedEmoji + ":" + selectedColor;
+        viewModel.creaScheda(nomeScheda, valutaFinale, iconaUrl, nomiPartecipanti);
         dismiss();
     }
 

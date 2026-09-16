@@ -546,6 +546,14 @@ public class DettaglioSchedaFragment extends Fragment {
                 if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
                     viewModel.assicuraCodiceInvito(scheda);
                 }
+                String titolo = scheda.getTitolo();
+                com.example.paripariapp.util.AvatarVisualUtil.AvatarConfig cfg =
+                        com.example.paripariapp.util.AvatarVisualUtil.parse(scheda.getIconaUrl(), titolo);
+                if (cfg.isEmoji && cfg.text != null && !cfg.text.isEmpty()) {
+                    binding.toolbarDettaglio.setTitle(cfg.text + " " + titolo);
+                } else {
+                    binding.toolbarDettaglio.setTitle(titolo);
+                }
                 aggiornaMembriAdapter();
             } else {
                 if (getActivity() != null && !getActivity().isFinishing() && isAdded()) {

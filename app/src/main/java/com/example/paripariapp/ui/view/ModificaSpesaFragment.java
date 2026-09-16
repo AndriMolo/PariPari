@@ -311,6 +311,9 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
                     spesaCorrente != null ? spesaCorrente.getScontrinoUrl() : null,
                     SyncStatus.PENDING_UPDATE
             );
+            if (spesaCorrente != null) {
+                spesaAggiornata.setScontrinoJson(spesaCorrente.getScontrinoJson());
+            }
 
             viewModel.aggiornaSpesaConQuote(spesaAggiornata, nuoveQuote);
             com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
