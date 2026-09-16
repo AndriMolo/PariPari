@@ -27,8 +27,8 @@ import java.util.UUID;
 
 /**
  * Utility avanzata per l'analisi ed importazione di file CSV esportati da PariPari
- * (o strutturati in modo equivalente), ricostruendo integralmente la scheda,
- * i membri e l'elenco delle spese con le relative quote di ripartizione.
+ * (o strutturati in modo equivalente da altre app/fogli di calcolo), ricostruendo
+ * integralmente la scheda, i membri e l'elenco delle spese con le relative quote di ripartizione.
  */
 public class ImportatoreCsvUtil {
 
@@ -51,8 +51,8 @@ public class ImportatoreCsvUtil {
         public final List<SpesaConQuote> speseConQuote;
 
         public RisultatoImportazione(String nomeScheda, String valuta,
-                                   List<Partecipante> partecipanti,
-                                   List<SpesaConQuote> speseConQuote) {
+                                     List<Partecipante> partecipanti,
+                                     List<SpesaConQuote> speseConQuote) {
             this.nomeScheda = nomeScheda;
             this.valuta = valuta;
             this.partecipanti = partecipanti;
@@ -60,15 +60,33 @@ public class ImportatoreCsvUtil {
         }
     }
 
-    private static final SimpleDateFormat FORMATO_DATA =
-            new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ITALY);
-    private static final SimpleDateFormat FORMATO_GIORNO =
-            new SimpleDateFormat("dd/MM/yyyy", Locale.ITALY);
+    private static final String[] FORMATI_DATA = new String[] {
+            "dd/MM/yyyy HH:mm:ss",
+            "dd/MM/yyyy HH:mm",
+            "dd/MM/yyyy",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd",
+            "dd-MM-yyyy HH:mm",
+            "dd-MM-yyyy",
+            "MM/dd/yyyy HH:mm",
+            "MM/dd/yyyy"
+    };
 
     @Nullable
     public static RisultatoImportazione analizzaCsv(@NonNull Context context, @NonNull Uri csvUri, @NonNull String schedaId) {
-        try (InputStream is = context.getContentResolver().openInputStream(csvUri);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+        try (InputStream is = context.getContentResolver().openInputStream(csvUri)) {
+            if (is == null) return null;
+            return analizzaCsv(is, schedaId);
+        } catch (Exception e) {
+            Log.e(TAG, "Errore apertura URI CSV", e);
+            return null;
+        }
+    }
+
+    @Nullable
+    public static RisultatoImportazione analizzaCsv(@NonNull InputStream is, @NonNull String schedaId) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
             String nomeGruppo = "Gruppo Importato";
             String valutaGruppo = "EUR";
@@ -77,6 +95,18 @@ public class ImportatoreCsvUtil {
             List<String[]> righeDati = new ArrayList<>();
             String line;
             boolean inDataSection = false;
+            char delimiter = ';';
+            boolean delimiterDetected = false;
+
+            // Indici colonne (valori predefiniti corrispondenti all'export PariPari)
+            int colData = 0;
+            int colTipo = 1;
+            int colDesc = 2;
+            int colCat = 3;
+            int colImporto = 4;
+            int colValuta = 5;
+            int colPagatoDa = 6;
+            int colQuote = 7;
 
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("\ufeff")) {
@@ -85,25 +115,34 @@ public class ImportatoreCsvUtil {
                 String lineTrim = line.trim();
                 if (lineTrim.isEmpty()) continue;
 
+                // Rilevamento automatico delimitatore (; o ,)
+                if (!delimiterDetected) {
+                    if (lineTrim.contains(";")) {
+                        delimiter = ';';
+                        delimiterDetected = true;
+                    } else if (lineTrim.contains(",")) {
+                        delimiter = ',';
+                        delimiterDetected = true;
+                    }
+                }
+
                 // 1. Parsing righe metadati (#)
                 if (lineTrim.startsWith("#")) {
                     String lineClean = lineTrim.substring(1).trim();
-                    if (lineClean.startsWith("GRUPPO;")) {
-                        String[] parts = lineClean.split(";");
-                        if (parts.length >= 2) {
+                    char metaSep = lineClean.contains(";") ? ';' : (lineClean.contains(",") ? ',' : delimiter);
+                    String[] parts = lineClean.split(String.valueOf(metaSep));
+                    if (parts.length >= 2) {
+                        String key = pulisciCampo(parts[0]).toUpperCase(Locale.ROOT);
+                        if (key.equals("GRUPPO")) {
                             nomeGruppo = pulisciCampo(parts[1]);
-                        }
-                    } else if (lineClean.startsWith("VALUTA;")) {
-                        String[] parts = lineClean.split(";");
-                        if (parts.length >= 2) {
+                        } else if (key.equals("VALUTA")) {
                             valutaGruppo = pulisciCampo(parts[1]);
-                        }
-                    } else if (lineClean.startsWith("MEMBRI;")) {
-                        String[] parts = lineClean.split(";");
-                        for (int i = 1; i < parts.length; i++) {
-                            String m = pulisciCampo(parts[i]);
-                            if (!m.isEmpty() && !nomiMembriMetadati.contains(m)) {
-                                nomiMembriMetadati.add(m);
+                        } else if (key.equals("MEMBRI")) {
+                            for (int i = 1; i < parts.length; i++) {
+                                String m = pulisciCampo(parts[i]);
+                                if (!m.isEmpty() && !nomiMembriMetadati.contains(m)) {
+                                    nomiMembriMetadati.add(m);
+                                }
                             }
                         }
                     }
@@ -111,15 +150,30 @@ public class ImportatoreCsvUtil {
                 }
 
                 // 2. Riga Intestazione Tabelle
-                if (lineTrim.toLowerCase(Locale.ROOT).startsWith("data;") || lineTrim.toLowerCase(Locale.ROOT).startsWith("date;")) {
+                String lowerLine = lineTrim.toLowerCase(Locale.ROOT);
+                if (lowerLine.startsWith("data") || lowerLine.startsWith("date")
+                        || lowerLine.contains("descrizione") || lowerLine.contains("description")
+                        || lowerLine.contains("importo") || lowerLine.contains("amount")) {
                     inDataSection = true;
+                    String[] headerTokens = dividiRigaCsv(lineTrim, delimiter);
+                    for (int i = 0; i < headerTokens.length; i++) {
+                        String h = pulisciCampo(headerTokens[i]).toLowerCase(Locale.ROOT);
+                        if (h.contains("dat")) colData = i;
+                        else if (h.contains("tip") || h.equals("type")) colTipo = i;
+                        else if (h.contains("desc") || h.contains("titolo") || h.equals("title") || h.equals("name")) colDesc = i;
+                        else if (h.contains("cat")) colCat = i;
+                        else if (h.contains("import") || h.contains("ammont") || h.contains("amount") || h.contains("cost") || h.contains("costo") || h.contains("prezzo")) colImporto = i;
+                        else if (h.contains("valut") || h.contains("curr")) colValuta = i;
+                        else if (h.contains("pagat") || h.contains("paid") || h.contains("payer") || h.contains("chi")) colPagatoDa = i;
+                        else if (h.contains("quot") || h.contains("shar") || h.contains("divis") || h.contains("ripartiz")) colQuote = i;
+                    }
                     continue;
                 }
 
                 // 3. Righe Dati Spese
-                if (inDataSection || lineTrim.contains(";")) {
-                    String[] tokens = dividiRigaCsv(lineTrim);
-                    if (tokens.length >= 5) {
+                if (inDataSection || lineTrim.contains(String.valueOf(delimiter))) {
+                    String[] tokens = dividiRigaCsv(lineTrim, delimiter);
+                    if (tokens.length >= 2) {
                         righeDati.add(tokens);
                     }
                 }
@@ -138,16 +192,16 @@ public class ImportatoreCsvUtil {
             }
 
             for (String[] row : righeDati) {
-                if (row.length >= 7) {
-                    String paganteNome = pulisciCampo(row[6]);
+                if (colPagatoDa >= 0 && colPagatoDa < row.length) {
+                    String paganteNome = pulisciCampo(row[colPagatoDa]);
                     if (!paganteNome.isEmpty() && !mappaMembri.containsKey(paganteNome.toLowerCase(Locale.ROOT))) {
                         String pId = UUID.randomUUID().toString();
                         mappaMembri.put(paganteNome.toLowerCase(Locale.ROOT),
                                 new Partecipante(pId, schedaId, paganteNome, null, SyncStatus.PENDING_INSERT));
                     }
                 }
-                if (row.length >= 8) {
-                    String quoteStr = pulisciCampo(row[7]);
+                if (colQuote >= 0 && colQuote < row.length) {
+                    String quoteStr = pulisciCampo(row[colQuote]);
                     String[] quotePairs = quoteStr.split("\\|");
                     for (String qPair : quotePairs) {
                         if (qPair.contains(":")) {
@@ -169,13 +223,13 @@ public class ImportatoreCsvUtil {
             List<SpesaConQuote> speseConQuote = new ArrayList<>();
 
             for (String[] row : righeDati) {
-                String dataStr = pulisciCampo(row[0]);
-                String tipoStr = row.length > 1 ? pulisciCampo(row[1]) : "Spesa";
-                String descStr = row.length > 2 ? pulisciCampo(row[2]) : "Spesa Importata";
-                String catStr = row.length > 3 ? pulisciCampo(row[3]) : "Generale";
-                String importoStr = row.length > 4 ? pulisciCampo(row[4]).replace(",", ".") : "0";
-                String valutaStr = row.length > 5 ? pulisciCampo(row[5]) : valutaGruppo;
-                String paganteStr = row.length > 6 ? pulisciCampo(row[6]) : "";
+                String dataStr = (colData >= 0 && colData < row.length) ? pulisciCampo(row[colData]) : "";
+                String tipoStr = (colTipo >= 0 && colTipo < row.length) ? pulisciCampo(row[colTipo]) : "Spesa";
+                String descStr = (colDesc >= 0 && colDesc < row.length) ? pulisciCampo(row[colDesc]) : "Spesa Importata";
+                String catStr = (colCat >= 0 && colCat < row.length) ? pulisciCampo(row[colCat]) : "Generale";
+                String importoStr = (colImporto >= 0 && colImporto < row.length) ? pulisciCampo(row[colImporto]).replace(",", ".") : "0";
+                String valutaStr = (colValuta >= 0 && colValuta < row.length) ? pulisciCampo(row[colValuta]) : valutaGruppo;
+                String paganteStr = (colPagatoDa >= 0 && colPagatoDa < row.length) ? pulisciCampo(row[colPagatoDa]) : "";
 
                 if (descStr.isEmpty()) descStr = "Spesa";
 
@@ -186,19 +240,13 @@ public class ImportatoreCsvUtil {
 
                 if (importo <= 0) continue;
 
-                long timestamp = System.currentTimeMillis();
-                try {
-                    Date d = FORMATO_DATA.parse(dataStr);
-                    if (d != null) timestamp = d.getTime();
-                } catch (Exception e1) {
-                    try {
-                        Date d2 = FORMATO_GIORNO.parse(dataStr);
-                        if (d2 != null) timestamp = d2.getTime();
-                    } catch (Exception ignored) {}
-                }
+                long timestamp = parseTimestamp(dataStr, System.currentTimeMillis());
 
                 Partecipante pPagante = mappaMembri.get(paganteStr.toLowerCase(Locale.ROOT));
                 String pagatoDaId = pPagante != null ? pPagante.getId() : (!partecipanti.isEmpty() ? partecipanti.get(0).getId() : "");
+
+                boolean isRimborso = tipoStr.equalsIgnoreCase("Rimborso") || CategoriaUtil.isCategoriaSaldi(catStr) || descStr.toLowerCase(Locale.ROOT).contains("rimborso");
+                String categoriaFinale = isRimborso ? CategoriaUtil.CAT_RIMBORSI : (catStr.isEmpty() ? "Generale" : catStr);
 
                 String spesaId = UUID.randomUUID().toString();
                 Spesa spesa = new Spesa(
@@ -208,7 +256,7 @@ public class ImportatoreCsvUtil {
                         importo,
                         valutaStr.isEmpty() ? valutaGruppo : valutaStr,
                         timestamp,
-                        catStr.isEmpty() ? "Generale" : catStr,
+                        categoriaFinale,
                         pagatoDaId,
                         null,
                         SyncStatus.PENDING_INSERT
@@ -216,8 +264,8 @@ public class ImportatoreCsvUtil {
 
                 List<SpesaPartecipante> quoteSpesa = new ArrayList<>();
 
-                if (row.length >= 8 && !row[7].trim().isEmpty()) {
-                    String quoteStr = pulisciCampo(row[7]);
+                if (colQuote >= 0 && colQuote < row.length && !row[colQuote].trim().isEmpty()) {
+                    String quoteStr = pulisciCampo(row[colQuote]);
                     String[] quotePairs = quoteStr.split("\\|");
                     for (String qPair : quotePairs) {
                         if (qPair.contains(":")) {
@@ -242,6 +290,7 @@ public class ImportatoreCsvUtil {
                     }
                 }
 
+                // Se non specificate le quote, suddividi equamente tra tutti i partecipanti
                 if (quoteSpesa.isEmpty() && !partecipanti.isEmpty()) {
                     double quotaEqua = importo / partecipanti.size();
                     for (Partecipante p : partecipanti) {
@@ -265,16 +314,30 @@ public class ImportatoreCsvUtil {
         }
     }
 
-    private static String pulisciCampo(String raw) {
+    private static long parseTimestamp(String dataStr, long fallback) {
+        if (dataStr == null || dataStr.trim().isEmpty()) return fallback;
+        String clean = dataStr.trim();
+        for (String pattern : FORMATI_DATA) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.ITALY);
+                sdf.setLenient(true);
+                Date d = sdf.parse(clean);
+                if (d != null) return d.getTime();
+            } catch (Exception ignored) {}
+        }
+        return fallback;
+    }
+
+    public static String pulisciCampo(String raw) {
         if (raw == null) return "";
         String clean = raw.trim();
         if (clean.startsWith("\"") && clean.endsWith("\"") && clean.length() >= 2) {
             clean = clean.substring(1, clean.length() - 1);
         }
-        return clean.trim();
+        return clean.replace("\"\"", "\"").trim();
     }
 
-    private static String[] dividiRigaCsv(String riga) {
+    public static String[] dividiRigaCsv(String riga, char delimiter) {
         List<String> tokens = new ArrayList<>();
         boolean inQuotes = false;
         StringBuilder sb = new StringBuilder();
@@ -282,8 +345,13 @@ public class ImportatoreCsvUtil {
         for (int i = 0; i < riga.length(); i++) {
             char c = riga.charAt(i);
             if (c == '\"') {
-                inQuotes = !inQuotes;
-            } else if (c == ';' && !inQuotes) {
+                if (inQuotes && i + 1 < riga.length() && riga.charAt(i + 1) == '\"') {
+                    sb.append('\"');
+                    i++; // salta la seconda virgoletta di escape RFC 4180
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == delimiter && !inQuotes) {
                 tokens.add(sb.toString());
                 sb.setLength(0);
             } else {

@@ -30,6 +30,8 @@
     <string name="dialog_opzioni_scheda_titolo">Choose an option</string>
     <string name="dialog_opzioni_nuova_scheda">➕ Start a new group</string>
     <string name="dialog_opzioni_entra_scheda">🔑 Join a group with code</string>
+    <string name="dialog_opzioni_importa_csv">📂 Import group from CSV file</string>
+    <string name="msg_importazione_csv_successo">Group \'%s\' successfully imported!</string>
 
     <!-- Empty States -->
     <string name="empty_membri_titolo">No members in group</string>
@@ -154,6 +156,12 @@
     <string name="msg_sei_uscito_dal_gruppo">You left the group</string>
     <string name="msg_sei_stato_rimosso_dal_gruppo">You were removed from the group</string>
     <string name="msg_membro_rimosso">%s was removed from the group</string>
+    <string name="stato_ex_membro">Former member</string>
+    <string name="btn_riattiva_membro">Reactivate member</string>
+    <string name="msg_membro_riattivato">%s was reactivated in the group</string>
+    <string name="msg_membro_disattivato">%s was moved to former members</string>
+    <string name="btn_testa_link">Test payment link</string>
+    <string name="error_handle_vuoto">Enter your username first to test the link</string>
     <string name="titolo_bilancio_membri">Member Balances</string>
     <string name="titolo_pagamenti_pareggio">Settlement Payments</string>
     <string name="label_saldo_pareggio">Settlement transfer</string>

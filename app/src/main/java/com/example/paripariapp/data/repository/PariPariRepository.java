@@ -572,7 +572,7 @@ public class PariPariRepository {
                     com.example.paripariapp.util.ImportatoreCsvUtil.analizzaCsv(context, csvUri, schedaId);
 
             android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-            if (res == null || res.speseConQuote.isEmpty()) {
+            if (res == null || (res.speseConQuote.isEmpty() && (res.partecipanti == null || res.partecipanti.isEmpty()))) {
                 mainHandler.post(() -> callback.onError("Impossibile leggere il file CSV o formato non valido"));
                 return;
             }
@@ -580,19 +580,80 @@ public class PariPariRepository {
             Scheda scheda = Scheda.createNew(res.nomeScheda, "", res.valuta, null);
             scheda.setId(schedaId);
 
+            FirebaseUser currentUser = auth.getCurrentUser();
+            Partecipante myPart = null;
+
             if (res.partecipanti != null && !res.partecipanti.isEmpty()) {
-                scheda.setCreatoreId(res.partecipanti.get(0).getId());
+                if (currentUser != null) {
+                    String userDisplayName = currentUser.getDisplayName();
+                    String userEmail = currentUser.getEmail();
+
+                    for (Partecipante p : res.partecipanti) {
+                        String pNome = p.getNome() != null ? p.getNome().trim().toLowerCase(java.util.Locale.ROOT) : "";
+                        if (userDisplayName != null && !userDisplayName.trim().isEmpty()
+                                && pNome.equalsIgnoreCase(userDisplayName.trim())) {
+                            myPart = p;
+                            break;
+                        }
+                        if (userEmail != null && !userEmail.trim().isEmpty()
+                                && pNome.equalsIgnoreCase(userEmail.trim())) {
+                            myPart = p;
+                            break;
+                        }
+                        if (pNome.equals("io") || pNome.equals("me")) {
+                            myPart = p;
+                            break;
+                        }
+                    }
+                }
+
+                if (myPart == null) {
+                    myPart = res.partecipanti.get(0);
+                }
+
+                if (currentUser != null) {
+                    myPart.setUserId(currentUser.getUid());
+                }
+
+                scheda.setCreatoreId(myPart.getId());
                 UserPreferencesRepository.getInstance(context)
-                        .setMyParticipantId(schedaId, res.partecipanti.get(0).getId());
+                        .setMyParticipantId(schedaId, myPart.getId());
+            } else {
+                String defaultNome = (currentUser != null && currentUser.getDisplayName() != null && !currentUser.getDisplayName().trim().isEmpty())
+                        ? currentUser.getDisplayName() : "Io";
+                String pId = java.util.UUID.randomUUID().toString();
+                Partecipante defaultP = new Partecipante(pId, schedaId, defaultNome, currentUser != null ? currentUser.getUid() : null, SyncStatus.PENDING_INSERT);
+                List<Partecipante> nuovaLista = new java.util.ArrayList<>();
+                nuovaLista.add(defaultP);
+                res = new com.example.paripariapp.util.ImportatoreCsvUtil.RisultatoImportazione(
+                        res.nomeScheda, res.valuta, nuovaLista, res.speseConQuote);
+                scheda.setCreatoreId(pId);
+                UserPreferencesRepository.getInstance(context).setMyParticipantId(schedaId, pId);
             }
 
-            insertScheda(scheda, res.partecipanti);
-
+            // Inserimenti sincroni nel thread di scrittura per garantire che i dati esistano prima dell'avvio dell'Activity
+            if (scheda.getCodiceInvito() == null || scheda.getCodiceInvito().trim().isEmpty()) {
+                scheda.setCodiceInvito(CodiceInvitoUtil.generaCodice());
+            }
+            schedaDao.insert(scheda);
+            if (res.partecipanti != null && !res.partecipanti.isEmpty()) {
+                partecipanteDao.insertAll(res.partecipanti);
+            }
             for (com.example.paripariapp.util.ImportatoreCsvUtil.SpesaConQuote sq : res.speseConQuote) {
-                insertSpesaConQuote(sq.spesa, sq.quote);
+                spesaDao.insertSpesaConQuoteTransaction(sq.spesa, sq.quote);
             }
 
-            mainHandler.post(() -> callback.onSuccess(schedaId, res.nomeScheda));
+            // Sincronizzazione cloud asincrona se l'utente è loggato e connesso
+            if (syncManager.isConnected() && currentUser != null) {
+                syncManager.uploadScheda(scheda, res.partecipanti);
+                for (com.example.paripariapp.util.ImportatoreCsvUtil.SpesaConQuote sq : res.speseConQuote) {
+                    syncManager.uploadSpesaConQuote(sq.spesa, sq.quote);
+                }
+            }
+            syncManager.attachSubcollectionListeners(schedaId);
+
+            final String nomeFinal = res.nomeScheda;
+            mainHandler.post(() -> callback.onSuccess(schedaId, nomeFinal));
         });
     }
 
