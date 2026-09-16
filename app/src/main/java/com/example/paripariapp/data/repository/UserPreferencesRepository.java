@@ -37,6 +37,9 @@ public class UserPreferencesRepository {
     private static final String KEY_PAYPAL_HANDLE = "pref_paypal_handle";
     private static final String KEY_REVOLUT_HANDLE = "pref_revolut_handle";
     private static final String KEY_CUSTOM_AVATAR = "pref_custom_avatar_string";
+    private static final String KEY_LAST_ACTIVE_TAB = "pref_last_active_tab";
+    private static final String KEY_TAB_STACK_CSV = "pref_tab_stack_csv";
+    private static final String KEY_PENDING_CONFIG_CHANGE = "pref_pending_config_change";
 
     public static final List<String> SUPPORTED_CURRENCIES = Arrays.asList(
             "EUR - Euro",
@@ -294,6 +297,7 @@ public class UserPreferencesRepository {
             return;
         }
         String cleanCode = langCode.trim();
+        setPendingConfigChange(true);
         preferences.edit().putString(KEY_APP_LANGUAGE, cleanCode).apply();
         appLanguageLive.postValue(cleanCode);
         applyLanguage(cleanCode);
@@ -411,6 +415,7 @@ public class UserPreferencesRepository {
             return;
         }
         String cleanCode = themeCode.trim().toUpperCase(Locale.ROOT);
+        setPendingConfigChange(true);
         preferences.edit().putString(KEY_APP_THEME, cleanCode).apply();
         appThemeLive.postValue(cleanCode);
         applyTheme(cleanCode);
@@ -559,5 +564,47 @@ public class UserPreferencesRepository {
                 customAvatarLive.postValue(clean);
             }
         }
+    }
+
+    public int getLastActiveTab(int defaultTab) {
+        return preferences.getInt(KEY_LAST_ACTIVE_TAB, defaultTab);
+    }
+
+    public void setLastActiveTab(int tabId) {
+        preferences.edit().putInt(KEY_LAST_ACTIVE_TAB, tabId).apply();
+    }
+
+    public java.util.List<Integer> getSavedTabStack() {
+        String csv = preferences.getString(KEY_TAB_STACK_CSV, "");
+        java.util.List<Integer> list = new java.util.ArrayList<>();
+        if (csv != null && !csv.trim().isEmpty()) {
+            for (String part : csv.split(",")) {
+                try {
+                    list.add(Integer.parseInt(part.trim()));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return list;
+    }
+
+    public void setSavedTabStack(java.util.Collection<Integer> stack) {
+        if (stack == null || stack.isEmpty()) {
+            preferences.edit().remove(KEY_TAB_STACK_CSV).apply();
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Integer id : stack) {
+            if (sb.length() > 0) sb.append(",");
+            sb.append(id);
+        }
+        preferences.edit().putString(KEY_TAB_STACK_CSV, sb.toString()).apply();
+    }
+
+    public boolean isPendingConfigChange() {
+        return preferences.getBoolean(KEY_PENDING_CONFIG_CHANGE, false);
+    }
+
+    public void setPendingConfigChange(boolean pending) {
+        preferences.edit().putBoolean(KEY_PENDING_CONFIG_CHANGE, pending).apply();
     }
 }

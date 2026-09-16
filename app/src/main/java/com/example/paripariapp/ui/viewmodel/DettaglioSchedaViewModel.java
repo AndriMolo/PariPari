@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Partecipante;
 import com.example.paripariapp.data.model.Scheda;
 import com.example.paripariapp.data.model.Spesa;
@@ -23,10 +24,19 @@ import java.util.List;
 public class DettaglioSchedaViewModel extends AndroidViewModel {
 
     private final PariPariRepository repository;
+    private int selectedTabId = R.id.nav_scheda_spese;
 
     public DettaglioSchedaViewModel(@NonNull Application application) {
         super(application);
         this.repository = PariPariRepository.getInstance(application);
+    }
+
+    public int getSelectedTabId() {
+        return selectedTabId;
+    }
+
+    public void setSelectedTabId(int selectedTabId) {
+        this.selectedTabId = selectedTabId;
     }
 
     public LiveData<List<SpesaConDettagli>> getSpeseConDettagli(String schedaId) {

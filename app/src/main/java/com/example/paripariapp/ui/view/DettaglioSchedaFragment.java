@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -51,6 +52,7 @@ public class DettaglioSchedaFragment extends Fragment {
     private static final String ARG_SCHEDA_ID = "arg_scheda_id";
     private static final String ARG_TITOLO = "arg_titolo";
     private static final String ARG_VALUTA = "arg_valuta";
+    private static final String KEY_SCHEDA_SELECTED_TAB = "key_scheda_selected_tab";
 
     private FragmentDettaglioSchedaBinding binding;
     private DettaglioSchedaViewModel viewModel;
@@ -117,35 +119,63 @@ public class DettaglioSchedaFragment extends Fragment {
         setupFab();
         setupBottomNavScheda();
         setupRecyclerMembri();
+        setupBackPressHandler();
 
+        int tabDaRipristinare = viewModel.getSelectedTabId();
+        if (savedInstanceState != null) {
+            tabDaRipristinare = savedInstanceState.getInt(KEY_SCHEDA_SELECTED_TAB, tabDaRipristinare);
+        }
+        binding.bottomNavScheda.setSelectedItemId(tabDaRipristinare);
+        selezionaTab(tabDaRipristinare);
     }
 
     private void setupBottomNavScheda() {
         binding.bottomNavScheda.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
+            selezionaTab(item.getItemId());
+            return true;
+        });
+    }
 
-            binding.sezioneSpese.setVisibility(id == R.id.nav_scheda_spese ? View.VISIBLE : View.GONE);
-            binding.sezioneSaldi.setVisibility(id == R.id.nav_scheda_saldi ? View.VISIBLE : View.GONE);
-            binding.sezioneMembri.setVisibility(id == R.id.nav_scheda_membri ? View.VISIBLE : View.GONE);
+    private void selezionaTab(int id) {
+        if (viewModel != null) {
+            viewModel.setSelectedTabId(id);
+        }
+        if (binding == null) return;
 
-            MenuItem searchItem = binding.toolbarDettaglio.getMenu().findItem(R.id.action_cerca);
-            if (searchItem != null) {
-                if (id == R.id.nav_scheda_spese) {
-                    searchItem.setVisible(true);
+        binding.sezioneSpese.setVisibility(id == R.id.nav_scheda_spese ? View.VISIBLE : View.GONE);
+        binding.sezioneSaldi.setVisibility(id == R.id.nav_scheda_saldi ? View.VISIBLE : View.GONE);
+        binding.sezioneMembri.setVisibility(id == R.id.nav_scheda_membri ? View.VISIBLE : View.GONE);
+
+        MenuItem searchItem = binding.toolbarDettaglio.getMenu().findItem(R.id.action_cerca);
+        if (searchItem != null) {
+            if (id == R.id.nav_scheda_spese) {
+                searchItem.setVisible(true);
+            } else {
+                if (searchItem.isActionViewExpanded()) {
+                    searchItem.collapseActionView();
+                }
+                searchItem.setVisible(false);
+            }
+        }
+
+        if (id == R.id.nav_scheda_spese) {
+            binding.fabNuovaSpesa.show();
+        } else {
+            binding.fabNuovaSpesa.hide();
+        }
+    }
+
+    private void setupBackPressHandler() {
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (viewModel != null && viewModel.getSelectedTabId() != R.id.nav_scheda_spese) {
+                    binding.bottomNavScheda.setSelectedItemId(R.id.nav_scheda_spese);
                 } else {
-                    if (searchItem.isActionViewExpanded()) {
-                        searchItem.collapseActionView();
-                    }
-                    searchItem.setVisible(false);
+                    setEnabled(false);
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
                 }
             }
-
-            if (id == R.id.nav_scheda_spese) {
-                binding.fabNuovaSpesa.show();
-            } else {
-                binding.fabNuovaSpesa.hide();
-            }
-            return true;
         });
     }
 
@@ -245,7 +275,9 @@ public class DettaglioSchedaFragment extends Fragment {
             binding.toolbarDettaglio.setTitle(titolo);
         }
         binding.toolbarDettaglio.setNavigationOnClickListener(v -> {
-            if (getActivity() != null) {
+            if (viewModel != null && viewModel.getSelectedTabId() != R.id.nav_scheda_spese) {
+                binding.bottomNavScheda.setSelectedItemId(R.id.nav_scheda_spese);
+            } else if (getActivity() != null) {
                 getActivity().finish();
             }
         });
@@ -1080,5 +1112,13 @@ public class DettaglioSchedaFragment extends Fragment {
         sheetBinding.btnChiudiDialogCodice.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (viewModel != null) {
+            outState.putInt(KEY_SCHEDA_SELECTED_TAB, viewModel.getSelectedTabId());
+        }
     }
 }
