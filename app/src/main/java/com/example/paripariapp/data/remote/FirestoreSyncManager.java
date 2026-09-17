@@ -436,6 +436,7 @@ public class FirestoreSyncManager {
         data.put("pagatoDaId", spesa.getPagatoDaId());
         Double tasso = spesa.getTassoCambio();
         data.put("tassoCambio", tasso != null ? tasso : 1.0);
+        data.put("updatedByUid", auth.getCurrentUser().getUid());
 
         String scontrinoUrl = spesa.getScontrinoUrl();
         if (scontrinoUrl != null && (scontrinoUrl.startsWith("http://") || scontrinoUrl.startsWith("https://"))) {
@@ -494,7 +495,7 @@ public class FirestoreSyncManager {
         if (auth.getCurrentUser() != null && networkMonitor.isConnected()) {
             FirebaseUser currentUser = auth.getCurrentUser();
             List<Partecipante> localParts = partecipanteDao.getPartecipantiBySchedaSync(schedaId);
-            String myPartId = Partecipante.findCurrentUserId(localParts, currentUser);
+            String myPartId = Partecipante.findCurrentUserId(localParts, currentUser, com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context), schedaId);
 
             firestore.collection("groups").document(schedaId)
                     .collection("participants")
@@ -975,57 +976,72 @@ public class FirestoreSyncManager {
 
                                                     // Notifica NATIVA in Java per gli altri membri SOLO se il cambio avviene in tempo reale
                                                     if (!isFirstBatch && !doc.getMetadata().hasPendingWrites()) {
-                                                        Scheda s = schedaDao.getSchedaById(groupId);
-                                                        String nomeGruppo = (s != null && s.getTitolo() != null) ? s.getTitolo() : "Gruppo";
+                                                        FirebaseUser currentUser = auth.getCurrentUser();
+                                                        String updatedByUid = doc.getString("updatedByUid");
+                                                        boolean modifiedByMe = (currentUser != null && currentUser.getUid().equals(updatedByUid));
 
-                                                        Partecipante pPagante = (pagatoDaId != null && !pagatoDaId.isEmpty()) ? partecipanteDao.getPartecipanteById(pagatoDaId) : null;
-                                                        String nomePagatore = (pPagante != null && pPagante.getNome() != null) ? pPagante.getNome() : "Un partecipante";
+                                                        List<Partecipante> partGroup = partecipanteDao.getPartecipantiBySchedaSync(groupId);
+                                                        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                                                                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
+                                                        String myPartId = Partecipante.findCurrentUserId(partGroup, currentUser, prefs, groupId);
 
-                                                        boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(categoria);
-                                                        String valutaStr = valuta != null ? valuta : "EUR";
-                                                        String importoFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", importo, valutaStr);
+                                                        boolean sonoIoPagante = (myPartId != null && myPartId.equals(pagatoDaId));
 
-                                                        String notifTitolo;
-                                                        String notifMessaggio;
+                                                        // Non notificare l'utente se è lui ad aver effettuato l'azione o pagato
+                                                        if (!modifiedByMe && !sonoIoPagante) {
+                                                            Scheda s = schedaDao.getSchedaById(groupId);
+                                                            String nomeGruppo = (s != null && s.getTitolo() != null) ? s.getTitolo() : "Gruppo";
 
-                                                        if (isRimborso) {
-                                                            if (dc.getType() == DocumentChange.Type.ADDED) {
-                                                                notifTitolo = "Pagamento saldato in \"" + nomeGruppo + "\"";
+                                                            Partecipante pPagante = (pagatoDaId != null && !pagatoDaId.isEmpty()) ? partecipanteDao.getPartecipanteById(pagatoDaId) : null;
+                                                            String nomePagatore = (pPagante != null && pPagante.getNome() != null) ? pPagante.getNome() : "Un partecipante";
+
+                                                            boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(categoria);
+                                                            String valutaStr = valuta != null ? valuta : "EUR";
+                                                            String importoFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", importo, valutaStr);
+
+                                                            String notifTitolo;
+                                                            String notifMessaggio;
+
+                                                            if (isRimborso) {
+                                                                if (dc.getType() == DocumentChange.Type.ADDED) {
+                                                                    notifTitolo = "Pagamento saldato in \"" + nomeGruppo + "\"";
+                                                                } else {
+                                                                    notifTitolo = "Rimborso modificato in \"" + nomeGruppo + "\"";
+                                                                }
+                                                                notifMessaggio = importoFmt + " da " + nomePagatore + " pagati.";
                                                             } else {
-                                                                notifTitolo = "Rimborso modificato in \"" + nomeGruppo + "\"";
-                                                            }
-                                                            notifMessaggio = importoFmt + " Da " + nomePagatore + " Pagati.";
-                                                        } else {
-                                                            if (dc.getType() == DocumentChange.Type.ADDED) {
-                                                                notifTitolo = "Nuova spesa in \"" + nomeGruppo + "\"";
-                                                            } else {
-                                                                notifTitolo = "Spesa modificata in \"" + nomeGruppo + "\"";
-                                                            }
+                                                                if (dc.getType() == DocumentChange.Type.ADDED) {
+                                                                    notifTitolo = "Nuova spesa in \"" + nomeGruppo + "\"";
+                                                                } else {
+                                                                    notifTitolo = "Spesa modificata in \"" + nomeGruppo + "\"";
+                                                                }
 
-                                                            List<Partecipante> partGroup = partecipanteDao.getPartecipantiBySchedaSync(groupId);
-                                                            FirebaseUser currentUser = auth.getCurrentUser();
-                                                            com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
-                                                                    com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
-                                                            String myPartId = Partecipante.findCurrentUserId(partGroup, currentUser, prefs, groupId);
-
-                                                            double miaQuota = 0.0;
-                                                            if (myPartId != null && !quoteInMem.isEmpty()) {
-                                                                for (SpesaPartecipante q : quoteInMem) {
-                                                                    if (q.getPartecipanteId().equals(myPartId)) {
-                                                                        miaQuota = q.getQuota();
-                                                                        break;
+                                                                double miaQuota = 0.0;
+                                                                boolean quotaTrovata = false;
+                                                                if (myPartId != null && !quoteInMem.isEmpty()) {
+                                                                    for (SpesaPartecipante q : quoteInMem) {
+                                                                        if (q.getPartecipanteId().equals(myPartId)) {
+                                                                            miaQuota = q.getQuota();
+                                                                            quotaTrovata = true;
+                                                                            break;
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
-                                                            if (miaQuota <= 0.001 && !quoteInMem.isEmpty()) {
-                                                                miaQuota = importo / quoteInMem.size();
+                                                                if (!quotaTrovata && quoteInMem.isEmpty() && partGroup != null && !partGroup.isEmpty()) {
+                                                                    miaQuota = importo / partGroup.size();
+                                                                    quotaTrovata = true;
+                                                                }
+
+                                                                if (quotaTrovata && miaQuota > 0.001) {
+                                                                    String quotaFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", miaQuota, valutaStr);
+                                                                    notifMessaggio = titolo + ". La tua quota: " + quotaFmt;
+                                                                } else {
+                                                                    notifMessaggio = titolo + ": " + importoFmt + (nomePagatore != null ? " da " + nomePagatore : "");
+                                                                }
                                                             }
 
-                                                            String quotaFmt = String.format(java.util.Locale.getDefault(), "%.2f %s", miaQuota, valutaStr);
-                                                            notifMessaggio = titolo + ". La tua Quota: " + quotaFmt;
+                                                            com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
                                                         }
-
-                                                        com.example.paripariapp.service.PariPariMessagingService.mostraNotificaNativa(context, notifTitolo, notifMessaggio, groupId);
                                                     }
                                                 });
                                     }

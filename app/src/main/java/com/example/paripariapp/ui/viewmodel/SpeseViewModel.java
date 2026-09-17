@@ -90,10 +90,6 @@ public class SpeseViewModel extends AndroidViewModel {
         return repository.getStoricoSaldi(schedaId);
     }
 
-    public void ripristinaScheda(Scheda scheda, List<Partecipante> partecipanti) {
-        repository.insertScheda(scheda, partecipanti);
-    }
-
     public void creaScheda(String nomeScheda, String valuta, List<String> nomiPartecipanti) {
         creaScheda(nomeScheda, valuta, null, nomiPartecipanti);
     }
@@ -177,17 +173,6 @@ public class SpeseViewModel extends AndroidViewModel {
 
     public String getDefaultCurrency() {
         return com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(getApplication()).getDefaultCurrency();
-    }
-
-    public void eliminaScheda(Scheda scheda) {
-        if (scheda != null) {
-            eliminaScheda(scheda.getId());
-        }
-    }
-    public void ripristinaScheda(Scheda scheda) {
-        if (scheda != null) {
-            repository.insertScheda(scheda, null);
-        }
     }
     public void registraPagamento(String schedaId, String daId, String daNome, String aId, String aNome, double importo, String valuta) {
         registraRimborsoConCategoria(schedaId, daId, daNome, aId, aNome, importo, valuta, "SETTLE_UP", "Pareggio");

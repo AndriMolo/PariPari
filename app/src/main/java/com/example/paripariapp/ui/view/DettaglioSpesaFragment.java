@@ -207,10 +207,7 @@ public class DettaglioSpesaFragment extends Fragment {
 
         // Controllo multivaluta
         if (!valutaSpesa.equalsIgnoreCase(gruppoVal)) {
-            CurrencyRepository currencyRepo = CurrencyRepository.getInstance(requireContext().getApplicationContext());
-            double rateSpesa = currencyRepo.getRate(valutaSpesa);
-            double rateGruppo = currencyRepo.getRate(gruppoVal);
-            double importoConvertito = (spesa.getImporto() / rateSpesa) * rateGruppo;
+            double importoConvertito = com.example.paripariapp.util.CalcolatoreSaldi.convertiImportoSpesa(spesa.getImporto(), spesa, gruppoVal, requireContext());
 
             binding.tvSecondariaValutaDettaglio.setVisibility(View.VISIBLE);
             binding.tvSecondariaValutaDettaglio.setText(
@@ -241,7 +238,7 @@ public class DettaglioSpesaFragment extends Fragment {
             }
         }
 
-        QuoteDettaglioAdapter adapter = new QuoteDettaglioAdapter(quoteDellaSpesa, partecipantiCache, valutaSpesa, gruppoVal);
+        QuoteDettaglioAdapter adapter = new QuoteDettaglioAdapter(quoteDellaSpesa, partecipantiCache, spesa, valutaSpesa, gruppoVal);
         binding.recyclerQuoteDettaglio.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerQuoteDettaglio.setAdapter(adapter);
     }
@@ -356,12 +353,14 @@ public class DettaglioSpesaFragment extends Fragment {
     private static class QuoteDettaglioAdapter extends RecyclerView.Adapter<QuoteDettaglioAdapter.ViewHolder> {
         private final List<SpesaPartecipante> quote;
         private final List<Partecipante> partecipanti;
+        private final Spesa spesa;
         private final String valutaSpesa;
         private final String gruppoVal;
 
-        QuoteDettaglioAdapter(List<SpesaPartecipante> quote, List<Partecipante> partecipanti, String valutaSpesa, String gruppoVal) {
+        QuoteDettaglioAdapter(List<SpesaPartecipante> quote, List<Partecipante> partecipanti, Spesa spesa, String valutaSpesa, String gruppoVal) {
             this.quote = quote;
             this.partecipanti = partecipanti;
+            this.spesa = spesa;
             this.valutaSpesa = valutaSpesa;
             this.gruppoVal = gruppoVal;
         }
@@ -396,10 +395,7 @@ public class DettaglioSpesaFragment extends Fragment {
 
             String importoStr = String.format(Locale.getDefault(), "%.2f %s", q.getQuota(), valutaSpesa);
             if (!valutaSpesa.equalsIgnoreCase(gruppoVal)) {
-                CurrencyRepository currencyRepo = CurrencyRepository.getInstance(holder.itemView.getContext().getApplicationContext());
-                double rateSpesa = currencyRepo.getRate(valutaSpesa);
-                double rateGruppo = currencyRepo.getRate(gruppoVal);
-                double importoConv = (q.getQuota() / rateSpesa) * rateGruppo;
+                double importoConv = com.example.paripariapp.util.CalcolatoreSaldi.convertiImportoSpesa(q.getQuota(), spesa, gruppoVal, holder.itemView.getContext());
                 importoStr += String.format(Locale.getDefault(), " (≈ %.2f %s)", importoConv, gruppoVal);
             }
             holder.binding.tvQuotaEqua.setText(importoStr);

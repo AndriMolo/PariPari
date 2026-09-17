@@ -647,6 +647,13 @@ public class PariPariRepository {
                 partecipanteDao.insertAll(res.partecipanti);
             }
             for (com.example.paripariapp.util.ImportatoreCsvUtil.SpesaConQuote sq : res.speseConQuote) {
+                if (sq.spesa.getTassoCambio() == null || sq.spesa.getTassoCambio() <= 0.0 || Math.abs(sq.spesa.getTassoCambio() - 1.0) < 0.000001) {
+                    String vPred = scheda.getValutaPredefinita();
+                    if (vPred != null && !vPred.equalsIgnoreCase(sq.spesa.getValuta())) {
+                        double tasso = com.example.paripariapp.ui.view.SpesaUiHelper.calcolaTassoCambioAttuale(sq.spesa.getValuta(), vPred, application);
+                        sq.spesa.setTassoCambio(tasso);
+                    }
+                }
                 spesaDao.insertSpesaConQuoteTransaction(sq.spesa, sq.quote);
             }
 

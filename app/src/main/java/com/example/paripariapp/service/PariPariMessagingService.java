@@ -75,30 +75,7 @@ public class PariPariMessagingService extends FirebaseMessagingService {
      * Mostra una notifica nativa di sistema con priorità alta.
      */
     private void mostraNotifica(String titolo, String messaggio) {
-        creaCanaleNotificaSeNecessario();
-
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags |= PendingIntent.FLAG_IMMUTABLE;
-        }
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, flags);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CANALE_NOTIFICHE_ID)
-                .setSmallIcon(R.drawable.ic_receipt)
-                .setContentTitle(titolo)
-                .setContentText(messaggio)
-                .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent);
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-        }
+        mostraNotificaNativa(this, titolo, messaggio, null);
     }
 
     private void creaCanaleNotificaSeNecessario() {

@@ -240,7 +240,7 @@ public class SpeseFragment extends Fragment {
         if (schedaInSospeso != null) {
             Scheda daEliminare = schedaInSospeso;
             schedaInSospeso = null;
-            viewModel.eliminaScheda(daEliminare);
+            viewModel.eliminaScheda(daEliminare.getId());
         }
     }
 

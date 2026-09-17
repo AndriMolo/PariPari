@@ -207,14 +207,14 @@ public class DettaglioSchedaFragment extends Fragment {
         saldoAdapter.setOnItemClickListener(item -> {
             if (item == null) return;
             com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-            String myPartId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+            com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext().getApplicationContext());
+            String myPartId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
 
             String creditorePaypalLocal = "";
             String creditoreRevolutLocal = "";
             boolean handleMancante = true;
 
             if (partecipantiCache != null) {
-                com.example.paripariapp.data.repository.UserPreferencesRepository prefs = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext().getApplicationContext());
                 for (Partecipante p : partecipantiCache) {
                     if (p.getId().equals(item.getAPartecipanteId())) {
                         boolean isCreditoreMe = p.getId().equals(myPartId) || Partecipante.isCurrentUserParticipant(p, currentUser);
