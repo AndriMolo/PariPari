@@ -73,6 +73,16 @@ public class ImportatoreCsvUtil {
             "MM/dd/yyyy"
     };
 
+    private static final ThreadLocal<SimpleDateFormat[]> FORMATI_DATA_PARSERS =
+            ThreadLocal.withInitial(() -> {
+                SimpleDateFormat[] arr = new SimpleDateFormat[FORMATI_DATA.length];
+                for (int i = 0; i < FORMATI_DATA.length; i++) {
+                    arr[i] = new SimpleDateFormat(FORMATI_DATA[i], Locale.ITALY);
+                    arr[i].setLenient(true);
+                }
+                return arr;
+            });
+
     @Nullable
     public static RisultatoImportazione analizzaCsv(@NonNull Context context, @NonNull Uri csvUri, @NonNull String schedaId) {
         try (InputStream is = context.getContentResolver().openInputStream(csvUri)) {
@@ -317,10 +327,9 @@ public class ImportatoreCsvUtil {
     private static long parseTimestamp(String dataStr, long fallback) {
         if (dataStr == null || dataStr.trim().isEmpty()) return fallback;
         String clean = dataStr.trim();
-        for (String pattern : FORMATI_DATA) {
+        SimpleDateFormat[] parsers = FORMATI_DATA_PARSERS.get();
+        for (SimpleDateFormat sdf : parsers) {
             try {
-                SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.ITALY);
-                sdf.setLenient(true);
                 Date d = sdf.parse(clean);
                 if (d != null) return d.getTime();
             } catch (Exception ignored) {}

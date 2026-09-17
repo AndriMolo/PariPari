@@ -82,7 +82,7 @@ public interface SpesaDao {
     @Query("SELECT COUNT(*) FROM spese WHERE sync_status != " + SyncStatus.PENDING_DELETE)
     LiveData<Integer> getCountSpeseLive();
 
-    @Query("SELECT SUM(importo) FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " AND (categoria IS NULL OR LOWER(categoria) NOT IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi'))")
+    @Query("SELECT SUM(importo * CASE WHEN tasso_cambio IS NOT NULL AND tasso_cambio > 0 THEN tasso_cambio ELSE 1.0 END) FROM spese WHERE scheda_id = :schedaId AND sync_status != " + SyncStatus.PENDING_DELETE + " AND (categoria IS NULL OR LOWER(categoria) NOT IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi'))")
     LiveData<Double> getTotaleSpeseBySchedaLive(String schedaId);
 
     @Query("SELECT * FROM spese WHERE id = :id LIMIT 1")
@@ -100,10 +100,10 @@ public interface SpesaDao {
             "ORDER BY s.data_spesa DESC")
     LiveData<List<SpesaConDettagli>> getSpeseConDettagliBySchedaLive(String schedaId);
 
-    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
+    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId AND s.sync_status != " + SyncStatus.PENDING_DELETE)
     LiveData<List<SpesaPartecipante>> getTutteQuoteBySchedaLive(String schedaId);
 
-    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId")
+    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId AND s.sync_status != " + SyncStatus.PENDING_DELETE)
     List<SpesaPartecipante> getTutteQuoteBySchedaSync(String schedaId);
 
     @Query("SELECT * FROM spese WHERE LOWER(categoria) IN ('saldi', 'saldo', 'pareggio', 'rimborso', 'rimborsi') AND sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_spesa DESC")
@@ -121,6 +121,6 @@ public interface SpesaDao {
     @Query("SELECT * FROM spese WHERE scheda_id = :schedaId AND pagato_da_id = :partecipanteId AND sync_status != " + SyncStatus.PENDING_DELETE + " LIMIT 1")
     Spesa getPrimaSpesaPagataDaPartecipanteSync(String schedaId, String partecipanteId);
 
-    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId AND q.partecipante_id = :partecipanteId AND q.quota > 0 LIMIT 1")
+    @Query("SELECT q.* FROM spese_partecipanti q INNER JOIN spese s ON q.spesa_id = s.id WHERE s.scheda_id = :schedaId AND q.partecipante_id = :partecipanteId AND q.quota > 0 AND s.sync_status != " + SyncStatus.PENDING_DELETE + " LIMIT 1")
     SpesaPartecipante getPrimaQuotaPartecipanteSync(String schedaId, String partecipanteId);
 }

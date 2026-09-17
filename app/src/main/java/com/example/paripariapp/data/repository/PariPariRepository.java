@@ -215,6 +215,7 @@ public class PariPariRepository {
             // L'uscita del capogruppo cancella il gruppo sia dal DB locale che da Firestore!
             if (isSelf && isCapogruppo && altriAutenticati == 0) {
                 syncManager.eliminaGruppoDefinitivamente(schedaId);
+                spesaDao.deleteQuoteBySchedaId(schedaId);
                 spesaDao.deleteBySchedaId(schedaId);
                 partecipanteDao.deleteBySchedaId(schedaId);
                 schedaDao.deleteById(schedaId);
@@ -255,6 +256,7 @@ public class PariPariRepository {
                     syncManager.esciDalGruppo(schedaId, partecipanteId);
 
                     if (isSelf) {
+                        spesaDao.deleteQuoteBySchedaId(schedaId);
                         spesaDao.deleteBySchedaId(schedaId);
                         partecipanteDao.deleteBySchedaId(schedaId);
                         schedaDao.deleteById(schedaId);
@@ -491,6 +493,7 @@ public class PariPariRepository {
             risultatoSaldiLiveData.addSource(schedaDao.getAllSchedeLive(), schede -> ricalcolaSaldi(schede));
             risultatoSaldiLiveData.addSource(spesaDao.getCountSpeseLive(), count -> ricalcolaSaldi(null));
             risultatoSaldiLiveData.addSource(partecipanteDao.getCountPartecipantiLive(), count -> ricalcolaSaldi(null));
+            risultatoSaldiLiveData.addSource(preferencesRepository.getDefaultCurrencyLive(), curr -> ricalcolaSaldi(null));
         }
         return risultatoSaldiLiveData;
     }
@@ -541,6 +544,8 @@ public class PariPariRepository {
                 }
             }
 
+            totaleRicevere = Math.round(totaleRicevere * 100.0) / 100.0;
+            totaleDare = Math.round(totaleDare * 100.0) / 100.0;
             risultatoSaldiLiveData.postValue(new RisultatoSaldi(totaleRicevere, totaleDare, bilanci));
         });
     }

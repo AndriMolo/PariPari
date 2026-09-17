@@ -21,7 +21,7 @@ public final class SpesaUtil {
     }
 
     private static final Pattern PATTERN_RIMBORSO = Pattern.compile(
-            "^(?:Rimborso|Reimbursement):\\s*(?:da|from)\\s+(.+?)\\s+(?:a|to)\\s+(.+)$",
+            "^(?:Rimborso|Reimbursement|Reembolso|Remboursement|Rückzahlung)\\s*:\\s*(?:da|from|de|von)\\s+(.+?)\\s+(?:a|to|à|an)\\s+(.+)$",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 

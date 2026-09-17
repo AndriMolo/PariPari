@@ -14,8 +14,9 @@ import com.example.paripariapp.R;
 import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.databinding.ItemStoricoSaldoBinding;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -92,7 +93,7 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
         void onItemClick(StoricoItem item);
     }
 
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("d MMM yyyy • HH:mm", Locale.getDefault());
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy • HH:mm");
     private OnItemClickListener listener;
 
     public StoricoSaldiAdapter() {
@@ -126,7 +127,7 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
         }
 
         holder.binding.tvTitoloSaldo.setText(item.getTestoDescrizione());
-        holder.binding.tvDataSaldo.setText(dateFormat.format(new Date(spesa.getDataSpesa())));
+        holder.binding.tvDataSaldo.setText(DATE_FORMAT.format(Instant.ofEpochMilli(spesa.getDataSpesa()).atZone(ZoneId.systemDefault())));
         holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formatta(spesa.getImporto(), spesa.getValuta()));
 
         if (item.isTerzo()) {

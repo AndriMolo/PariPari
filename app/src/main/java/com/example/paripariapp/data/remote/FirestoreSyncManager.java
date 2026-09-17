@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Gestore dedicato per tutte le operazioni remote Cloud Firestore:
@@ -107,7 +108,7 @@ public class FirestoreSyncManager {
     private final FirebaseAuth auth;
     private final NetworkConnectivityMonitor networkMonitor;
 
-    private final List<ListenerRegistration> activeListeners = new ArrayList<>();
+    private final List<ListenerRegistration> activeListeners = new CopyOnWriteArrayList<>();
     private final Map<String, ListenerRegistration> groupSubListeners = new ConcurrentHashMap<>();
 
     public FirestoreSyncManager(@NonNull Context context,
@@ -704,7 +705,7 @@ public class FirestoreSyncManager {
                     if (sp.getSyncStatus() == SyncStatus.PENDING_DELETE) {
                         firestore.collection("groups").document(sp.getSchedaId())
                                 .collection("expenses").document(sp.getId()).delete()
-                                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> spesaDao.deleteById(sp.getId()));
+                                .addOnSuccessListener(AppDatabase.databaseWriteExecutor, aVoid -> spesaDao.deleteSpesaTransaction(sp.getId()));
                     } else {
                         uploadSpesaConQuote(sp, spesaDao.getQuoteBySpesaSync(sp.getId()));
                     }
@@ -1051,7 +1052,7 @@ public class FirestoreSyncManager {
                                     break;
                                 case REMOVED:
                                     Spesa spesaEliminata = spesaDao.getSpesaByIdSync(eId);
-                                    spesaDao.deleteById(eId);
+                                    spesaDao.deleteSpesaTransaction(eId);
 
                                     if (!isFirstBatch && !doc.getMetadata().hasPendingWrites() && spesaEliminata != null) {
                                         Scheda sRem = schedaDao.getSchedaById(groupId);

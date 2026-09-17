@@ -43,9 +43,10 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -79,7 +80,7 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private String queryFiltroTesto = "";
     private String categoriaSelezionata = "";
-    private final SimpleDateFormat dateFormatHeader = new SimpleDateFormat("d MMMM yyyy", Locale.getDefault());
+    private static final DateTimeFormatter DATE_FORMAT_HEADER = DateTimeFormatter.ofPattern("d MMMM yyyy");
 
     public static DettaglioSchedaFragment newInstance(String schedaId, String titolo, String valuta) {
         DettaglioSchedaFragment fragment = new DettaglioSchedaFragment();
@@ -784,7 +785,7 @@ public class DettaglioSchedaFragment extends Fragment {
         String ultimoHeader = "";
 
         for (SpesaConDettagli item : filtrate) {
-            String dataHeader = dateFormatHeader.format(new Date(item.getSpesa().getDataSpesa()));
+            String dataHeader = DATE_FORMAT_HEADER.format(Instant.ofEpochMilli(item.getSpesa().getDataSpesa()).atZone(ZoneId.systemDefault()));
             if (!dataHeader.equals(ultimoHeader)) {
                 ultimoHeader = dataHeader;
                 itemsConHeader.add(new SpesaListItem(dataHeader));

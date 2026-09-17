@@ -24,9 +24,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -38,10 +40,22 @@ import java.util.Map;
  */
 public final class EsportatoreDati {
 
-    private static final SimpleDateFormat FORMATO_DATA =
-            new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ITALY);
-    private static final SimpleDateFormat FORMATO_GIORNO =
-            new SimpleDateFormat("dd/MM/yyyy", Locale.ITALY);
+    private static final DateTimeFormatter FORMATO_DATA =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.ITALY);
+    private static final DateTimeFormatter FORMATO_GIORNO =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ITALY);
+
+    private static String formattaData(long timestamp) {
+        return FORMATO_DATA.format(Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()));
+    }
+
+    private static String formattaDataOraAttuale() {
+        return FORMATO_DATA.format(ZonedDateTime.now());
+    }
+
+    private static String formattaGiorno(long timestamp) {
+        return FORMATO_GIORNO.format(Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()));
+    }
 
     private EsportatoreDati() {
     }
@@ -131,7 +145,7 @@ public final class EsportatoreDati {
 
             if (spese != null) {
                 for (Spesa s : spese) {
-                    String data = FORMATO_DATA.format(new Date(s.getDataSpesa()));
+                    String data = formattaData(s.getDataSpesa());
                     boolean isRimborso = CategoriaUtil.isCategoriaSaldi(s.getCategoria());
                     String tipo = isRimborso ? "Rimborso" : "Spesa";
                     String desc = s.getTitolo() != null ? sanitizzaCsv(s.getTitolo()) : "";
@@ -216,7 +230,7 @@ public final class EsportatoreDati {
         paint.setTypeface(Typeface.DEFAULT);
         canvas.drawText("Report Finanziario di Gruppo", margin + 105, y - 2, paint);
 
-        String dataGenerazione = FORMATO_DATA.format(new Date());
+        String dataGenerazione = formattaDataOraAttuale();
         paint.setTextAlign(Paint.Align.RIGHT);
         canvas.drawText(dataGenerazione, pageWidth - margin, y - 2, paint);
         paint.setTextAlign(Paint.Align.LEFT);
@@ -391,7 +405,7 @@ public final class EsportatoreDati {
                 paint.setColor(Color.rgb(51, 65, 85));
                 paint.setTextSize(9);
                 paint.setTypeface(Typeface.DEFAULT);
-                canvas.drawText(FORMATO_GIORNO.format(new Date(sp.getDataSpesa())), margin + 8, y, paint);
+                canvas.drawText(formattaGiorno(sp.getDataSpesa()), margin + 8, y, paint);
 
                 String desc = sp.getTitolo() != null ? sp.getTitolo() : "";
                 if (desc.length() > 28) desc = desc.substring(0, 26) + "...";

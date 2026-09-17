@@ -61,7 +61,7 @@ public interface PartecipanteDao {
         public int count;
     }
 
-    @Query("SELECT scheda_id, COUNT(*) AS count FROM partecipanti GROUP BY scheda_id")
+    @Query("SELECT scheda_id, COUNT(*) AS count FROM partecipanti WHERE (stato IS NULL OR stato = 'ATTIVO' OR stato = 'OSPITE') AND sync_status != " + SyncStatus.PENDING_DELETE + " GROUP BY scheda_id")
     LiveData<List<ConteggioPartecipantiTuple>> getAllConteggiPartecipanti();
 
     @Query("SELECT COUNT(*) FROM partecipanti WHERE sync_status != " + SyncStatus.PENDING_DELETE)
