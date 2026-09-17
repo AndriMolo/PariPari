@@ -1,6 +1,9 @@
 package com.example.paripariapp.ui.view;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +31,11 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Fragment per visualizzare lo storico dei saldi e pareggi effettuati.
@@ -49,7 +54,24 @@ public class StoricoSaldiFragment extends Fragment {
     private List<Spesa> saldiCache = new ArrayList<>();
     private final Map<String, List<Partecipante>> partecipantiPerScheda = new HashMap<>();
     private final Map<String, List<SpesaPartecipante>> quotePerSpesaAll = new HashMap<>();
+    private final Map<String, String> spesaDestinatarioCache = new HashMap<>();
+    private final Set<String> observedSchedeIds = new HashSet<>();
     private String schedaFiltroId = null; // null = Tutti i gruppi
+
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private Runnable updateRunnable;
+
+    private void schedulaAggiornamentoLista() {
+        if (updateRunnable != null) {
+            mainHandler.removeCallbacks(updateRunnable);
+        }
+        updateRunnable = () -> {
+            if (isAdded() && getContext() != null && binding != null) {
+                aggiornaLista();
+            }
+        };
+        mainHandler.post(updateRunnable);
+    }
 
     public static StoricoSaldiFragment newInstance(@Nullable String schedaId) {
         StoricoSaldiFragment fragment = new StoricoSaldiFragment();
@@ -187,40 +209,98 @@ public class StoricoSaldiFragment extends Fragment {
             }
 
             for (Scheda s : schedeCache) {
-                viewModel.getPartecipanti(s.getId()).observe(getViewLifecycleOwner(), partecipanti -> {
-                    if (partecipanti != null) {
-                        partecipantiPerScheda.put(s.getId(), partecipanti);
-                        aggiornaLista();
-                    }
-                });
-                viewModel.getQuoteDellaScheda(s.getId()).observe(getViewLifecycleOwner(), quote -> {
-                    if (quote != null) {
-                        for (SpesaPartecipante q : quote) {
-                            List<SpesaPartecipante> list = quotePerSpesaAll.computeIfAbsent(q.getSpesaId(), k -> new ArrayList<>());
-                            if (!list.contains(q)) {
-                                list.add(q);
-                            }
+                if (observedSchedeIds.add(s.getId())) {
+                    viewModel.getPartecipanti(s.getId()).observe(getViewLifecycleOwner(), partecipanti -> {
+                        if (partecipanti != null) {
+                            partecipantiPerScheda.put(s.getId(), partecipanti);
+                            schedulaAggiornamentoLista();
                         }
-                    }
-                });
+                    });
+                    viewModel.getQuoteDellaScheda(s.getId()).observe(getViewLifecycleOwner(), quote -> {
+                        if (quote != null) {
+                            for (SpesaPartecipante q : quote) {
+                                List<SpesaPartecipante> list = quotePerSpesaAll.computeIfAbsent(q.getSpesaId(), k -> new ArrayList<>());
+                                if (!list.contains(q)) {
+                                    list.add(q);
+                                }
+                            }
+                            schedulaAggiornamentoLista();
+                        }
+                    });
+                }
             }
-            aggiornaLista();
+            schedulaAggiornamentoLista();
         });
 
         viewModel.getStoricoSaldi(schedaId).observe(getViewLifecycleOwner(), saldiList -> {
             saldiCache = saldiList != null ? saldiList : new ArrayList<>();
-            aggiornaLista();
+            schedulaAggiornamentoLista();
         });
     }
 
+    private String trovaDestinatarioId(Spesa s, @Nullable List<Partecipante> partecipantiScheda) {
+        if (s == null) return null;
+        
+        String cached = spesaDestinatarioCache.get(s.getId());
+        if (cached != null) {
+            return cached;
+        }
+
+        List<SpesaPartecipante> quote = quotePerSpesaAll.get(s.getId());
+        if (quote != null && !quote.isEmpty()) {
+            for (SpesaPartecipante q : quote) {
+                if (q.getPartecipanteId() != null && !q.getPartecipanteId().equals(s.getPagatoDaId())) {
+                    spesaDestinatarioCache.put(s.getId(), q.getPartecipanteId());
+                    return q.getPartecipanteId();
+                }
+            }
+        }
+        if (partecipantiScheda != null && !partecipantiScheda.isEmpty()) {
+            String destNome = estraiDestinatarioDalTitolo(s.getTitolo());
+            if (!destNome.isEmpty() && !"Membro".equalsIgnoreCase(destNome)) {
+                for (Partecipante p : partecipantiScheda) {
+                    String pNome = Partecipante.pulisciNome(p.getNome());
+                    if (pNome.equalsIgnoreCase(destNome) && !p.getId().equals(s.getPagatoDaId())) {
+                        spesaDestinatarioCache.put(s.getId(), p.getId());
+                        return p.getId();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     private void aggiornaLista() {
-        if (binding == null) return;
+        if (!isAdded() || getContext() == null || binding == null) return;
+        Context context = getContext();
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(context);
 
         List<Spesa> listaFiltrata = new ArrayList<>();
         for (Spesa s : saldiCache) {
-            if (schedaFiltroId == null || s.getSchedaId().equals(schedaFiltroId)) {
-                listaFiltrata.add(s);
+            if (schedaFiltroId != null && !s.getSchedaId().equals(schedaFiltroId)) {
+                continue;
             }
+
+            // Se siamo nello storico saldi generale (schedaId == null), mostrare SOLO i saldi in cui IO sono coinvolto
+            if (schedaId == null) {
+                List<Partecipante> partecipantiScheda = partecipantiPerScheda.get(s.getSchedaId());
+                String myId = (partecipantiScheda != null) ? Partecipante.findCurrentUserId(partecipantiScheda, currentUser, prefs, s.getSchedaId()) : null;
+
+                if (myId != null) {
+                    String destId = trovaDestinatarioId(s, partecipantiScheda);
+                    boolean isMittente = s.getPagatoDaId() != null && s.getPagatoDaId().equals(myId);
+                    boolean isDestinatario = destId != null && destId.equals(myId);
+
+                    if (!isMittente && !isDestinatario) {
+                        continue; // Esclude i saldi tra terzi dallo storico generale personale
+                    }
+                }
+            }
+
+            listaFiltrata.add(s);
         }
 
         if (listaFiltrata.isEmpty()) {
@@ -232,7 +312,6 @@ public class StoricoSaldiFragment extends Fragment {
         binding.layoutEmptyStorico.setVisibility(View.GONE);
         binding.recyclerStoricoSaldi.setVisibility(View.VISIBLE);
 
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         List<StoricoSaldiAdapter.StoricoItem> items = new ArrayList<>();
         boolean showGroupTitle = (schedaId == null);
 
@@ -256,31 +335,41 @@ public class StoricoSaldiFragment extends Fragment {
                 }
             }
 
-            boolean isRicevuto;
+            String destId = trovaDestinatarioId(s, partecipantiScheda);
+            String destinatarioNome = null;
+            if (destId != null && partecipantiScheda != null) {
+                for (Partecipante p : partecipantiScheda) {
+                    if (p.getId().equals(destId)) {
+                        destinatarioNome = Partecipante.pulisciNome(p.getNome());
+                        break;
+                    }
+                }
+            }
+            if (destinatarioNome == null) {
+                destinatarioNome = estraiDestinatarioDalTitolo(s.getTitolo());
+            }
+
+            String myId = (partecipantiScheda != null) ? Partecipante.findCurrentUserId(partecipantiScheda, currentUser, prefs, s.getSchedaId()) : null;
+
+            boolean isRicevuto = false;
+            boolean isTerzo = false;
             String testoDescrizione;
 
-            String myId = null;
-            if (partecipantiScheda != null) {
-                com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
-                        com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
-                myId = Partecipante.findCurrentUserId(partecipantiScheda, currentUser, prefs, s.getSchedaId());
-            }
-
-            if (myId != null) {
-                if (s.getPagatoDaId().equals(myId)) {
-                    isRicevuto = false;
-                    String dest = estraiDestinatarioDalTitolo(s.getTitolo());
-                    testoDescrizione = getString(R.string.storico_pagamento_inviato, dest.toLowerCase(Locale.getDefault()));
-                } else {
-                    isRicevuto = true;
-                    testoDescrizione = getString(R.string.storico_pagamento_ricevuto, mittenteNome.toLowerCase(Locale.getDefault()));
-                }
+            if (myId != null && s.getPagatoDaId() != null && s.getPagatoDaId().equals(myId)) {
+                isRicevuto = false;
+                isTerzo = false;
+                testoDescrizione = getString(R.string.storico_pagamento_inviato, destinatarioNome.toLowerCase(Locale.getDefault()));
+            } else if (myId != null && destId != null && destId.equals(myId)) {
+                isRicevuto = true;
+                isTerzo = false;
+                testoDescrizione = getString(R.string.storico_pagamento_ricevuto, mittenteNome.toLowerCase(Locale.getDefault()));
             } else {
                 isRicevuto = false;
-                testoDescrizione = s.getTitolo();
+                isTerzo = true;
+                testoDescrizione = mittenteNome + " → " + destinatarioNome;
             }
 
-            items.add(new StoricoSaldiAdapter.StoricoItem(s, nomeScheda, testoDescrizione, isRicevuto, showGroupTitle));
+            items.add(new StoricoSaldiAdapter.StoricoItem(s, nomeScheda, testoDescrizione, isRicevuto, showGroupTitle, isTerzo));
         }
 
         adapter.submitList(items);
@@ -304,6 +393,22 @@ public class StoricoSaldiFragment extends Fragment {
             return titolo.substring(idx + marker.length()).trim();
         }
         return "Membro";
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof com.example.paripariapp.MainActivity) {
+            ((com.example.paripariapp.MainActivity) getActivity()).impostaVisibilitaBottomNav(false);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (getActivity() instanceof com.example.paripariapp.MainActivity) {
+            ((com.example.paripariapp.MainActivity) getActivity()).impostaVisibilitaBottomNav(true);
+        }
     }
 
     @Override

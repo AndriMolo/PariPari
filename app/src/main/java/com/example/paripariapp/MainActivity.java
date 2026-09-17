@@ -3,6 +3,7 @@ package com.example.paripariapp;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -241,6 +242,12 @@ public class MainActivity extends AppCompatActivity {
         currentFragment = targetFragment;
         transaction.commit();
         return true;
+    }
+
+    public void impostaVisibilitaBottomNav(boolean visibile) {
+        if (binding != null && binding.bottomNavigation != null) {
+            binding.bottomNavigation.setVisibility(visibile ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void aggiornaFcmTokenSeLoggato() {

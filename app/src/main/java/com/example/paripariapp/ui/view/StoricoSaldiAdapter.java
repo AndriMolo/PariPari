@@ -31,13 +31,19 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
         private final String testoDescrizione;
         private final boolean isRicevuto;
         private final boolean showGroupTitle;
+        private final boolean isTerzo;
 
-        public StoricoItem(Spesa spesa, String nomeScheda, String testoDescrizione, boolean isRicevuto, boolean showGroupTitle) {
+        public StoricoItem(Spesa spesa, String nomeScheda, String testoDescrizione, boolean isRicevuto, boolean showGroupTitle, boolean isTerzo) {
             this.spesa = spesa;
             this.nomeScheda = nomeScheda;
             this.testoDescrizione = testoDescrizione;
             this.isRicevuto = isRicevuto;
             this.showGroupTitle = showGroupTitle;
+            this.isTerzo = isTerzo;
+        }
+
+        public StoricoItem(Spesa spesa, String nomeScheda, String testoDescrizione, boolean isRicevuto, boolean showGroupTitle) {
+            this(spesa, nomeScheda, testoDescrizione, isRicevuto, showGroupTitle, false);
         }
 
         public Spesa getSpesa() {
@@ -59,6 +65,10 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
         public boolean isShowGroupTitle() {
             return showGroupTitle;
         }
+
+        public boolean isTerzo() {
+            return isTerzo;
+        }
     }
 
     private static final DiffUtil.ItemCallback<StoricoItem> DIFF_CALLBACK = new DiffUtil.ItemCallback<StoricoItem>() {
@@ -73,6 +83,7 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
                     Double.compare(oldItem.getSpesa().getImporto(), newItem.getSpesa().getImporto()) == 0 &&
                     oldItem.getSpesa().getDataSpesa() == newItem.getSpesa().getDataSpesa() &&
                     oldItem.isRicevuto() == newItem.isRicevuto() &&
+                    oldItem.isTerzo() == newItem.isTerzo() &&
                     oldItem.isShowGroupTitle() == newItem.isShowGroupTitle();
         }
     };
@@ -118,14 +129,21 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
         holder.binding.tvDataSaldo.setText(dateFormat.format(new Date(spesa.getDataSpesa())));
         holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formatta(spesa.getImporto(), spesa.getValuta()));
 
-        if (item.isRicevuto()) {
-            int greenColor = androidx.core.content.ContextCompat.getColor(ctx, R.color.credit_green);
+        if (item.isTerzo()) {
+            int neutralColor = com.google.android.material.color.MaterialColors.getColor(
+                    holder.itemView, android.R.attr.colorPrimary);
+            holder.binding.ivIconaSaldo.setColorFilter(neutralColor);
+            holder.binding.tvImportoSaldo.setTextColor(neutralColor);
+            holder.binding.tvBadgeTipoSaldo.setText(R.string.badge_saldato_effettuato);
+            holder.binding.tvBadgeTipoSaldo.setTextColor(neutralColor);
+        } else if (item.isRicevuto()) {
+            int greenColor = ctx.getResources().getColor(R.color.credit_green, null);
             holder.binding.ivIconaSaldo.setColorFilter(greenColor);
             holder.binding.tvImportoSaldo.setTextColor(greenColor);
             holder.binding.tvBadgeTipoSaldo.setText(R.string.badge_ricevuto);
             holder.binding.tvBadgeTipoSaldo.setTextColor(greenColor);
         } else {
-            int redColor = androidx.core.content.ContextCompat.getColor(ctx, R.color.debt_red);
+            int redColor = ctx.getResources().getColor(android.R.color.holo_red_dark, null);
             holder.binding.ivIconaSaldo.setColorFilter(redColor);
             holder.binding.tvImportoSaldo.setTextColor(redColor);
             holder.binding.tvBadgeTipoSaldo.setText(R.string.badge_inviato);
