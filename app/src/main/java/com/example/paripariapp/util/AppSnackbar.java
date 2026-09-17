@@ -193,6 +193,9 @@ public final class AppSnackbar {
         // che la sua altezza sia identica e galleggi perfettamente a 16dp sopra la barra inferiore.
         Activity activity = findActivity(context);
         View bottomNav = activity != null ? activity.findViewById(R.id.bottom_navigation) : null;
+        if (bottomNav == null && activity != null) {
+            bottomNav = activity.findViewById(R.id.bottom_nav_scheda);
+        }
         boolean hasVisibleBottomNav = bottomNav != null && bottomNav.getVisibility() == View.VISIBLE;
 
         ViewGroup.LayoutParams layoutParams = snackbarView.getLayoutParams();

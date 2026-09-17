@@ -16,6 +16,9 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -122,6 +125,7 @@ public class DettaglioSchedaFragment extends Fragment {
         setupBottomNavScheda();
         setupRecyclerMembri();
         setupBackPressHandler();
+        setupWindowInsets();
 
         int tabDaRipristinare = viewModel.getSelectedTabId();
         if (savedInstanceState != null) {
@@ -129,6 +133,27 @@ public class DettaglioSchedaFragment extends Fragment {
         }
         binding.bottomNavScheda.setSelectedItemId(tabDaRipristinare);
         selezionaTab(tabDaRipristinare);
+    }
+
+    private void setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int navBarBottom = systemBars.bottom;
+            float density = getResources().getDisplayMetrics().density;
+
+            int baseNavHeight = (int) (56 * density);
+            int totalBottomNavHeight = baseNavHeight + navBarBottom;
+
+            binding.containerSezioni.setPadding(0, 0, 0, totalBottomNavHeight);
+
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) binding.fabNuovaSpesa.getLayoutParams();
+            if (lp != null) {
+                lp.bottomMargin = totalBottomNavHeight + (int) (16 * density);
+                binding.fabNuovaSpesa.setLayoutParams(lp);
+            }
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(binding.getRoot());
     }
 
     private void setupBottomNavScheda() {

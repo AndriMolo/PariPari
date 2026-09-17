@@ -7,6 +7,9 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -144,6 +147,25 @@ public class DettaglioRimborsoFragment extends Fragment {
         });
 
         setupObservers();
+        setupWindowInsets();
+    }
+
+    private void setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int navBarBottom = systemBars.bottom;
+            float density = getResources().getDisplayMetrics().density;
+
+            int basePadding = (int) (24 * density);
+            binding.scrollDettaglioRimborso.setPadding(
+                    binding.scrollDettaglioRimborso.getPaddingLeft(),
+                    binding.scrollDettaglioRimborso.getPaddingTop(),
+                    binding.scrollDettaglioRimborso.getPaddingRight(),
+                    basePadding + navBarBottom
+            );
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(binding.getRoot());
     }
 
     private void setupObservers() {

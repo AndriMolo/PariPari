@@ -10,6 +10,9 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.paripariapp.R;
@@ -99,6 +102,33 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         setupAzioneElimina();
         setupObservers();
         setupSalva();
+        setupWindowInsets();
+    }
+
+    private void setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            int navBarBottom = systemBars.bottom;
+            float density = getResources().getDisplayMetrics().density;
+
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) binding.azioneSalva.getLayoutParams();
+            if (lp != null) {
+                int baseMargin = (int) (20 * density);
+                lp.bottomMargin = baseMargin + navBarBottom;
+                lp.rightMargin = baseMargin;
+                binding.azioneSalva.setLayoutParams(lp);
+            }
+
+            int baseScrollPadding = (int) (96 * density);
+            binding.scrollModificaSpesa.setPadding(
+                    binding.scrollModificaSpesa.getPaddingLeft(),
+                    binding.scrollModificaSpesa.getPaddingTop(),
+                    binding.scrollModificaSpesa.getPaddingRight(),
+                    baseScrollPadding + navBarBottom
+            );
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(binding.getRoot());
     }
 
     private void setupAzioneElimina() {
