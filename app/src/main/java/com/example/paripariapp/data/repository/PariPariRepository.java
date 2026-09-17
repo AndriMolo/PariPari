@@ -192,6 +192,10 @@ public class PariPariRepository {
 
     public void eliminaPartecipanteDefinitivamente(String schedaId, String partecipanteId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            if (haPartecipatoASpese(schedaId, partecipanteId)) {
+                android.util.Log.w("PariPariRepository", "Impossibile eliminare definitivamente partecipante con storico spese: " + partecipanteId);
+                return;
+            }
             partecipanteDao.deleteById(partecipanteId);
             syncManager.deletePartecipanteDefinitivamente(schedaId, partecipanteId);
         });
@@ -199,6 +203,10 @@ public class PariPariRepository {
 
     public void esciDalGruppo(String schedaId, String partecipanteId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            Scheda scheda = schedaDao.getSchedaById(schedaId);
+            Partecipante pUscito = partecipanteDao.getPartecipanteById(partecipanteId);
+            if (pUscito == null) return;
+
             List<Partecipante> partecipantiAttivi = partecipanteDao.getPartecipantiAttiviBySchedaSync(schedaId);
 
             int altriAutenticati = 0;
@@ -210,9 +218,13 @@ public class PariPariRepository {
                 }
             }
 
-            // SE NON CI SONO ALTRI UTENTI REALI AUTENTICATI NEL GRUPPO:
+            FirebaseUser currentUser = auth.getCurrentUser();
+            boolean isSelf = Partecipante.isCurrentUserParticipant(pUscito, currentUser);
+            boolean isCapogruppo = (scheda != null && scheda.getCreatoreId() != null && scheda.getCreatoreId().equals(partecipanteId));
+
+            // SE chi esce è l'utente reale corrente ed è il capogruppo, e non ci sono altri utenti autenticati a cui cedere la scheda:
             // L'uscita del capogruppo cancella il gruppo sia dal DB locale che da Firestore!
-            if (altriAutenticati == 0) {
+            if (isSelf && isCapogruppo && altriAutenticati == 0) {
                 syncManager.eliminaGruppoDefinitivamente(schedaId);
                 spesaDao.deleteBySchedaId(schedaId);
                 partecipanteDao.deleteBySchedaId(schedaId);
@@ -220,12 +232,7 @@ public class PariPariRepository {
                 return;
             }
 
-            Scheda scheda = schedaDao.getSchedaById(schedaId);
-            Partecipante pUscito = partecipanteDao.getPartecipanteById(partecipanteId);
-
             if (pUscito != null) {
-                FirebaseUser currentUser = auth.getCurrentUser();
-                boolean isSelf = Partecipante.isCurrentUserParticipant(pUscito, currentUser);
                 boolean eLocale = !pUscito.isAutenticato();
                 boolean haSpese = haPartecipatoASpese(schedaId, partecipanteId);
 
@@ -519,12 +526,14 @@ public class PariPariRepository {
                 String mioId = Partecipante.findCurrentUserId(parti, currentUser, UserPreferencesRepository.getInstance(application), idScheda);
 
                 if (mioId != null) {
+                    String defaultAppCurrency = UserPreferencesRepository.getInstance(application).getDefaultCurrency();
                     for (TrasferimentoSaldo t : trasferimenti) {
+                        double importoInDefaultCurrency = CalcolatoreSaldi.convertiValuta(t.getImporto(), valuta, defaultAppCurrency, application);
                         if (t.getDaPartecipanteId().equals(mioId)) {
-                            totaleDare += t.getImporto();
+                            totaleDare += importoInDefaultCurrency;
                             bilanci.add(new BilancioPersonaItem(t.getAPartecipanteNome(), titoloScheda, -t.getImporto(), valuta, idScheda, t));
                         } else if (t.getAPartecipanteId().equals(mioId)) {
-                            totaleRicevere += t.getImporto();
+                            totaleRicevere += importoInDefaultCurrency;
                             bilanci.add(new BilancioPersonaItem(t.getDaPartecipanteNome(), titoloScheda, t.getImporto(), valuta, idScheda, t));
                         }
                     }

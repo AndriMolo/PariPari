@@ -35,6 +35,28 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Banner Rimborso non modificabile (Membro assente) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_banner_readonly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="?attr/colorError"
+                app:strokeWidth="1dp">
+
+                <TextView
+                    android:id="@+id/tv_banner_readonly"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="@string/banner_spesa_non_modificabile"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorError"
+                    android:textStyle="bold" />
+            </com.google.android.material.card.MaterialCardView>
+
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

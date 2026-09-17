@@ -59,6 +59,9 @@ public class Spesa {
     @ColumnInfo(name = "sync_status")
     private int syncStatus;
 
+    @ColumnInfo(name = "tasso_cambio")
+    private Double tassoCambio = 1.0;
+
     public Spesa(@NonNull String id, @NonNull String schedaId, @NonNull String titolo,
                  double importo, @NonNull String valuta, long dataSpesa,
                  String categoria, @NonNull String pagatoDaId,
@@ -185,5 +188,13 @@ public class Spesa {
 
     public void setSyncStatus(int syncStatus) {
         this.syncStatus = syncStatus;
+    }
+
+    public Double getTassoCambio() {
+        return tassoCambio;
+    }
+
+    public void setTassoCambio(Double tassoCambio) {
+        this.tassoCambio = tassoCambio;
     }
 }

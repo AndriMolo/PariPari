@@ -93,6 +93,16 @@ public class StoricoSaldiFragment extends Fragment {
             if (item == null || item.getSpesa() == null) return;
             Spesa spesa = item.getSpesa();
             if (isSettleUp(spesa)) {
+                List<Partecipante> partecipanti = partecipantiPerScheda.get(spesa.getSchedaId());
+                List<SpesaPartecipante> quote = quotePerSpesaAll.get(spesa.getId());
+                if (SpesaUiHelper.haPartecipantiAssenti(spesa, quote, partecipanti)) {
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.dialog_titolo_spesa_non_modificabile)
+                            .setMessage(R.string.dialog_msg_spesa_membro_assente)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show();
+                    return;
+                }
                 new MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.titolo_annulla_saldo)
                         .setMessage(R.string.msg_conferma_annulla_saldo)

@@ -20,6 +20,7 @@ import com.example.paripariapp.data.model.SpesaPartecipante;
 import com.example.paripariapp.data.model.SyncStatus;
 import com.example.paripariapp.databinding.FragmentModificaRimborsoBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
+import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
 import com.example.paripariapp.util.HapticUtil;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -51,10 +52,12 @@ public class ModificaRimborsoFragment extends Fragment {
     private String valutaGruppo;
 
     private Spesa spesaCorrente;
+    private List<Partecipante> tuttiPartecipanti = new ArrayList<>();
     private List<Partecipante> partecipanti = new ArrayList<>();
     private List<SpesaPartecipante> quoteEsistenti = new ArrayList<>();
     private long dataSelezionataTimestamp = System.currentTimeMillis();
     private boolean isDataLoaded = false;
+    private boolean isReadOnly = false;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.getDefault());
 
@@ -159,6 +162,10 @@ public class ModificaRimborsoFragment extends Fragment {
 
     private void setupAzioneElimina() {
         binding.azioneElimina.setOnClickListener(v -> {
+            if (isReadOnly) {
+                AppSnackbar.show(binding.getRoot(), R.string.msg_spesa_non_modificabile_membro_assente);
+                return;
+            }
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.dialog_titolo_elimina_rimborso)
                     .setMessage(R.string.dialog_msg_elimina_rimborso)
@@ -177,6 +184,7 @@ public class ModificaRimborsoFragment extends Fragment {
         if (schedaId != null) {
             viewModel.getPartecipanti(schedaId).observe(getViewLifecycleOwner(), lista -> {
                 if (lista == null) return;
+                this.tuttiPartecipanti = lista;
                 List<Partecipante> attivi = new ArrayList<>();
                 for (Partecipante p : lista) {
                     if (p.isAttivo()) {
@@ -272,26 +280,36 @@ public class ModificaRimborsoFragment extends Fragment {
         dataSelezionataTimestamp = spesaCorrente.getDataSpesa();
         aggiornaDataVisualizzata(dataSelezionataTimestamp);
 
+        // Verifica se qualche partecipante coinvolto è assente
+        boolean haPartecipantiAssenti = SpesaUiHelper.haPartecipantiAssenti(spesaCorrente, quoteEsistenti, partecipanti);
+        this.isReadOnly = haPartecipantiAssenti;
+
         // 5. Mittente (Pagatore)
-        for (Partecipante p : partecipanti) {
+        String nomePagatore = null;
+        for (Partecipante p : tuttiPartecipanti) {
             if (p.getId().equals(spesaCorrente.getPagatoDaId())) {
-                binding.menuPagante.setText(p.getNome(), false);
+                nomePagatore = p.getNome();
                 break;
             }
         }
+        binding.menuPagante.setText(nomePagatore != null ? nomePagatore : getString(R.string.nome_sconosciuto), false);
 
         // 6. Destinatario (dalla quota)
-        aggiornaDropdownDestinatario();
+        if (!isReadOnly) {
+            aggiornaDropdownDestinatario();
+        }
         boolean trovataQuota = false;
         for (SpesaPartecipante q : quoteEsistenti) {
             if (q.getSpesaId().equals(spesaCorrente.getId())) {
                 trovataQuota = true;
-                for (Partecipante p : partecipanti) {
+                String nomeDest = null;
+                for (Partecipante p : tuttiPartecipanti) {
                     if (p.getId().equals(q.getPartecipanteId())) {
-                        binding.menuDestinatario.setText(p.getNome(), false);
+                        nomeDest = p.getNome();
                         break;
                     }
                 }
+                binding.menuDestinatario.setText(nomeDest != null ? nomeDest : getString(R.string.nome_sconosciuto), false);
                 break;
             }
         }
@@ -300,11 +318,27 @@ public class ModificaRimborsoFragment extends Fragment {
             return;
         }
 
+        if (haPartecipantiAssenti) {
+            binding.cardBannerReadonly.setVisibility(View.VISIBLE);
+            binding.azioneSalva.setVisibility(View.GONE);
+            binding.campoDescrizione.setEnabled(false);
+            binding.campoImporto.setEnabled(false);
+            binding.campoValuta.setEnabled(false);
+            binding.campoData.setEnabled(false);
+            binding.menuPagante.setEnabled(false);
+            binding.menuDestinatario.setEnabled(false);
+            binding.contenitoreData.setEndIconOnClickListener(null);
+        }
+
         isDataLoaded = true;
     }
 
     private void setupSalva() {
         binding.azioneSalva.setOnClickListener(v -> {
+            if (isReadOnly) {
+                AppSnackbar.show(binding.getRoot(), R.string.msg_spesa_non_modificabile_membro_assente);
+                return;
+            }
             String importoStr = binding.campoImporto.getText() != null ? binding.campoImporto.getText().toString().trim() : "";
             double importo = 0.0;
             try {
@@ -368,6 +402,16 @@ public class ModificaRimborsoFragment extends Fragment {
                     desc,
                     SyncStatus.PENDING_UPDATE
             );
+
+            double tasso;
+            if (spesaCorrente != null && spesaCorrente.getValuta() != null &&
+                    spesaCorrente.getValuta().equalsIgnoreCase(valuta) &&
+                    spesaCorrente.getTassoCambio() > 0) {
+                tasso = spesaCorrente.getTassoCambio();
+            } else {
+                tasso = SpesaUiHelper.calcolaTassoCambioAttuale(valuta, valutaGruppo != null ? valutaGruppo : "EUR", requireContext());
+            }
+            spesaAggiornata.setTassoCambio(tasso);
 
             List<SpesaPartecipante> nuoveQuote = new ArrayList<>();
             nuoveQuote.add(new SpesaPartecipante(

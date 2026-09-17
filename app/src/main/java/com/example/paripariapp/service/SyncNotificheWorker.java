@@ -123,6 +123,10 @@ public class SyncNotificheWorker extends Worker {
                                     SyncStatus.SYNCED
                             );
                             nuovaSpesa.setScontrinoJson(scontrinoJson);
+                            Double tassoCambio = eDoc.getDouble("tassoCambio");
+                            if (tassoCambio != null) {
+                                nuovaSpesa.setTassoCambio(tassoCambio);
+                            }
                             db.spesaDao().insert(nuovaSpesa);
 
                             // Scarica anche le quote per consistenza DB locale

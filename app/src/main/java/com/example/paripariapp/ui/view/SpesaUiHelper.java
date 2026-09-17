@@ -8,10 +8,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.paripariapp.data.model.Partecipante;
+import com.example.paripariapp.data.model.Spesa;
 import com.example.paripariapp.data.model.SpesaPartecipante;
+import com.example.paripariapp.data.repository.CurrencyRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +24,75 @@ import java.util.Set;
  * e ripartizione delle quote spese condivisa tra NuovaSpesaFragment e ModificaSpesaFragment.
  */
 public final class SpesaUiHelper {
+
+    /**
+     * Verifica centralizzata per controllare se una spesa o rimborso include partecipanti non più attivi
+     * (ex membri usciti o rimossi).
+     */
+    public static boolean haPartecipantiAssenti(
+            @Nullable String pagatoDaId,
+            @Nullable String spesaId,
+            @Nullable List<SpesaPartecipante> quote,
+            @Nullable List<Partecipante> partecipantiGruppo
+    ) {
+        if (partecipantiGruppo == null || partecipantiGruppo.isEmpty()) {
+            return false;
+        }
+        Set<String> activeIds = new HashSet<>();
+        for (Partecipante p : partecipantiGruppo) {
+            if (p != null && p.isAttivo()) {
+                activeIds.add(p.getId());
+            }
+        }
+        if (pagatoDaId != null && !pagatoDaId.trim().isEmpty() && !activeIds.contains(pagatoDaId)) {
+            return true;
+        }
+        if (quote != null) {
+            for (SpesaPartecipante q : quote) {
+                if (q == null) continue;
+                if (spesaId != null && !spesaId.equals(q.getSpesaId())) {
+                    continue;
+                }
+                if (q.getPartecipanteId() != null && !activeIds.contains(q.getPartecipanteId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean haPartecipantiAssenti(
+            @Nullable Spesa spesa,
+            @Nullable List<SpesaPartecipante> quote,
+            @Nullable List<Partecipante> partecipantiGruppo
+    ) {
+        if (spesa == null) return false;
+        return haPartecipantiAssenti(spesa.getPagatoDaId(), spesa.getId(), quote, partecipantiGruppo);
+    }
+
+    /**
+     * Calcola il tasso di cambio attuale per convertire 1 unità di valutaSpesa nella valuta della scheda.
+     * Se le valute coincidono o context è nullo, restituisce 1.0.
+     */
+    public static double calcolaTassoCambioAttuale(
+            @Nullable String valutaSpesa,
+            @Nullable String valutaScheda,
+            @Nullable Context context
+    ) {
+        if (valutaSpesa == null || valutaScheda == null || valutaSpesa.equalsIgnoreCase(valutaScheda)) {
+            return 1.0;
+        }
+        if (context == null) {
+            return 1.0;
+        }
+        CurrencyRepository repo = CurrencyRepository.getInstance(context.getApplicationContext());
+        double rateOrigine = repo.getRate(valutaSpesa);
+        double rateDestinazione = repo.getRate(valutaScheda);
+        if (rateOrigine <= 0.0) {
+            return 1.0;
+        }
+        return rateDestinazione / rateOrigine;
+    }
 
     public enum TipoDivisione {
         EQUA,

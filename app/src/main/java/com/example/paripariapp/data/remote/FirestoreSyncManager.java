@@ -434,6 +434,8 @@ public class FirestoreSyncManager {
         data.put("dataSpesa", spesa.getDataSpesa());
         data.put("categoria", spesa.getCategoria());
         data.put("pagatoDaId", spesa.getPagatoDaId());
+        Double tasso = spesa.getTassoCambio();
+        data.put("tassoCambio", tasso != null ? tasso : 1.0);
 
         String scontrinoUrl = spesa.getScontrinoUrl();
         if (scontrinoUrl != null && (scontrinoUrl.startsWith("http://") || scontrinoUrl.startsWith("https://"))) {
@@ -931,6 +933,7 @@ public class FirestoreSyncManager {
                                     String pagatoDaId = doc.getString("pagatoDaId");
                                     String scontrinoUrl = doc.getString("scontrinoUrl");
                                     String scontrinoJson = doc.getString("scontrinoJson");
+                                    Double tassoCambio = doc.getDouble("tassoCambio");
 
                                     if (titolo != null && importo != null) {
                                         Spesa spesa = new Spesa(
@@ -946,6 +949,9 @@ public class FirestoreSyncManager {
                                                 SyncStatus.SYNCED
                                         );
                                         spesa.setScontrinoJson(scontrinoJson);
+                                        if (tassoCambio != null) {
+                                            spesa.setTassoCambio(tassoCambio);
+                                        }
                                         spesaDao.insert(spesa);
 
                                         final List<SpesaPartecipante> quoteInMem = new ArrayList<>();
@@ -1521,6 +1527,10 @@ public class FirestoreSyncManager {
                                                     SyncStatus.SYNCED
                                             );
                                             sDownload.setScontrinoJson(eScontrinoJson);
+                                            Double eTasso = eDoc.getDouble("tassoCambio");
+                                            if (eTasso != null) {
+                                                sDownload.setTassoCambio(eTasso);
+                                            }
                                             speseScaricate.add(sDownload);
 
                                             eDoc.getReference().collection("shares").get()

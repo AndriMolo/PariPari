@@ -57,6 +57,7 @@ public abstract class BaseSpesaFragment extends Fragment {
 
     protected String schedaId;
     protected String valuta;
+    protected String valutaScheda;
     protected List<Partecipante> partecipanti = new ArrayList<>();
 
     protected SpesaUiHelper.TipoDivisione tipoDivisione = SpesaUiHelper.TipoDivisione.EQUA;
@@ -131,6 +132,7 @@ public abstract class BaseSpesaFragment extends Fragment {
         if (getArguments() != null) {
             schedaId = getArguments().getString(ARG_SCHEDA_ID);
             valuta = getArguments().getString(ARG_VALUTA);
+            valutaScheda = valuta;
         }
     }
 
@@ -280,6 +282,11 @@ public abstract class BaseSpesaFragment extends Fragment {
     @NonNull
     protected String getValutaEffettiva() {
         return valuta != null && !valuta.isEmpty() ? valuta : getString(R.string.valuta_default);
+    }
+
+    @NonNull
+    protected String getValutaScheda() {
+        return valutaScheda != null && !valutaScheda.isEmpty() ? valutaScheda : getString(R.string.valuta_default);
     }
 
     protected void setupCategorieDropdown() {

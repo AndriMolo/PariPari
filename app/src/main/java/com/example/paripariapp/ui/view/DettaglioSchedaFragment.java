@@ -43,6 +43,8 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -275,22 +277,27 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private void aggiornaSaldi() {
         if (saldoAdapter != null) {
-            List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
+            String valutaCorrente = valuta != null ? valuta : "EUR";
+            Map<String, Double> mapBilanci = CalcolatoreSaldi.calcolaMapBilanci(
                     partecipantiCache,
                     speseCache,
                     quoteCache,
-                    valuta != null ? valuta : "EUR",
-                    requireContext()
+                    valutaCorrente,
+                    getContext()
+            );
+
+            List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
+                    partecipantiCache,
+                    mapBilanci,
+                    valutaCorrente
             );
 
             saldoAdapter.submitList(trasferimenti != null ? trasferimenti : new ArrayList<>());
 
             List<CalcolatoreSaldi.BilancioMembro> bilanciMembri = CalcolatoreSaldi.calcolaListaBilanciMembri(
                     partecipantiCache,
-                    speseCache,
-                    quoteCache,
-                    valuta != null ? valuta : "EUR",
-                    requireContext()
+                    mapBilanci,
+                    valutaCorrente
             );
             if (bilancioMembroAdapter != null) {
                 bilancioMembroAdapter.submitList(bilanciMembri);
@@ -389,29 +396,7 @@ public class DettaglioSchedaFragment extends Fragment {
             if (item == null || item.getSpesa() == null) return;
             Spesa spesa = item.getSpesa();
 
-            java.util.Set<String> activeIds = new java.util.HashSet<>();
-            if (partecipantiCache != null) {
-                for (Partecipante p : partecipantiCache) {
-                    if (p.isAttivo()) {
-                        activeIds.add(p.getId());
-                    }
-                }
-            }
-
-            boolean haMembroAssente = false;
-            if (spesa.getPagatoDaId() != null && !activeIds.contains(spesa.getPagatoDaId())) {
-                haMembroAssente = true;
-            }
-            if (!haMembroAssente && quoteCache != null) {
-                for (SpesaPartecipante q : quoteCache) {
-                    if (q.getSpesaId().equals(spesa.getId())) {
-                        if (q.getPartecipanteId() != null && !activeIds.contains(q.getPartecipanteId())) {
-                            haMembroAssente = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            boolean haMembroAssente = SpesaUiHelper.haPartecipantiAssenti(spesa, quoteCache, partecipantiCache);
 
             if (haMembroAssente) {
                 new MaterialAlertDialogBuilder(requireContext())
@@ -462,6 +447,14 @@ public class DettaglioSchedaFragment extends Fragment {
                     }
                     return true;
                 } else if (menuItem.getItemId() == 2) {
+                    if (SpesaUiHelper.haPartecipantiAssenti(spesa, quoteCache, partecipantiCache)) {
+                        new MaterialAlertDialogBuilder(requireContext())
+                                .setTitle(R.string.dialog_titolo_spesa_non_modificabile)
+                                .setMessage(R.string.dialog_msg_spesa_membro_assente)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                        return true;
+                    }
                     boolean isRimborso = com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(spesa.getCategoria());
                     new MaterialAlertDialogBuilder(requireContext())
                             .setTitle(isRimborso ? R.string.dialog_titolo_elimina_rimborso : R.string.dialog_titolo_elimina_spesa)
@@ -637,17 +630,20 @@ public class DettaglioSchedaFragment extends Fragment {
 
         double mieSpeseTotale = 0.0;
         String valutaScheda = valuta != null ? valuta : "EUR";
-        if (myId != null && tutteSpeseRaw != null && quoteCache != null) {
+        if (myId != null && tutteSpeseRaw != null && quoteCache != null && !quoteCache.isEmpty()) {
+            Map<String, Spesa> nonSaldiSpeseMap = new HashMap<>(tutteSpeseRaw.size() * 4 / 3 + 1);
             for (SpesaConDettagli scd : tutteSpeseRaw) {
                 if (scd.getSpesa() != null
                         && !com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(scd.getSpesa().getCategoria())) {
-                    String spesaId = scd.getSpesa().getId();
-                    String valutaSpesa = scd.getSpesa().getValuta() != null ? scd.getSpesa().getValuta() : valutaScheda;
-                    for (SpesaPartecipante q : quoteCache) {
-                        if (q.getSpesaId().equals(spesaId) && q.getPartecipanteId().equals(myId)) {
-                            mieSpeseTotale += CalcolatoreSaldi.convertiValuta(q.getQuota(), valutaSpesa, valutaScheda, requireContext());
-                            break;
-                        }
+                    nonSaldiSpeseMap.put(scd.getSpesa().getId(), scd.getSpesa());
+                }
+            }
+
+            for (SpesaPartecipante q : quoteCache) {
+                if (q != null && myId.equals(q.getPartecipanteId())) {
+                    Spesa s = nonSaldiSpeseMap.get(q.getSpesaId());
+                    if (s != null) {
+                        mieSpeseTotale += CalcolatoreSaldi.convertiImportoSpesa(q.getQuota(), s, valutaScheda, getContext());
                     }
                 }
             }
@@ -833,7 +829,28 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private void mostraDialogLasciaScheda() {
         com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
-        String mioId = Partecipante.findCurrentUserId(partecipantiCache, currentUser);
+        com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(requireContext());
+        String mioId = Partecipante.findCurrentUserId(partecipantiCache, currentUser, prefs, schedaId);
+
+        Partecipante mioPartecipante = null;
+        if (mioId != null && partecipantiCache != null) {
+            for (Partecipante p : partecipantiCache) {
+                if (mioId.equals(p.getId())) {
+                    mioPartecipante = p;
+                    break;
+                }
+            }
+        }
+
+        if (mioPartecipante != null && haSpeseODebiti(mioPartecipante)) {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.dialog_titolo_gestione_gruppo)
+                    .setMessage(getString(R.string.msg_errore_uscita_debiti))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
 
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(getString(R.string.dialog_titolo_lascia_scheda))
@@ -855,19 +872,15 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private boolean haSpeseODebiti(Partecipante p) {
         if (p == null) return false;
-        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(
+        Map<String, Double> bilanci = CalcolatoreSaldi.calcolaMapBilanci(
                 partecipantiCache,
                 speseCache,
                 quoteCache,
-                valuta != null ? valuta : "EUR"
+                valuta != null ? valuta : "EUR",
+                getContext()
         );
-        for (TrasferimentoSaldo t : trasferimenti) {
-            if ((t.getDaPartecipanteId().equals(p.getId()) || t.getAPartecipanteId().equals(p.getId()))
-                    && t.getImporto() > 0.01) {
-                return true; // Ha debiti o crediti netti aperti non ancora saldati
-            }
-        }
-        return false; // Saldo netto = € 0,00, rimozione consentita
+        Double saldo = bilanci.get(p.getId());
+        return saldo != null && Math.abs(saldo) > 0.01;
     }
 
     private boolean isMe(Partecipante p) {
@@ -989,17 +1002,28 @@ public class DettaglioSchedaFragment extends Fragment {
 
     private void gestisciEliminazioneDefinitivaExMembro(Partecipante p) {
         if (p == null) return;
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.titolo_elimina_definitivamente)
-                .setMessage(getString(R.string.msg_conferma_elimina_definitivamente_ex_membro, p.getNome()))
-                .setPositiveButton(R.string.btn_elimina_definitivamente, (dialog, which) -> {
-                    viewModel.eliminaPartecipanteDefinitivamente(schedaId, p.getId());
-                    if (binding != null) {
-                        AppSnackbar.show(binding.getRoot(), getString(R.string.msg_ex_membro_eliminato, p.getNome()));
-                    }
-                })
-                .setNegativeButton(R.string.btn_annulla, null)
-                .show();
+        viewModel.verificaPartecipazioneSpese(schedaId, p.getId(), haPartecipato -> {
+            if (!isAdded()) return;
+            if (haPartecipato) {
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.titolo_elimina_definitivamente)
+                        .setMessage(R.string.msg_errore_rimozione_membro)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                return;
+            }
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.titolo_elimina_definitivamente)
+                    .setMessage(getString(R.string.msg_conferma_elimina_definitivamente_ex_membro, p.getNome()))
+                    .setPositiveButton(R.string.btn_elimina_definitivamente, (dialog, which) -> {
+                        viewModel.eliminaPartecipanteDefinitivamente(schedaId, p.getId());
+                        if (binding != null) {
+                            AppSnackbar.show(binding.getRoot(), getString(R.string.msg_ex_membro_eliminato, p.getNome()));
+                        }
+                    })
+                    .setNegativeButton(R.string.btn_annulla, null)
+                    .show();
+        });
     }
 
     private void setupRecyclerMembri() {

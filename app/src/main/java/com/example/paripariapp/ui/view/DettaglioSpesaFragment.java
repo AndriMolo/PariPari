@@ -103,29 +103,7 @@ public class DettaglioSpesaFragment extends Fragment {
             }
 
             // Controlla se qualche partecipante ha lasciato il gruppo
-            java.util.Set<String> activeIds = new java.util.HashSet<>();
-            if (partecipantiCache != null) {
-                for (Partecipante p : partecipantiCache) {
-                    if (p.isAttivo()) {
-                        activeIds.add(p.getId());
-                    }
-                }
-            }
-
-            boolean haMembroAssente = false;
-            if (spesa.getPagatoDaId() != null && !activeIds.contains(spesa.getPagatoDaId())) {
-                haMembroAssente = true;
-            }
-            if (!haMembroAssente && quoteCache != null) {
-                for (SpesaPartecipante q : quoteCache) {
-                    if (q.getSpesaId().equals(spesa.getId())) {
-                        if (q.getPartecipanteId() != null && !activeIds.contains(q.getPartecipanteId())) {
-                            haMembroAssente = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            boolean haMembroAssente = SpesaUiHelper.haPartecipantiAssenti(spesa, quoteCache, partecipantiCache);
 
             if (haMembroAssente) {
                 new MaterialAlertDialogBuilder(requireContext())

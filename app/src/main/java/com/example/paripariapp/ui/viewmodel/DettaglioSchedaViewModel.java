@@ -95,6 +95,17 @@ public class DettaglioSchedaViewModel extends AndroidViewModel {
         repository.eliminaPartecipanteDefinitivamente(schedaId, partecipanteId);
     }
 
+    public boolean haPartecipatoASpese(String schedaId, String partecipanteId) {
+        return repository.haPartecipatoASpese(schedaId, partecipanteId);
+    }
+
+    public void verificaPartecipazioneSpese(String schedaId, String partecipanteId, java.util.function.Consumer<Boolean> callback) {
+        com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+            boolean haSpese = repository.haPartecipatoASpese(schedaId, partecipanteId);
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> callback.accept(haSpese));
+        });
+    }
+
     public void aggiornaNomePartecipante(String partecipanteId, String nuovoNome) {
         repository.aggiornaNomePartecipante(partecipanteId, nuovoNome);
     }

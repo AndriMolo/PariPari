@@ -173,33 +173,15 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         }
 
         // Verifica presenza di partecipanti assenti
-        Set<String> activeParticipantIds = new HashSet<>();
+        boolean haPartecipantiAssenti = SpesaUiHelper.haPartecipantiAssenti(spesaCorrente, quoteEsistenti, partecipanti);
+        String nomePagatore = null;
         for (Partecipante p : partecipanti) {
-            activeParticipantIds.add(p.getId());
-        }
-
-        boolean haPartecipantiAssenti = false;
-        if (spesaCorrente.getPagatoDaId() != null && !activeParticipantIds.contains(spesaCorrente.getPagatoDaId())) {
-            haPartecipantiAssenti = true;
-            binding.menuPagante.setText(getString(R.string.nome_sconosciuto), false);
-        } else {
-            for (Partecipante p : partecipanti) {
-                if (p.getId().equals(spesaCorrente.getPagatoDaId())) {
-                    binding.menuPagante.setText(p.getNome(), false);
-                    break;
-                }
+            if (p.getId().equals(spesaCorrente.getPagatoDaId())) {
+                nomePagatore = p.getNome();
+                break;
             }
         }
-
-        if (quoteEsistenti != null) {
-            for (SpesaPartecipante q : quoteEsistenti) {
-                if (q.getPartecipanteId() != null && !activeParticipantIds.contains(q.getPartecipanteId())) {
-                    haPartecipantiAssenti = true;
-                    break;
-                }
-            }
-        }
-
+        binding.menuPagante.setText(nomePagatore != null ? nomePagatore : getString(R.string.nome_sconosciuto), false);
         this.isReadOnly = haPartecipantiAssenti;
 
         if (spesaCorrente.getCategoria() != null) {
@@ -314,6 +296,16 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
             if (spesaCorrente != null) {
                 spesaAggiornata.setScontrinoJson(spesaCorrente.getScontrinoJson());
             }
+
+            double tasso;
+            if (spesaCorrente != null && spesaCorrente.getValuta() != null &&
+                    spesaCorrente.getValuta().equalsIgnoreCase(getValutaEffettiva()) &&
+                    spesaCorrente.getTassoCambio() > 0) {
+                tasso = spesaCorrente.getTassoCambio();
+            } else {
+                tasso = SpesaUiHelper.calcolaTassoCambioAttuale(getValutaEffettiva(), getValutaScheda(), requireContext());
+            }
+            spesaAggiornata.setTassoCambio(tasso);
 
             viewModel.aggiornaSpesaConQuote(spesaAggiornata, nuoveQuote);
             com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);

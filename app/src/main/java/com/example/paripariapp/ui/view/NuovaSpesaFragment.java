@@ -442,12 +442,16 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
     }
 
     private void salvaSpesaFinale(String spesaId, DatiFormValidi dati, @Nullable String scontrinoJson) {
+        String valutaSpesa = getValutaEffettiva();
+        String valutaGruppo = getValutaScheda();
+        double tasso = SpesaUiHelper.calcolaTassoCambioAttuale(valutaSpesa, valutaGruppo, requireContext());
+
         Spesa spesa = new Spesa(
                 spesaId,
                 schedaId,
                 dati.titolo,
                 dati.importo,
-                getValutaEffettiva(),
+                valutaSpesa,
                 dati.timestamp,
                 dati.categoria,
                 dati.pagatoreId,
@@ -455,6 +459,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 SyncStatus.PENDING_INSERT
         );
         spesa.setScontrinoJson(scontrinoJson);
+        spesa.setTassoCambio(tasso);
 
         viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
         com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);

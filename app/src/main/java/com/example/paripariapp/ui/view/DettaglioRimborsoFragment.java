@@ -97,29 +97,7 @@ public class DettaglioRimborsoFragment extends Fragment {
             Spesa spesa = spesaCorrente.getSpesa();
 
             // Verifica che tutti i partecipanti coinvolti siano ancora nel gruppo
-            Set<String> activeIds = new HashSet<>();
-            if (partecipantiCache != null) {
-                for (Partecipante p : partecipantiCache) {
-                    if (p.isAttivo()) {
-                        activeIds.add(p.getId());
-                    }
-                }
-            }
-
-            boolean haMembroAssente = false;
-            if (spesa.getPagatoDaId() != null && !activeIds.contains(spesa.getPagatoDaId())) {
-                haMembroAssente = true;
-            }
-            if (!haMembroAssente && quoteCache != null) {
-                for (SpesaPartecipante q : quoteCache) {
-                    if (q.getSpesaId().equals(spesa.getId())) {
-                        if (q.getPartecipanteId() != null && !activeIds.contains(q.getPartecipanteId())) {
-                            haMembroAssente = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            boolean haMembroAssente = SpesaUiHelper.haPartecipantiAssenti(spesa, quoteCache, partecipantiCache);
 
             if (haMembroAssente) {
                 new MaterialAlertDialogBuilder(requireContext())
