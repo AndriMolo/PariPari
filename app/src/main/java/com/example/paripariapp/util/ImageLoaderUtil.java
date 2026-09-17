@@ -54,9 +54,10 @@ public class ImageLoaderUtil {
         imageView.setTag(urlStr);
 
         executor.execute(() -> {
+            HttpURLConnection conn = null;
             try {
                 URL url = new URL(urlStr);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setDoInput(true);
                 conn.setConnectTimeout(8000);
                 conn.setReadTimeout(8000);
@@ -74,6 +75,10 @@ public class ImageLoaderUtil {
                     }
                 }
             } catch (Exception ignored) {
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
+                }
             }
         });
     }

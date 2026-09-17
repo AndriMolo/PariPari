@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         setupBackPressHandler();
 
         gestisciDeepLink(getIntent());
+        gestisciIntentNotifica(getIntent());
     }
 
     @Override
@@ -162,6 +163,25 @@ public class MainActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         gestisciDeepLink(intent);
+        gestisciIntentNotifica(intent);
+    }
+
+    private void gestisciIntentNotifica(Intent intent) {
+        if (intent == null || !intent.hasExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID)) return;
+        String schedaId = intent.getStringExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID);
+        if (schedaId != null && !schedaId.trim().isEmpty()) {
+            intent.removeExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID);
+            com.example.paripariapp.data.local.AppDatabase.databaseWriteExecutor.execute(() -> {
+                com.example.paripariapp.data.model.Scheda scheda =
+                        com.example.paripariapp.data.local.AppDatabase.getInstance(this).schedaDao().getSchedaById(schedaId);
+                if (scheda != null) {
+                    runOnUiThread(() -> {
+                        if (isFinishing() || isDestroyed()) return;
+                        DettaglioSchedaActivity.avvia(MainActivity.this, scheda.getId(), scheda.getTitolo(), scheda.getValutaPredefinita());
+                    });
+                }
+            });
+        }
     }
 
     private void gestisciDeepLink(Intent intent) {
