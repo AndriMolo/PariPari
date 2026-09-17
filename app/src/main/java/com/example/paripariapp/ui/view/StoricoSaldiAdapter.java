@@ -119,13 +119,13 @@ public class StoricoSaldiAdapter extends ListAdapter<StoricoSaldiAdapter.Storico
         holder.binding.tvImportoSaldo.setText(com.example.paripariapp.util.ImportoUtil.formatta(spesa.getImporto(), spesa.getValuta()));
 
         if (item.isRicevuto()) {
-            int greenColor = ctx.getResources().getColor(R.color.credit_green, null);
+            int greenColor = androidx.core.content.ContextCompat.getColor(ctx, R.color.credit_green);
             holder.binding.ivIconaSaldo.setColorFilter(greenColor);
             holder.binding.tvImportoSaldo.setTextColor(greenColor);
             holder.binding.tvBadgeTipoSaldo.setText(R.string.badge_ricevuto);
             holder.binding.tvBadgeTipoSaldo.setTextColor(greenColor);
         } else {
-            int redColor = ctx.getResources().getColor(android.R.color.holo_red_dark, null);
+            int redColor = androidx.core.content.ContextCompat.getColor(ctx, R.color.debt_red);
             holder.binding.ivIconaSaldo.setColorFilter(redColor);
             holder.binding.tvImportoSaldo.setTextColor(redColor);
             holder.binding.tvBadgeTipoSaldo.setText(R.string.badge_inviato);

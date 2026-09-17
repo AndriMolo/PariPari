@@ -87,6 +87,7 @@ public class SchedaAdapter extends ListAdapter<Scheda, SchedaAdapter.SchedaViewH
         public boolean areContentsTheSame(@NonNull Scheda oldItem, @NonNull Scheda newItem) {
             return Objects.equals(oldItem.getTitolo(), newItem.getTitolo()) &&
                     Objects.equals(oldItem.getValutaPredefinita(), newItem.getValutaPredefinita()) &&
+                    Objects.equals(oldItem.getIconaUrl(), newItem.getIconaUrl()) &&
                     oldItem.getDataAggiornamento() == newItem.getDataAggiornamento();
         }
     };

@@ -39,7 +39,10 @@ public class MembroAdapter extends ListAdapter<Partecipante, MembroAdapter.Membr
         public boolean areContentsTheSame(@NonNull Partecipante oldItem, @NonNull Partecipante newItem) {
             return Objects.equals(oldItem.getNome(), newItem.getNome()) &&
                     Objects.equals(oldItem.getEmail(), newItem.getEmail()) &&
-                    Objects.equals(oldItem.getSchedaId(), newItem.getSchedaId());
+                    Objects.equals(oldItem.getSchedaId(), newItem.getSchedaId()) &&
+                    Objects.equals(oldItem.getPhotoUrl(), newItem.getPhotoUrl()) &&
+                    Objects.equals(oldItem.getStato(), newItem.getStato()) &&
+                    Objects.equals(oldItem.getUserId(), newItem.getUserId());
         }
     };
 

@@ -103,6 +103,7 @@ public class SyncNotificheWorker extends Worker {
                         String pagatoDaId = eDoc.getString("pagatoDaId");
                         String scontrinoUrl = eDoc.getString("scontrinoUrl");
                         String scontrinoJson = eDoc.getString("scontrinoJson");
+                        String updatedByUid = eDoc.getString("updatedByUid");
 
                         if (titolo == null || importo == null) continue;
 
@@ -159,7 +160,8 @@ public class SyncNotificheWorker extends Worker {
                             }
 
                             // Mostra la notifica se la spesa non è stata inserita/pagata dall'utente stesso
-                            boolean sonoIo = (myPartId != null && myPartId.equals(pagatoDaId));
+                            boolean modifiedByMe = (currentUser.getUid().equals(updatedByUid));
+                            boolean sonoIo = modifiedByMe || (myPartId != null && myPartId.equals(pagatoDaId));
                             if (!sonoIo) {
                                 String nomeGruppo = (scheda.getTitolo() != null) ? scheda.getTitolo() : "Gruppo";
 

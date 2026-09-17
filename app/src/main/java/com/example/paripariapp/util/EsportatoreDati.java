@@ -427,11 +427,20 @@ public final class EsportatoreDati {
     }
 
     public static void condividiFile(Context context, File file, String mimeType, String titoloChooser) {
-        Uri uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType(mimeType);
-        intent.putExtra(Intent.EXTRA_STREAM, uri);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        context.startActivity(Intent.createChooser(intent, titoloChooser));
+        if (context == null || file == null) return;
+        try {
+            Uri uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType(mimeType);
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(intent, titoloChooser);
+            if (!(context instanceof android.app.Activity)) {
+                chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+            context.startActivity(chooser);
+        } catch (Exception e) {
+            android.util.Log.e("EsportatoreDati", "Errore condivisione file", e);
+        }
     }
 }

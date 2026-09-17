@@ -73,6 +73,7 @@ public class SpesaAdapter extends ListAdapter<SpesaListItem, RecyclerView.ViewHo
             return Objects.equals(o.getSpesa().getTitolo(), n.getSpesa().getTitolo()) &&
                     Double.compare(o.getSpesa().getImporto(), n.getSpesa().getImporto()) == 0 &&
                     Objects.equals(o.getSpesa().getValuta(), n.getSpesa().getValuta()) &&
+                    Objects.equals(o.getSpesa().getCategoria(), n.getSpesa().getCategoria()) &&
                     Objects.equals(o.getNomePagatore(), n.getNomePagatore()) &&
                     o.getNumeroPartecipanti() == n.getNumeroPartecipanti() &&
                     o.getSpesa().getDataSpesa() == n.getSpesa().getDataSpesa();

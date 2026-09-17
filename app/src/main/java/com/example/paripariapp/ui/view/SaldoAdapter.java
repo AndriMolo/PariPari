@@ -41,7 +41,9 @@ public class SaldoAdapter extends ListAdapter<TrasferimentoSaldo, SaldoAdapter.S
         @Override
         public boolean areContentsTheSame(@NonNull TrasferimentoSaldo oldItem, @NonNull TrasferimentoSaldo newItem) {
             return Double.compare(oldItem.getImporto(), newItem.getImporto()) == 0 &&
-                    Objects.equals(oldItem.getValuta(), newItem.getValuta());
+                    Objects.equals(oldItem.getValuta(), newItem.getValuta()) &&
+                    Objects.equals(oldItem.getDaPartecipanteNome(), newItem.getDaPartecipanteNome()) &&
+                    Objects.equals(oldItem.getAPartecipanteNome(), newItem.getAPartecipanteNome());
         }
     };
 
