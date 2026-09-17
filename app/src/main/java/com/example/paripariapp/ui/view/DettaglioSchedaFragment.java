@@ -239,8 +239,8 @@ public class DettaglioSchedaFragment extends Fragment {
             if (handleMancante && schedaId != null && item.getAPartecipanteId() != null) {
                 // Handle non presente nella cache locale: fetch aggiornato da Firestore
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                        .collection("schede").document(schedaId)
-                        .collection("partecipanti").document(item.getAPartecipanteId())
+                        .collection("groups").document(schedaId)
+                        .collection("participants").document(item.getAPartecipanteId())
                         .get()
                         .addOnSuccessListener(doc -> {
                             String paypal = "";

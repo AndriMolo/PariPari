@@ -27,6 +27,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Repository centrale (Single Source of Truth) dell'applicazione.
@@ -158,18 +159,6 @@ public class PariPariRepository {
             partecipanteDao.insert(partecipante);
             if (syncManager.isConnected() && auth.getCurrentUser() != null) {
                 syncManager.uploadPartecipante(partecipante);
-            }
-        });
-    }
-
-    public void deletePartecipante(String partecipanteId) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            Partecipante p = partecipanteDao.getPartecipanteById(partecipanteId);
-            spesaDao.deleteQuoteByPartecipanteId(partecipanteId);
-            partecipanteDao.deleteById(partecipanteId);
-
-            if (p != null) {
-                syncManager.deletePartecipante(partecipanteId, p.getSchedaId());
             }
         });
     }
@@ -342,8 +331,9 @@ public class PariPariRepository {
                 for (Scheda s : schede) {
                     List<Partecipante> parti = partecipanteDao.getPartecipantiBySchedaSync(s.getId());
                     if (parti != null) {
+                        String myPartId = Partecipante.findCurrentUserId(parti, currentUser, UserPreferencesRepository.getInstance(application), s.getId());
                         for (Partecipante p : parti) {
-                            if (Partecipante.isCurrentUserParticipant(p, currentUser)) {
+                            if (p.getId().equals(myPartId) || Partecipante.isCurrentUserParticipant(p, currentUser)) {
                                 p.setNome(nomePulito);
                                 p.setSyncStatus(SyncStatus.PENDING_UPDATE);
                                 partecipanteDao.update(p);
@@ -415,8 +405,7 @@ public class PariPariRepository {
                 double totaleConvertito = 0.0;
                 for (Spesa s : spese) {
                     if (s != null && !com.example.paripariapp.util.CategoriaUtil.isCategoriaSaldi(s.getCategoria())) {
-                        String valutaSpesa = s.getValuta();
-                        totaleConvertito += CalcolatoreSaldi.convertiValuta(s.getImporto(), valutaSpesa, valutaScheda, application);
+                        totaleConvertito += CalcolatoreSaldi.convertiImportoSpesa(s.getImporto(), s, valutaScheda, application);
                     }
                 }
                 totaleLiveData.postValue(totaleConvertito);
@@ -435,6 +424,12 @@ public class PariPariRepository {
 
     public void insertSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            Scheda scheda = schedaDao.getSchedaById(spesa.getSchedaId());
+            String valutaScheda = (scheda != null && scheda.getValutaPredefinita() != null) ? scheda.getValutaPredefinita() : "EUR";
+            if (spesa.getTassoCambio() <= 0.0 || (spesa.getTassoCambio() == 1.0 && spesa.getValuta() != null && !spesa.getValuta().equalsIgnoreCase(valutaScheda))) {
+                double tasso = com.example.paripariapp.ui.view.SpesaUiHelper.calcolaTassoCambioAttuale(spesa.getValuta(), valutaScheda, application);
+                spesa.setTassoCambio(tasso);
+            }
             spesaDao.insertSpesaConQuoteTransaction(spesa, quote);
             if (syncManager.isConnected() && auth.getCurrentUser() != null) {
                 syncManager.uploadSpesaConQuote(spesa, quote);
@@ -463,6 +458,12 @@ public class PariPariRepository {
 
     public void aggiornaSpesaConQuote(Spesa spesa, List<SpesaPartecipante> quote) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            Scheda scheda = schedaDao.getSchedaById(spesa.getSchedaId());
+            String valutaScheda = (scheda != null && scheda.getValutaPredefinita() != null) ? scheda.getValutaPredefinita() : "EUR";
+            if (spesa.getTassoCambio() <= 0.0) {
+                double tasso = com.example.paripariapp.ui.view.SpesaUiHelper.calcolaTassoCambioAttuale(spesa.getValuta(), valutaScheda, application);
+                spesa.setTassoCambio(tasso);
+            }
             spesa.setSyncStatus(SyncStatus.PENDING_UPDATE);
             if (quote != null && !quote.isEmpty()) {
                 for (SpesaPartecipante q : quote) {
@@ -556,15 +557,12 @@ public class PariPariRepository {
 
         Scheda scheda = schedaDao.getSchedaById(schedaId);
         String valuta = (scheda != null && scheda.getValutaPredefinita() != null) ? scheda.getValutaPredefinita() : "EUR";
-        List<TrasferimentoSaldo> trasferimenti = CalcolatoreSaldi.calcolaTrasferimenti(parti, spese, quote, valuta, application);
+        Map<String, Double> mapBilanci = CalcolatoreSaldi.calcolaMapBilanci(parti, spese, quote, valuta, application);
         FirebaseUser currentUser = auth.getCurrentUser();
         String mioId = Partecipante.findCurrentUserId(parti, currentUser, UserPreferencesRepository.getInstance(application), schedaId);
-        if (mioId != null && trasferimenti != null) {
-            for (TrasferimentoSaldo t : trasferimenti) {
-                if ((t.getDaPartecipanteId().equals(mioId) || t.getAPartecipanteId().equals(mioId)) && t.getImporto() > 0.001) {
-                    return true;
-                }
-            }
+        if (mioId != null && mapBilanci != null) {
+            Double mioSaldo = mapBilanci.get(mioId);
+            return mioSaldo != null && Math.abs(mioSaldo) > 0.005;
         }
         return false;
     }

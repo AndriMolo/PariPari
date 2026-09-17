@@ -78,8 +78,8 @@ public class SaldiFragment extends Fragment {
                     if (handleMancante && schedaId != null && aId != null) {
                         // Handle non presente nel DB locale: fetch aggiornato da Firestore
                         com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                                .collection("schede").document(schedaId)
-                                .collection("partecipanti").document(aId)
+                                .collection("groups").document(schedaId)
+                                .collection("participants").document(aId)
                                 .get()
                                 .addOnSuccessListener(doc -> {
                                     String paypalHandle = "";

@@ -545,10 +545,6 @@ public class FirestoreSyncManager {
         }
     }
 
-    public void deletePartecipante(String partecipanteId, @Nullable String schedaId) {
-        deletePartecipanteDefinitivamente(schedaId, partecipanteId);
-    }
-
     public void deletePartecipanteDefinitivamente(@Nullable String schedaId, String partecipanteId) {
         if (schedaId != null && partecipanteId != null) {
             firestore.collection("groups").document(schedaId)

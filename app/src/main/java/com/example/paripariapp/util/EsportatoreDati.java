@@ -240,7 +240,7 @@ public final class EsportatoreDati {
         if (spese != null) {
             for (Spesa s : spese) {
                 if (!CategoriaUtil.isCategoriaSaldi(s.getCategoria())) {
-                    totaleSpeso += CalcolatoreSaldi.convertiValuta(s.getImporto(), s.getValuta(), valutaDefault, context);
+                    totaleSpeso += CalcolatoreSaldi.convertiImportoSpesa(s.getImporto(), s, valutaDefault, context);
                     conteggioSpese++;
                 }
             }

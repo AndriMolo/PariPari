@@ -122,9 +122,20 @@ public class SpeseViewModel extends AndroidViewModel {
         }
 
         if (!partecipanti.isEmpty()) {
-            nuovaScheda.setCreatoreId(partecipanti.get(0).getId());
-            com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(getApplication())
-                    .setMyParticipantId(schedaId, partecipanti.get(0).getId());
+            Partecipante creatore = partecipanti.get(0);
+            nuovaScheda.setCreatoreId(creatore.getId());
+            com.google.firebase.auth.FirebaseUser currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                creatore.setUserId(currentUser.getUid());
+                if (currentUser.getEmail() != null && !currentUser.getEmail().trim().isEmpty()) {
+                    creatore.setEmail(currentUser.getEmail().trim());
+                }
+            }
+            com.example.paripariapp.data.repository.UserPreferencesRepository prefs =
+                    com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(getApplication());
+            creatore.setPaypalHandle(prefs.getPaypalHandle());
+            creatore.setRevolutHandle(prefs.getRevolutHandle());
+            prefs.setMyParticipantId(schedaId, creatore.getId());
         }
 
         repository.insertScheda(nuovaScheda, partecipanti);
