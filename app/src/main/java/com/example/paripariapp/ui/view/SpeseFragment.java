@@ -148,6 +148,14 @@ public class SpeseFragment extends Fragment {
                 super.clearView(recyclerView, viewHolder);
                 viewHolder.itemView.setAlpha(1.0f);
                 viewHolder.itemView.setElevation(0f);
+
+                List<String> orderedIds = new ArrayList<>();
+                for (Scheda s : adapter.getLocalList()) {
+                    if (s != null && s.getId() != null) {
+                        orderedIds.add(s.getId());
+                    }
+                }
+                viewModel.salvaOrdineSchede(orderedIds);
             }
 
             @Override

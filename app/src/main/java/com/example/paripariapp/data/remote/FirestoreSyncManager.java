@@ -749,10 +749,11 @@ public class FirestoreSyncManager {
                                 }
                                 schedaDao.insert(nuovaScheda);
                             } else {
+                                long targetDataAgg = (dataAggAdd != null) ? dataAggAdd : schedaEsistente.getDataAggiornamento();
                                 schedaDao.updateTitolo(
                                         groupId,
                                         titoloAdd,
-                                        dataAggAdd != null ? dataAggAdd : System.currentTimeMillis(),
+                                        targetDataAgg,
                                         SyncStatus.SYNCED
                                 );
                                 if (codInvitoAdd != null) {
@@ -773,10 +774,12 @@ public class FirestoreSyncManager {
                         String codInvitoMod = doc.getString("codiceInvito");
                         String iconaUrlMod = doc.getString("iconaUrl");
                         if (titoloMod != null) {
+                            Scheda sMod = schedaDao.getSchedaById(groupId);
+                            long fallbackMod = (sMod != null) ? sMod.getDataAggiornamento() : System.currentTimeMillis();
                             schedaDao.updateTitolo(
                                     groupId,
                                     titoloMod,
-                                    dataAggMod != null ? dataAggMod : System.currentTimeMillis(),
+                                    dataAggMod != null ? dataAggMod : fallbackMod,
                                     SyncStatus.SYNCED
                             );
                         }

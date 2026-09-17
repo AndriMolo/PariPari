@@ -40,6 +40,7 @@ public class UserPreferencesRepository {
     private static final String KEY_LAST_ACTIVE_TAB = "pref_last_active_tab";
     private static final String KEY_TAB_STACK_CSV = "pref_tab_stack_csv";
     private static final String KEY_PENDING_CONFIG_CHANGE = "pref_pending_config_change";
+    private static final String KEY_SCHEDE_ORDER_CSV = "pref_schede_order_csv";
 
     public static final List<String> SUPPORTED_CURRENCIES = Arrays.asList(
             "EUR - Euro",
@@ -622,5 +623,34 @@ public class UserPreferencesRepository {
 
     public void setPendingConfigChange(boolean pending) {
         preferences.edit().putBoolean(KEY_PENDING_CONFIG_CHANGE, pending).apply();
+    }
+
+    public List<String> getSavedSchedeOrder() {
+        String csv = preferences.getString(KEY_SCHEDE_ORDER_CSV, "");
+        List<String> list = new java.util.ArrayList<>();
+        if (csv != null && !csv.trim().isEmpty()) {
+            for (String part : csv.split(",")) {
+                String clean = part.trim();
+                if (!clean.isEmpty()) {
+                    list.add(clean);
+                }
+            }
+        }
+        return list;
+    }
+
+    public void setSavedSchedeOrder(java.util.Collection<String> order) {
+        if (order == null || order.isEmpty()) {
+            preferences.edit().remove(KEY_SCHEDE_ORDER_CSV).apply();
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String id : order) {
+            if (id != null && !id.trim().isEmpty()) {
+                if (sb.length() > 0) sb.append(",");
+                sb.append(id.trim());
+            }
+        }
+        preferences.edit().putString(KEY_SCHEDE_ORDER_CSV, sb.toString()).apply();
     }
 }

@@ -27,6 +27,7 @@ import java.util.UUID;
 public class SpeseViewModel extends AndroidViewModel {
 
     private final PariPariRepository repository;
+    private final com.example.paripariapp.data.repository.UserPreferencesRepository userPreferencesRepository;
     private final androidx.lifecycle.MediatorLiveData<SpeseUiState> uiState = new androidx.lifecycle.MediatorLiveData<>();
     private List<Scheda> currentSchede = null;
     private Map<String, Integer> currentConteggi = new HashMap<>();
@@ -34,6 +35,7 @@ public class SpeseViewModel extends AndroidViewModel {
     public SpeseViewModel(@NonNull Application application) {
         super(application);
         this.repository = PariPariRepository.getInstance(application);
+        this.userPreferencesRepository = com.example.paripariapp.data.repository.UserPreferencesRepository.getInstance(application);
 
         uiState.setValue(SpeseUiState.loading());
 
@@ -41,7 +43,7 @@ public class SpeseViewModel extends AndroidViewModel {
         LiveData<Map<String, Integer>> conteggiLive = getMappaConteggioPartecipanti();
 
         uiState.addSource(schedeLive, schede -> {
-            currentSchede = schede;
+            currentSchede = applicaOrdine(schede, userPreferencesRepository.getSavedSchedeOrder());
             uiState.setValue(new SpeseUiState(false, currentSchede, currentConteggi, null));
         });
 
@@ -51,6 +53,45 @@ public class SpeseViewModel extends AndroidViewModel {
             }
             uiState.setValue(new SpeseUiState(false, currentSchede, currentConteggi, null));
         });
+    }
+
+    public static List<Scheda> applicaOrdine(@Nullable List<Scheda> schede, @Nullable List<String> savedOrder) {
+        if (schede == null || schede.isEmpty()) {
+            return new ArrayList<>();
+        }
+        if (savedOrder == null || savedOrder.isEmpty()) {
+            return new ArrayList<>(schede);
+        }
+
+        Map<String, Integer> orderMap = new HashMap<>(savedOrder.size() * 4 / 3 + 1);
+        for (int i = 0; i < savedOrder.size(); i++) {
+            orderMap.put(savedOrder.get(i), i);
+        }
+
+        List<Scheda> ordinati = new ArrayList<>(schede);
+        ordinati.sort((s1, s2) -> {
+            Integer idx1 = orderMap.get(s1.getId());
+            Integer idx2 = orderMap.get(s2.getId());
+            if (idx1 != null && idx2 != null) {
+                return Integer.compare(idx1, idx2);
+            } else if (idx1 != null) {
+                return 1;
+            } else if (idx2 != null) {
+                return -1;
+            } else {
+                return Long.compare(s2.getDataCreazione(), s1.getDataCreazione());
+            }
+        });
+        return ordinati;
+    }
+
+    public void salvaOrdineSchede(@Nullable List<String> orderedIds) {
+        if (orderedIds == null) return;
+        userPreferencesRepository.setSavedSchedeOrder(orderedIds);
+        if (currentSchede != null) {
+            currentSchede = applicaOrdine(currentSchede, orderedIds);
+            uiState.setValue(new SpeseUiState(false, currentSchede, currentConteggi, null));
+        }
     }
 
     /**

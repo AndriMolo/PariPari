@@ -16,10 +16,10 @@ import java.util.List;
 @Dao
 public interface SchedaDao {
 
-    @Query("SELECT * FROM schede WHERE sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_aggiornamento DESC")
+    @Query("SELECT * FROM schede WHERE sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_aggiornamento DESC, data_creazione DESC, id ASC")
     LiveData<List<Scheda>> getAllSchedeLive();
 
-    @Query("SELECT * FROM schede WHERE sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_aggiornamento DESC")
+    @Query("SELECT * FROM schede WHERE sync_status != " + SyncStatus.PENDING_DELETE + " ORDER BY data_aggiornamento DESC, data_creazione DESC, id ASC")
     List<Scheda> getAllSchedeSync();
 
     @Query("SELECT * FROM schede WHERE id = :id LIMIT 1")
