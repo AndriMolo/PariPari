@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.paripariapp.MainActivity;
 import com.example.paripariapp.R;
+import com.example.paripariapp.ui.view.DettaglioSchedaActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
@@ -46,6 +47,7 @@ public class PariPariMessagingService extends FirebaseMessagingService {
 
         String titolo = null;
         String messaggio = null;
+        String schedaId = null;
 
         // 1. Estrazione da notification payload (se presente)
         if (remoteMessage.getNotification() != null) {
@@ -61,13 +63,20 @@ public class PariPariMessagingService extends FirebaseMessagingService {
             if (remoteMessage.getData().containsKey("body")) {
                 messaggio = remoteMessage.getData().get("body");
             }
+            if (remoteMessage.getData().containsKey(DettaglioSchedaActivity.EXTRA_SCHEDA_ID)) {
+                schedaId = remoteMessage.getData().get(DettaglioSchedaActivity.EXTRA_SCHEDA_ID);
+            } else if (remoteMessage.getData().containsKey("scheda_id")) {
+                schedaId = remoteMessage.getData().get("scheda_id");
+            } else if (remoteMessage.getData().containsKey("schedaId")) {
+                schedaId = remoteMessage.getData().get("schedaId");
+            }
         }
 
         if (titolo == null) {
             titolo = getString(R.string.app_name);
         }
         if (messaggio != null) {
-            mostraNotifica(titolo, messaggio);
+            mostraNotifica(titolo, messaggio, schedaId);
         }
     }
 
@@ -75,7 +84,11 @@ public class PariPariMessagingService extends FirebaseMessagingService {
      * Mostra una notifica nativa di sistema con priorità alta.
      */
     private void mostraNotifica(String titolo, String messaggio) {
-        mostraNotificaNativa(this, titolo, messaggio, null);
+        mostraNotifica(titolo, messaggio, null);
+    }
+
+    private void mostraNotifica(String titolo, String messaggio, @androidx.annotation.Nullable String schedaId) {
+        mostraNotificaNativa(this, titolo, messaggio, schedaId);
     }
 
     private void creaCanaleNotificaSeNecessario() {
@@ -109,7 +122,7 @@ public class PariPariMessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         if (schedaId != null) {
-            intent.putExtra("extra_scheda_id", schedaId);
+            intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, schedaId);
         }
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
