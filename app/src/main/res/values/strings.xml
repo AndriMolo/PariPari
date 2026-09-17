@@ -19,6 +19,20 @@
     <string name="ocr_in_corso">Riconoscimento importo e data in corso…</string>
     <string name="ocr_successo">Importo rilevato dallo scontrino: %s</string>
     <string name="ocr_nessun_importo">Nessun importo rilevato con certezza</string>
+    <string name="errore_avvio_fotocamera">Impossibile avviare fotocamera</string>
+    <string name="ocr_scontrino_digitalizzato_toast">🧾 Scontrino digitalizzato (%d voci)</string>
+    <string name="ocr_voci_digitalizzate">%d voci digitalizzate</string>
+    <string name="ocr_tot_label">• Tot: %s</string>
+    <string name="ocr_verificato">• ✓ Verificato</string>
+    <string name="ocr_discrepanza_formato">• Diff: %1$+.2f %2$s</string>
+    <string name="dialog_titolo_scontrino_digitalizzato">Scontrino Digitalizzato</string>
+    <string name="ocr_dettaglio_esercente">Esercente: %s\n</string>
+    <string name="ocr_dettaglio_data">Data: %s\n</string>
+    <string name="ocr_nessuna_voce">Nessuna voce dettagliata rilevata.\n</string>
+    <string name="ocr_totale_rilevato">Totale rilevato: %1$.2f %2$s\n</string>
+    <string name="ocr_somma_voci">Somma voci: %1$.2f %2$s\n</string>
+    <string name="ocr_quadratura_perfetta">✓ Somma e totale quadrano perfettamente.\n</string>
+    <string name="ocr_discrepanza_info">⚠ Discrepanza: %1$+.2f %2$s (possibile coperto/sconto)\n</string>
     <string name="error_credenziali_google">Impossibile recuperare le credenziali Google</string>
 
     <!-- Titoli Schermate -->

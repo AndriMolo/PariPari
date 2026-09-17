@@ -19,6 +19,20 @@
     <string name="ocr_in_corso">Betrag und Datum werden erkannt…</string>
     <string name="ocr_successo">Erkannter Belegbetrag: %s</string>
     <string name="ocr_nessun_importo">Kein eindeutiger Betrag erkannt</string>
+    <string name="errore_avvio_fotocamera">Kamera konnte nicht gestartet werden</string>
+    <string name="ocr_scontrino_digitalizzato_toast">🧾 Beleg digitalisiert (%d Artikel)</string>
+    <string name="ocr_voci_digitalizzate">%d Artikel digitalisiert</string>
+    <string name="ocr_tot_label">• Gesamt: %s</string>
+    <string name="ocr_verificato">• ✓ Verifiziert</string>
+    <string name="ocr_discrepanza_formato">• Diff: %1$+.2f %2$s</string>
+    <string name="dialog_titolo_scontrino_digitalizzato">Digitalisierter Beleg</string>
+    <string name="ocr_dettaglio_esercente">Händler: %s\n</string>
+    <string name="ocr_dettaglio_data">Datum: %s\n</string>
+    <string name="ocr_nessuna_voce">Keine detaillierten Artikel erkannt.\n</string>
+    <string name="ocr_totale_rilevato">Erkannter Gesamtbetrag: %1$.2f %2$s\n</string>
+    <string name="ocr_somma_voci">Summe der Artikel: %1$.2f %2$s\n</string>
+    <string name="ocr_quadratura_perfetta">✓ Summe und Gesamtbetrag stimmen überein.\n</string>
+    <string name="ocr_discrepanza_info">⚠ Abweichung: %1$+.2f %2$s (evtl. Gedeck/Rabatt)\n</string>
     <string name="error_credenziali_google">Google-Anmeldedaten konnten nicht abgerufen werden</string>
 
     <!-- Titoli Schermate -->

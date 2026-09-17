@@ -19,6 +19,20 @@
     <string name="ocr_in_corso">Scanning receipt for amount and date…</string>
     <string name="ocr_successo">Amount detected from receipt: %s</string>
     <string name="ocr_nessun_importo">No amount clearly detected</string>
+    <string name="errore_avvio_fotocamera">Unable to start camera</string>
+    <string name="ocr_scontrino_digitalizzato_toast">🧾 Receipt digitized (%d items)</string>
+    <string name="ocr_voci_digitalizzate">%d items digitized</string>
+    <string name="ocr_tot_label">• Tot: %s</string>
+    <string name="ocr_verificato">• ✓ Verified</string>
+    <string name="ocr_discrepanza_formato">• Diff: %1$+.2f %2$s</string>
+    <string name="dialog_titolo_scontrino_digitalizzato">Digitized Receipt</string>
+    <string name="ocr_dettaglio_esercente">Merchant: %s\n</string>
+    <string name="ocr_dettaglio_data">Date: %s\n</string>
+    <string name="ocr_nessuna_voce">No detailed items detected.\n</string>
+    <string name="ocr_totale_rilevato">Detected total: %1$.2f %2$s\n</string>
+    <string name="ocr_somma_voci">Items sum: %1$.2f %2$s\n</string>
+    <string name="ocr_quadratura_perfetta">✓ Items and total match perfectly.\n</string>
+    <string name="ocr_discrepanza_info">⚠ Discrepancy: %1$+.2f %2$s (possible tip/discount)\n</string>
     <string name="error_credenziali_google">Unable to retrieve Google credentials</string>
 
     <!-- Titoli Schermate -->

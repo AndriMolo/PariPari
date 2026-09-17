@@ -429,4 +429,40 @@ public class ScontrinoOcrUtil {
 
         return risultato;
     }
+
+    /**
+     * Decodifica una miniatura scalata in modo sicuro (anti OutOfMemoryError) per l'anteprima UI.
+     */
+    @Nullable
+    public static android.graphics.Bitmap caricaMiniatura(@NonNull Context context, @NonNull Uri uri, int maxDimensione) {
+        try {
+            android.graphics.BitmapFactory.Options boundsOptions = new android.graphics.BitmapFactory.Options();
+            boundsOptions.inJustDecodeBounds = true;
+            try (java.io.InputStream in = context.getContentResolver().openInputStream(uri)) {
+                if (in == null) return null;
+                android.graphics.BitmapFactory.decodeStream(in, null, boundsOptions);
+            }
+
+            int larghezza = boundsOptions.outWidth;
+            int altezza = boundsOptions.outHeight;
+            if (larghezza <= 0 || altezza <= 0) return null;
+
+            int sampleSize = 1;
+            while ((larghezza / sampleSize) > maxDimensione || (altezza / sampleSize) > maxDimensione) {
+                sampleSize *= 2;
+            }
+
+            android.graphics.BitmapFactory.Options decodeOptions = new android.graphics.BitmapFactory.Options();
+            decodeOptions.inSampleSize = sampleSize;
+            decodeOptions.inPreferredConfig = android.graphics.Bitmap.Config.RGB_565;
+
+            try (java.io.InputStream in = context.getContentResolver().openInputStream(uri)) {
+                if (in == null) return null;
+                return android.graphics.BitmapFactory.decodeStream(in, null, decodeOptions);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Impossibile caricare miniatura scalata per URI: " + uri, e);
+            return null;
+        }
+    }
 }

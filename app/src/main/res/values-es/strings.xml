@@ -19,6 +19,20 @@
     <string name="ocr_in_corso">Escaneando recibo para importe y fecha…</string>
     <string name="ocr_successo">Importe detectado del recibo: %s</string>
     <string name="ocr_nessun_importo">No se detectó ningún importe con certeza</string>
+    <string name="errore_avvio_fotocamera">No se pudo iniciar la cámara</string>
+    <string name="ocr_scontrino_digitalizzato_toast">🧾 Recibo digitalizado (%d artículos)</string>
+    <string name="ocr_voci_digitalizzate">%d artículos digitalizados</string>
+    <string name="ocr_tot_label">• Tot: %s</string>
+    <string name="ocr_verificato">• ✓ Verificado</string>
+    <string name="ocr_discrepanza_formato">• Dif: %1$+.2f %2$s</string>
+    <string name="dialog_titolo_scontrino_digitalizzato">Recibo Digitalizado</string>
+    <string name="ocr_dettaglio_esercente">Comercio: %s\n</string>
+    <string name="ocr_dettaglio_data">Fecha: %s\n</string>
+    <string name="ocr_nessuna_voce">No se detectaron artículos detallados.\n</string>
+    <string name="ocr_totale_rilevato">Total detectado: %1$.2f %2$s\n</string>
+    <string name="ocr_somma_voci">Suma de artículos: %1$.2f %2$s\n</string>
+    <string name="ocr_quadratura_perfetta">✓ La suma y el total coinciden perfectamente.\n</string>
+    <string name="ocr_discrepanza_info">⚠ Discrepancia: %1$+.2f %2$s (posible suplemento/descuento)\n</string>
     <string name="error_credenziali_google">No se pudieron obtener las credenciales de Google</string>
 
     <!-- Titoli Schermate -->

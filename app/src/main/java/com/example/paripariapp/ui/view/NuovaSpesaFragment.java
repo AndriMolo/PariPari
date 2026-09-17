@@ -154,16 +154,9 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
     private void setupScontrinoListeners() {
         binding.btnAllegaFotoScontrino.setOnClickListener(v -> {
-            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Consenso Galleria e Immagini")
-                    .setMessage("PariPari richiede il consenso per accedere alla galleria al fine di selezionare l'immagine dello scontrino. Verrà condivisa solo la foto da te scelta.")
-                    .setPositiveButton("Consenti", (dialog, which) -> {
-                        pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
-                                .setMediaType(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                                .build());
-                    })
-                    .setNegativeButton("Annulla", null)
-                    .show();
+            pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                    .setMediaType(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
         });
 
         binding.btnFotocameraScontrino.setOnClickListener(v -> avviaFotocameraConUri());
@@ -192,14 +185,19 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             );
             takePictureLauncher.launch(cameraTempUri);
         } catch (Exception e) {
-            com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "Impossibile avviare fotocamera");
+            com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), R.string.errore_avvio_fotocamera);
         }
     }
 
     private void gestisciImmagineScontrino(android.net.Uri uri) {
         scontrinoUri = uri;
         binding.cardAnteprimaScontrino.setVisibility(View.VISIBLE);
-        binding.ivAnteprimaScontrino.setImageURI(uri);
+        android.graphics.Bitmap miniatura = com.example.paripariapp.util.ScontrinoOcrUtil.caricaMiniatura(requireContext(), uri, 256);
+        if (miniatura != null) {
+            binding.ivAnteprimaScontrino.setImageBitmap(miniatura);
+        } else {
+            binding.ivAnteprimaScontrino.setImageURI(uri);
+        }
         binding.layoutOcrProgress.setVisibility(View.VISIBLE);
         binding.tvOcrStatus.setText(R.string.ocr_in_corso);
 
@@ -257,62 +255,64 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         }
 
         int numVoci = scontrinoDigitaleCorrente.getVoci().size();
+        String val = getValutaEffettiva();
         String totaleStr = scontrinoDigitaleCorrente.getTotale() != null
-                ? String.format(java.util.Locale.US, "%.2f €", scontrinoDigitaleCorrente.getTotale()) : "";
+                ? String.format(java.util.Locale.US, "%.2f %s", scontrinoDigitaleCorrente.getTotale(), val) : "";
 
         StringBuilder info = new StringBuilder();
-        info.append(numVoci).append(" voci digitalizzate");
+        info.append(getString(R.string.ocr_voci_digitalizzate, numVoci));
         if (!totaleStr.isEmpty()) {
-            info.append(" • Tot: ").append(totaleStr);
+            info.append(" ").append(getString(R.string.ocr_tot_label, totaleStr));
         }
         if (scontrinoDigitaleCorrente.isQuadrato()) {
-            info.append(" • ✓ Verificato");
+            info.append(" ").append(getString(R.string.ocr_verificato));
         } else if (scontrinoDigitaleCorrente.getDiscrepanza() != 0.0) {
-            info.append(String.format(java.util.Locale.US, " • Diff: %+.2f €", scontrinoDigitaleCorrente.getDiscrepanza()));
+            info.append(" ").append(getString(R.string.ocr_discrepanza_formato, scontrinoDigitaleCorrente.getDiscrepanza(), val));
         }
 
         binding.tvOcrStatus.setText(info.toString());
-        com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "🧾 Scontrino digitalizzato (" + numVoci + " voci)");
+        com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), getString(R.string.ocr_scontrino_digitalizzato_toast, numVoci));
     }
 
     private void mostraDettaglioVociScontrino() {
         if (scontrinoDigitaleCorrente == null || !isAdded()) return;
 
+        String val = getValutaEffettiva();
         StringBuilder sb = new StringBuilder();
         if (scontrinoDigitaleCorrente.getEsercente() != null) {
-            sb.append("Esercente: ").append(scontrinoDigitaleCorrente.getEsercente()).append("\n");
+            sb.append(getString(R.string.ocr_dettaglio_esercente, scontrinoDigitaleCorrente.getEsercente()));
         }
         if (scontrinoDigitaleCorrente.getDataFormatted() != null && !scontrinoDigitaleCorrente.getDataFormatted().isEmpty()) {
-            sb.append("Data: ").append(scontrinoDigitaleCorrente.getDataFormatted()).append("\n");
+            sb.append(getString(R.string.ocr_dettaglio_data, scontrinoDigitaleCorrente.getDataFormatted()));
         }
         sb.append("----------------------------\n");
 
         if (scontrinoDigitaleCorrente.getVoci().isEmpty()) {
-            sb.append("Nessuna voce dettagliata rilevata.\n");
+            sb.append(getString(R.string.ocr_nessuna_voce));
         } else {
             for (com.example.paripariapp.data.model.ScontrinoDigitale.VoceScontrino v : scontrinoDigitaleCorrente.getVoci()) {
                 String prefix = v.getQuantita() > 1 ? String.format(java.util.Locale.US, "%.0fx ", v.getQuantita()) : "";
                 sb.append(prefix).append(v.getDescrizione())
                         .append(" : ")
-                        .append(String.format(java.util.Locale.US, "%.2f €", v.getPrezzoTotale()))
+                        .append(String.format(java.util.Locale.US, "%.2f %s", v.getPrezzoTotale(), val))
                         .append("\n");
             }
         }
         sb.append("----------------------------\n");
         if (scontrinoDigitaleCorrente.getTotale() != null) {
-            sb.append(String.format(java.util.Locale.US, "Totale rilevato: %.2f €\n", scontrinoDigitaleCorrente.getTotale()));
+            sb.append(getString(R.string.ocr_totale_rilevato, scontrinoDigitaleCorrente.getTotale(), val));
         }
-        sb.append(String.format(java.util.Locale.US, "Somma voci: %.2f €\n", scontrinoDigitaleCorrente.calcolaSommaVoci()));
+        sb.append(getString(R.string.ocr_somma_voci, scontrinoDigitaleCorrente.calcolaSommaVoci(), val));
         if (scontrinoDigitaleCorrente.isQuadrato()) {
-            sb.append("✓ Somma e totale quadrano perfettamente.\n");
+            sb.append(getString(R.string.ocr_quadratura_perfetta));
         } else {
-            sb.append(String.format(java.util.Locale.US, "⚠ Discrepanza: %+.2f € (possibile coperto/sconto)\n", scontrinoDigitaleCorrente.getDiscrepanza()));
+            sb.append(getString(R.string.ocr_discrepanza_info, scontrinoDigitaleCorrente.getDiscrepanza(), val));
         }
 
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Scontrino Digitalizzato")
+                .setTitle(R.string.dialog_titolo_scontrino_digitalizzato)
                 .setMessage(sb.toString())
-                .setPositiveButton("OK", null)
+                .setPositiveButton(android.R.string.ok, null)
                 .show();
     }
 

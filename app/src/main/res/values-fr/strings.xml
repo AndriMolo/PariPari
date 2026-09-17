@@ -19,6 +19,20 @@
     <string name="ocr_in_corso">Reconnaissance du montant et de la date en cours…</string>
     <string name="ocr_successo">Montant détecté sur le reçu : %s</string>
     <string name="ocr_nessun_importo">Aucun montant détecté avec certitude</string>
+    <string name="errore_avvio_fotocamera">Impossible de lancer l\'appareil photo</string>
+    <string name="ocr_scontrino_digitalizzato_toast">🧾 Reçu numérisé (%d articles)</string>
+    <string name="ocr_voci_digitalizzate">%d articles numérisés</string>
+    <string name="ocr_tot_label">• Tot : %s</string>
+    <string name="ocr_verificato">• ✓ Vérifié</string>
+    <string name="ocr_discrepanza_formato">• Diff : %1$+.2f %2$s</string>
+    <string name="dialog_titolo_scontrino_digitalizzato">Reçu Numérisé</string>
+    <string name="ocr_dettaglio_esercente">Commerçant : %s\n</string>
+    <string name="ocr_dettaglio_data">Date : %s\n</string>
+    <string name="ocr_nessuna_voce">Aucun article détaillé détecté.\n</string>
+    <string name="ocr_totale_rilevato">Total détecté : %1$.2f %2$s\n</string>
+    <string name="ocr_somma_voci">Somme des articles : %1$.2f %2$s\n</string>
+    <string name="ocr_quadratura_perfetta">✓ La somme et le total correspondent parfaitement.\n</string>
+    <string name="ocr_discrepanza_info">⚠ Écart : %1$+.2f %2$s (frais/remise éventuels)\n</string>
     <string name="error_credenziali_google">Impossible de récupérer les identifiants Google</string>
 
     <!-- Titoli Schermate -->
