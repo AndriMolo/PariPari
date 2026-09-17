@@ -53,16 +53,6 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                 }
             });
 
-    private final androidx.activity.result.ActivityResultLauncher<String> cameraPermissionLauncher =
-            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    avviaFotocameraConUri();
-                } else {
-                    if (isAdded() && binding != null) {
-                        com.example.paripariapp.util.AppSnackbar.show(binding.getRoot(), "Permesso fotocamera negato");
-                    }
-                }
-            });
 
     public static NuovaSpesaFragment newInstance(String schedaId, String valuta) {
         NuovaSpesaFragment fragment = new NuovaSpesaFragment();
@@ -176,21 +166,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
                     .show();
         });
 
-        binding.btnFotocameraScontrino.setOnClickListener(v -> {
-            if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA)
-                    == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                avviaFotocameraConUri();
-            } else {
-                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Consenso Fotocamera")
-                        .setMessage("PariPari richiede l'accesso alla fotocamera per scattare e scansionare la foto dello scontrino.")
-                        .setPositiveButton("Consenti", (dialog, which) -> {
-                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
-                        })
-                        .setNegativeButton("Annulla", null)
-                        .show();
-            }
-        });
+        binding.btnFotocameraScontrino.setOnClickListener(v -> avviaFotocameraConUri());
 
         binding.btnRimuoviScontrino.setOnClickListener(v -> {
             scontrinoUri = null;
@@ -230,9 +206,6 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         com.example.paripariapp.util.ScontrinoOcrUtil.analizzaScontrino(requireContext(), uri, new com.example.paripariapp.util.ScontrinoOcrUtil.OcrCallback() {
             @Override
             public void onSuccess(com.example.paripariapp.util.ScontrinoOcrUtil.RisultatoOcr risultato) {
-                // Elimina subito la foto temporanea dalla cache per risparmiare spazio sul dispositivo
-                eliminaFotoTemporanea();
-
                 if (!isAdded() || binding == null) return;
                 binding.layoutOcrProgress.setVisibility(View.GONE);
 
@@ -260,7 +233,6 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
             @Override
             public void onError(Exception e) {
-                eliminaFotoTemporanea();
                 if (!isAdded() || binding == null) return;
                 binding.layoutOcrProgress.setVisibility(View.GONE);
                 binding.tvOcrStatus.setText(R.string.scontrino_allegato);
@@ -484,6 +456,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
         spesa.setTassoCambio(tasso);
 
         viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
+        eliminaFotoTemporanea();
         com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
 
         if (getParentFragmentManager() != null) {

@@ -414,6 +414,9 @@ public class StoricoSaldiFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (updateRunnable != null) {
+            mainHandler.removeCallbacks(updateRunnable);
+        }
         binding = null;
     }
 }
