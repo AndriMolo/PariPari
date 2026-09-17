@@ -71,6 +71,7 @@
     <!-- Gestione Plurali Partecipanti -->
     <plurals name="label_partecipanti_count">
         <item quantity="one">%d participant</item>
+        <item quantity="many">%d de participants</item>
         <item quantity="other">%d participants</item>
     </plurals>
 
@@ -252,6 +253,7 @@
     <string name="spesa_pagato_da">Payé par %1$s • %2$s</string>
     <plurals name="spesa_split_persone">
         <item quantity="one">Divisé entre %d personne</item>
+        <item quantity="many">Divisé entre %d de personnes</item>
         <item quantity="other">Divisé entre %d personnes</item>
     </plurals>
 
