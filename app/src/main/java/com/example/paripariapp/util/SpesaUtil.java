@@ -26,6 +26,28 @@ public final class SpesaUtil {
     );
 
     /**
+     * Verifica se una stringa corrisponde al pattern di un rimborso in una qualsiasi delle 5 lingue supportate.
+     */
+    public static boolean isPatternRimborso(@Nullable String titolo) {
+        if (titolo == null) return false;
+        return PATTERN_RIMBORSO.matcher(titolo.trim()).find();
+    }
+
+    /**
+     * Estrae i nomi di mittente e destinatario da un titolo di rimborso multilingue.
+     * Restituisce un array di 2 elementi [mittente, destinatario], oppure null se non è un rimborso valido.
+     */
+    @Nullable
+    public static String[] estraiMittenteEDestinatario(@Nullable String titolo) {
+        if (titolo == null) return null;
+        Matcher matcher = PATTERN_RIMBORSO.matcher(titolo.trim());
+        if (matcher.find()) {
+            return new String[]{matcher.group(1), matcher.group(2)};
+        }
+        return null;
+    }
+
+    /**
      * Formatta dinamicamente il titolo di una spesa/rimborso in base alla lingua attiva dell'applicazione.
      * Se la spesa è un rimborso/saldo, estrae i nomi di mittente e destinatario ed applica
      * la risorsa stringa localizzata R.string.titolo_rimborso_formattato.
@@ -38,11 +60,9 @@ public final class SpesaUtil {
         String trimmed = spesa.getTitolo().trim();
 
         if (CategoriaUtil.isCategoriaSaldi(spesa.getCategoria())) {
-            Matcher matcher = PATTERN_RIMBORSO.matcher(trimmed);
-            if (matcher.find()) {
-                String da = matcher.group(1);
-                String a = matcher.group(2);
-                return context.getString(R.string.titolo_rimborso_formattato, da, a);
+            String[] parti = estraiMittenteEDestinatario(trimmed);
+            if (parti != null) {
+                return context.getString(R.string.titolo_rimborso_formattato, parti[0], parti[1]);
             }
         }
         return trimmed;
