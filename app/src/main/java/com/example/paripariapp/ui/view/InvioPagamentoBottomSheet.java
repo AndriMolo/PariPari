@@ -160,7 +160,6 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         binding.btnSegnaSaldato.setVisibility(View.VISIBLE);
         binding.btnSegnaSaldato.setOnClickListener(v -> {
             if (schedaId != null && daId != null && aId != null) {
-                com.example.paripariapp.util.HapticUtil.confirm(binding.btnSegnaSaldato);
                 SpeseViewModel viewModel = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
                 viewModel.registraPagamento(schedaId, daId, daNome, aId, aNome, importo, valuta);
                 dismiss();
@@ -262,7 +261,6 @@ public class InvioPagamentoBottomSheet extends BottomSheetDialogFragment {
         if (clipboard != null) {
             clipboard.setPrimaryClip(clip);
             if (binding != null) {
-                com.example.paripariapp.util.HapticUtil.confirm(binding.getRoot());
                 AppSnackbar.show(binding.getRoot(), R.string.msg_link_copiato);
             }
         }

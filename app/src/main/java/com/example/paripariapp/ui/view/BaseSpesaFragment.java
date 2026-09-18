@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -24,7 +27,7 @@ import com.example.paripariapp.util.ImportoUtil;
 import com.example.paripariapp.util.CalcolatriceEspressioniUtil;
 import com.example.paripariapp.util.CategoriaUtil;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
-import com.example.paripariapp.util.HapticUtil;
+import com.example.paripariapp.util.KeyboardUtil;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -211,7 +214,6 @@ public abstract class BaseSpesaFragment extends Fragment {
                     String corrente = menuCategoria.getText() != null ? menuCategoria.getText().toString() : "";
                     if (!indovinata.equalsIgnoreCase(corrente)) {
                         menuCategoria.setText(indovinata, false);
-                        HapticUtil.tick(menuCategoria);
                     }
                 } else if (test.trim().isEmpty()) {
                     String altroLoc = getString(R.string.cat_altro);
@@ -244,11 +246,21 @@ public abstract class BaseSpesaFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Calcolatore inline al termine della digitazione/cambio focus
+        // Calcolatore inline al termine della digitazione/cambio focus o azione Done da tastiera
         campoImporto.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 valutaEspressioneImportoSeNecessario();
             }
+        });
+        campoImporto.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO
+                    || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                valutaEspressioneImportoSeNecessario();
+                campoImporto.clearFocus();
+                KeyboardUtil.hideKeyboard(campoImporto);
+                return true;
+            }
+            return false;
         });
 
         setupCategorieDropdown();
@@ -270,7 +282,6 @@ public abstract class BaseSpesaFragment extends Fragment {
         datePicker.addOnPositiveButtonClickListener(selection -> {
             if (selection != null) {
                 impostaData(selection);
-                HapticUtil.tick(campoData);
             }
         });
         datePicker.show(getParentFragmentManager(), "date_picker_spesa");
@@ -283,7 +294,6 @@ public abstract class BaseSpesaFragment extends Fragment {
             Double calcolato = CalcolatriceEspressioniUtil.valuta(raw);
             if (calcolato != null) {
                 campoImporto.setText(String.format(Locale.US, "%.2f", calcolato));
-                HapticUtil.confirm(campoImporto);
             }
         }
     }
@@ -316,7 +326,6 @@ public abstract class BaseSpesaFragment extends Fragment {
         if (toggleGruppoDivisione == null) return;
         toggleGruppoDivisione.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return;
-            HapticUtil.tick(group);
             if (checkedId == R.id.btn_divisione_equa) {
                 cambiaTipoDivisione(SpesaUiHelper.TipoDivisione.EQUA);
             } else if (checkedId == R.id.btn_divisione_percentuale) {

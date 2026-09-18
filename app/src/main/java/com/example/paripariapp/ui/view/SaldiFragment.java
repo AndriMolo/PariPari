@@ -45,6 +45,8 @@ public class SaldiFragment extends Fragment {
 
         adapter = new BilancioPersonaAdapter();
         binding.recyclerBilanci.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerBilanci.setHasFixedSize(true);
+        binding.recyclerBilanci.setItemViewCacheSize(10);
         binding.recyclerBilanci.setAdapter(adapter);
 
         binding.btnStoricoSaldi.setOnClickListener(v -> {

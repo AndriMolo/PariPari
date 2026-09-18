@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private int currentSelectedTabId = R.id.nav_spese;
     private final Deque<Integer> tabBackStack = new ArrayDeque<>();
     private boolean isNavigatingBack = false;
+    private boolean bottomNavExplicitlyHidden = false;
 
     private final androidx.activity.result.ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -58,6 +59,15 @@ public class MainActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+
+            boolean isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+            if (binding.bottomNavigation != null) {
+                if (isImeVisible) {
+                    binding.bottomNavigation.setVisibility(View.GONE);
+                } else if (!bottomNavExplicitlyHidden) {
+                    binding.bottomNavigation.setVisibility(View.VISIBLE);
+                }
+            }
             return insets;
         });
 
@@ -265,8 +275,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void impostaVisibilitaBottomNav(boolean visibile) {
+        this.bottomNavExplicitlyHidden = !visibile;
         if (binding != null && binding.bottomNavigation != null) {
-            binding.bottomNavigation.setVisibility(visibile ? View.VISIBLE : View.GONE);
+            boolean isImeVisible = false;
+            WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(binding.main);
+            if (rootInsets != null) {
+                isImeVisible = rootInsets.isVisible(WindowInsetsCompat.Type.ime());
+            }
+            binding.bottomNavigation.setVisibility((visibile && !isImeVisible) ? View.VISIBLE : View.GONE);
         }
     }
 

@@ -25,7 +25,7 @@ import com.example.paripariapp.databinding.FragmentModificaRimborsoBinding;
 import com.example.paripariapp.ui.viewmodel.DettaglioSchedaViewModel;
 import com.example.paripariapp.util.AppSnackbar;
 import com.example.paripariapp.util.DecimalDigitsInputFilter;
-import com.example.paripariapp.util.HapticUtil;
+import com.example.paripariapp.util.KeyboardUtil;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.transition.MaterialSharedAxis;
@@ -249,7 +249,6 @@ public class ModificaRimborsoFragment extends Fragment {
         binding.menuPagante.setAdapter(adapter);
 
         binding.menuPagante.setOnItemClickListener((parent, v, position, id) -> {
-            HapticUtil.tick(binding.menuPagante);
             aggiornaDropdownDestinatario();
         });
 
@@ -444,7 +443,7 @@ public class ModificaRimborsoFragment extends Fragment {
             ));
 
             viewModel.aggiornaSpesaConQuote(spesaAggiornata, nuoveQuote);
-            HapticUtil.confirm(binding.azioneSalva);
+            KeyboardUtil.hideKeyboard(requireView());
 
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();
@@ -454,6 +453,9 @@ public class ModificaRimborsoFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (getView() != null) {
+            KeyboardUtil.hideKeyboard(getView());
+        }
         super.onDestroyView();
         binding = null;
     }

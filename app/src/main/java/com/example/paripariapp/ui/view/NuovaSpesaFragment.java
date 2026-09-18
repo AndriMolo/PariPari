@@ -104,7 +104,6 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
         binding.toggleTipoOperazione.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return;
-            com.example.paripariapp.util.HapticUtil.tick(group);
             isRimborso = (checkedId == R.id.btn_tipo_rimborso);
             if (isRimborso) {
                 binding.titoloSpesa.setText(R.string.titolo_nuovo_rimborso);
@@ -375,7 +374,6 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
             aggiornaDropdownDestinatario();
 
             binding.menuPagante.setOnItemClickListener((parent, v, position, id) -> {
-                com.example.paripariapp.util.HapticUtil.tick(binding.menuPagante);
                 aggiornaDropdownDestinatario();
             });
 
@@ -419,7 +417,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
                     SpeseViewModel speseVm = new ViewModelProvider(requireActivity()).get(SpeseViewModel.class);
                     speseVm.registraRimborso(schedaId, daId, paganteNome, aId, destinatarioNome, importo, getValutaEffettiva(), desc);
-                    com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
+                    com.example.paripariapp.util.KeyboardUtil.hideKeyboard(requireView());
                     if (getParentFragmentManager() != null) {
                         getParentFragmentManager().popBackStack();
                     }
@@ -457,7 +455,7 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
         viewModel.inserisciSpesaConQuote(spesa, dati.quoteCalcolate);
         eliminaFotoTemporanea();
-        com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
+        com.example.paripariapp.util.KeyboardUtil.hideKeyboard(requireView());
 
         if (getParentFragmentManager() != null) {
             getParentFragmentManager().popBackStack();
@@ -466,6 +464,9 @@ public class NuovaSpesaFragment extends BaseSpesaFragment {
 
     @Override
     public void onDestroyView() {
+        if (getView() != null) {
+            com.example.paripariapp.util.KeyboardUtil.hideKeyboard(getView());
+        }
         if (binding != null) {
             binding.ivAnteprimaScontrino.setImageDrawable(null);
         }

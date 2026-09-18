@@ -112,6 +112,8 @@ public class StoricoSaldiFragment extends Fragment {
 
         adapter = new StoricoSaldiAdapter();
         binding.recyclerStoricoSaldi.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerStoricoSaldi.setHasFixedSize(true);
+        binding.recyclerStoricoSaldi.setItemViewCacheSize(10);
         binding.recyclerStoricoSaldi.setAdapter(adapter);
 
         adapter.setOnItemClickListener(item -> {

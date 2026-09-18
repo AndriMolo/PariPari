@@ -234,6 +234,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textCapWords|textNoSuggestions"
                     android:importantForAutofill="no"
+                    android:imeOptions="actionNext"
                     android:maxLines="1" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -252,6 +253,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
+                    android:imeOptions="actionNext"
                     android:maxLines="1" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -271,6 +273,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
+                    android:imeOptions="actionDone"
                     android:maxLines="1" />
 
             </com.google.android.material.textfield.TextInputLayout>

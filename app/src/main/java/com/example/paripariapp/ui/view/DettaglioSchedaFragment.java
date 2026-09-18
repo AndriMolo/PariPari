@@ -210,10 +210,14 @@ public class DettaglioSchedaFragment extends Fragment {
     private void setupRecyclerSaldi() {
         saldoAdapter = new SaldoAdapter();
         binding.recyclerSaldi.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerSaldi.setHasFixedSize(true);
+        binding.recyclerSaldi.setItemViewCacheSize(10);
         binding.recyclerSaldi.setAdapter(saldoAdapter);
 
         bilancioMembroAdapter = new BilancioMembroAdapter();
         binding.recyclerBilanciMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerBilanciMembri.setHasFixedSize(true);
+        binding.recyclerBilanciMembri.setItemViewCacheSize(10);
         binding.recyclerBilanciMembri.setAdapter(bilancioMembroAdapter);
 
         binding.btnStoricoSaldiScheda.setOnClickListener(v -> {
@@ -498,6 +502,8 @@ public class DettaglioSchedaFragment extends Fragment {
         });
 
         binding.recyclerSpese.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerSpese.setHasFixedSize(true);
+        binding.recyclerSpese.setItemViewCacheSize(15);
         binding.recyclerSpese.setAdapter(adapter);
     }
 
@@ -1055,10 +1061,14 @@ public class DettaglioSchedaFragment extends Fragment {
     private void setupRecyclerMembri() {
         membroAdapter = new MembroAdapter();
         binding.recyclerMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerMembri.setHasFixedSize(true);
+        binding.recyclerMembri.setItemViewCacheSize(10);
         binding.recyclerMembri.setAdapter(membroAdapter);
 
         exMembroAdapter = new MembroAdapter();
         binding.recyclerExMembri.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerExMembri.setHasFixedSize(true);
+        binding.recyclerExMembri.setItemViewCacheSize(10);
         binding.recyclerExMembri.setAdapter(exMembroAdapter);
 
         membroAdapter.setOnNomeModificatoListener((p, nuovoNome) -> {

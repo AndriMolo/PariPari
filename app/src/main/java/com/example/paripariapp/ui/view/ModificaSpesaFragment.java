@@ -344,7 +344,7 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
             spesaAggiornata.setTassoCambio(tasso);
 
             viewModel.aggiornaSpesaConQuote(spesaAggiornata, nuoveQuote);
-            com.example.paripariapp.util.HapticUtil.confirm(binding.azioneSalva);
+            com.example.paripariapp.util.KeyboardUtil.hideKeyboard(requireView());
 
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();
@@ -354,6 +354,9 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
 
     @Override
     public void onDestroyView() {
+        if (getView() != null) {
+            com.example.paripariapp.util.KeyboardUtil.hideKeyboard(getView());
+        }
         super.onDestroyView();
         binding = null;
     }

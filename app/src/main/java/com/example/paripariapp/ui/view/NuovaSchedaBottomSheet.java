@@ -2,6 +2,7 @@ package com.example.paripariapp.ui.view;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,7 +94,6 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
                 selectedEmoji = emoji;
                 selectedColor = color;
                 aggiornaIconaAnteprima();
-                com.example.paripariapp.util.HapticUtil.tick(tv);
             });
 
             binding.containerEmojiNuovaScheda.addView(tv);
@@ -104,7 +104,6 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
                     % com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE.length;
             selectedColor = com.example.paripariapp.util.AvatarVisualUtil.COLOR_PALETTE[nextIdx];
             aggiornaIconaAnteprima();
-            com.example.paripariapp.util.HapticUtil.tick(binding.cardIconaNuovaScheda);
         });
     }
 
@@ -168,7 +167,8 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
 
         // Tasto Invio/Fine sulla tastiera mentre si digita il nome dell'amico
         binding.etNuovoPartecipante.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
+            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_GO
+                    || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
                 aggiungiAmicoDaInput();
                 return true;
             }
@@ -204,7 +204,7 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         chipAmico.setOnCloseIconClickListener(v -> binding.chipGroupPartecipanti.removeView(chipAmico));
 
         binding.chipGroupPartecipanti.addView(chipAmico);
-        com.example.paripariapp.util.HapticUtil.tick(binding.chipGroupPartecipanti);
+        binding.etNuovoPartecipante.setText("");
     }
 
     private void creaScheda() {
@@ -242,7 +242,6 @@ public class NuovaSchedaBottomSheet extends BottomSheetDialogFragment {
         }
 
         String valutaFinale = selectedCurrencyCode != null ? selectedCurrencyCode : viewModel.getDefaultCurrency();
-        com.example.paripariapp.util.HapticUtil.confirm(binding.btnCreaScheda);
         String iconaUrl = "emoji:" + selectedEmoji + ":" + selectedColor;
         viewModel.creaScheda(nomeScheda, valutaFinale, iconaUrl, nomiPartecipanti);
         dismiss();

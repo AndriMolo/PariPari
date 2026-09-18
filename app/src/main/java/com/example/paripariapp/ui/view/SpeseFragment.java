@@ -83,6 +83,8 @@ public class SpeseFragment extends Fragment {
         });
 
         binding.recyclerSchede.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recyclerSchede.setHasFixedSize(true);
+        binding.recyclerSchede.setItemViewCacheSize(10);
         binding.recyclerSchede.setAdapter(adapter);
 
         setupItemTouchHelper();
