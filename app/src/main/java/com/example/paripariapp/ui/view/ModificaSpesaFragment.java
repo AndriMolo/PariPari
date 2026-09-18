@@ -214,8 +214,14 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
         binding.menuPagante.setText(nomePagatore != null ? nomePagatore : getString(R.string.nome_sconosciuto), false);
         this.isReadOnly = haPartecipantiAssenti;
 
-        if (spesaCorrente.getCategoria() != null) {
+        if (spesaCorrente.getCategoria() != null && !spesaCorrente.getCategoria().isEmpty()) {
             binding.menuCategoria.setText(spesaCorrente.getCategoria(), false);
+            String altroLoc = getString(R.string.cat_altro);
+            if (!spesaCorrente.getCategoria().equalsIgnoreCase(altroLoc)
+                    && !spesaCorrente.getCategoria().equalsIgnoreCase(com.example.paripariapp.util.CategoriaUtil.CAT_ALTRO)
+                    && !spesaCorrente.getCategoria().equalsIgnoreCase("Other")) {
+                categoriaSelezionataManualmente = true;
+            }
         }
 
         // Mappa delle quote esistenti e dei partecipanti inclusi

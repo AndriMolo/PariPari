@@ -121,8 +121,30 @@ public class CategoriaUtil {
     }
 
     /**
+     * Verifica se una parola è presente all'interno del testo come parola isolata/delimitata,
+     * prevenendo falsi positivi per sottostringhe brevi (es. "bar" in "Barcellona", "pub" in "repubblica").
+     * Supporta caratteri Unicode e lettere accentate (é, à, è, ö, ü, ñ, ecc.) tramite Character.isLetter().
+     */
+    public static boolean contieneParola(@NonNull String testo, @NonNull String parola) {
+        int idx = testo.indexOf(parola);
+        int len = parola.length();
+        int totalLen = testo.length();
+        while (idx != -1) {
+            boolean primaOk = (idx == 0) || !Character.isLetter(testo.charAt(idx - 1));
+            int dopoIdx = idx + len;
+            boolean dopoOk = (dopoIdx == totalLen) || !Character.isLetter(testo.charAt(dopoIdx));
+            if (primaOk && dopoOk) {
+                return true;
+            }
+            idx = testo.indexOf(parola, idx + 1);
+        }
+        return false;
+    }
+
+    /**
      * Riconosce intelligentemente la categoria più probabile a partire dal testo/titolo inserito dall'utente
      * (es. "Pizza con amici" -> Cibo, "Spritz" -> Bar & Aperitivi, "Esselunga" -> Spesa, "Benzina" -> Trasporti).
+     * Copre in modo mirato i termini più frequenti per spese di gruppo nelle 5 lingue supportate (IT, EN, ES, FR, DE).
      */
     @Nullable
     public static String indovinaCategoriaDaTitolo(@Nullable String titolo) {
@@ -130,43 +152,101 @@ public class CategoriaUtil {
         String t = titolo.trim().toLowerCase(java.util.Locale.ROOT);
         if (t.isEmpty()) return null;
 
+        // 1. Cibo & Ristoranti (IT, EN, ES, FR, DE)
         if (t.contains("pizza") || t.contains("pizzeria") || t.contains("sushi") || t.contains("ristorante")
-                || t.contains("pranzo") || t.contains("cena") || t.contains("mcdonald") || t.contains("burger")
-                || t.contains("panino") || t.contains("kebab") || t.contains("poke")) {
+                || t.contains("restaurant") || t.contains("pranzo") || t.contains("cena") || t.contains("dinner")
+                || t.contains("lunch") || t.contains("almuerzo") || t.contains("comida") || t.contains("dîner")
+                || t.contains("déjeuner") || t.contains("abendessen") || t.contains("mittagessen") || t.contains("mcdonald")
+                || t.contains("burger") || t.contains("panino") || t.contains("kebab") || t.contains("poke")
+                || t.contains("trattoria") || t.contains("osteria") || t.contains("tapas") || t.contains("paella")
+                || t.contains("brasserie") || t.contains("crêperie") || t.contains("fast food") || t.contains("dining")) {
             return CAT_CIBO;
         }
-        if (t.contains("birra") || t.contains("beer") || t.contains("pub") || t.contains("cocktail")
-                || t.contains("aperitivo") || t.contains("spritz") || t.contains("drink") || t.contains("caffè")
-                || t.contains("colazione") || t.contains("bar")) {
+
+        // 2. Bar & Aperitivi (IT, EN, ES, FR, DE)
+        // Usiamo contieneParola per termini brevi ad alto rischio di collisione (bar, pub, vin)
+        if (contieneParola(t, "bar") || contieneParola(t, "pub") || contieneParola(t, "vin")
+                || t.contains("birra") || t.contains("beer") || t.contains("bière") || t.contains("bier")
+                || t.contains("cerveza") || t.contains("cocktail") || t.contains("aperitivo") || t.contains("apéro")
+                || t.contains("spritz") || t.contains("drink") || t.contains("caffè") || t.contains("coffee")
+                || t.contains("cafe") || t.contains("kaffee") || t.contains("colazione") || t.contains("desayuno")
+                || t.contains("kneipe") || t.contains("enoteca") || t.contains("brewery")) {
             return CAT_BAR;
         }
-        if (t.contains("spesa") || t.contains("supermercato") || t.contains("conad") || t.contains("coop")
-                || t.contains("esselunga") || t.contains("lidl") || t.contains("carrefour") || t.contains("alimentari")) {
+
+        // 3. Spesa & Supermercato (IT, EN, ES, FR, DE)
+        if (t.contains("spesa") || t.contains("supermercato") || t.contains("supermarket") || t.contains("supermarché")
+                || t.contains("supermarkt") || t.contains("groceries") || t.contains("grocery") || t.contains("alimentari")
+                || t.contains("courses") || t.contains("einkauf") || t.contains("lebensmittel")
+                || t.contains("esselunga") || t.contains("conad") || t.contains("coop") || t.contains("lidl")
+                || t.contains("carrefour") || t.contains("mercadona") || t.contains("rewe") || t.contains("edeka")
+                || t.contains("auchan") || t.contains("monoprix") || t.contains("leclerc") || t.contains("kaufland")) {
             return CAT_SPESA;
         }
-        if (t.contains("benzina") || t.contains("gasolio") || t.contains("diesel") || t.contains("carburante")
-                || t.contains("treno") || t.contains("trenitalia") || t.contains("italo") || t.contains("volo")
-                || t.contains("aereo") || t.contains("ryanair") || t.contains("easyjet") || t.contains("taxi")
-                || t.contains("uber") || t.contains("pedaggio") || t.contains("telepass") || t.contains("parcheggio")) {
+
+        // 4. Trasporti (IT, EN, ES, FR, DE)
+        // Usiamo contieneParola per termini brevi (bus, gas, zug, vol, cab, taxi)
+        if (contieneParola(t, "bus") || contieneParola(t, "gas") || contieneParola(t, "zug")
+                || contieneParola(t, "vol") || contieneParola(t, "cab") || contieneParola(t, "taxi")
+                || t.contains("benzina") || t.contains("gasolio") || t.contains("diesel") || t.contains("carburante")
+                || t.contains("gasolina") || t.contains("essence") || t.contains("tanken") || t.contains("fuel")
+                || t.contains("petrol") || t.contains("treno") || t.contains("trenitalia") || t.contains("italo")
+                || t.contains("train") || t.contains("renfe") || t.contains("sncf") || t.contains("bahn")
+                || t.contains("volo") || t.contains("aereo") || t.contains("flight") || t.contains("vuelo")
+                || t.contains("avion") || t.contains("flug") || t.contains("ryanair") || t.contains("easyjet")
+                || t.contains("uber") || t.contains("pedaggio") || t.contains("peaje") || t.contains("péage")
+                || t.contains("maut") || t.contains("telepass") || t.contains("toll") || t.contains("parcheggio")
+                || t.contains("parking") || t.contains("parken") || t.contains("metro") || t.contains("subway")
+                || t.contains("traghetto") || t.contains("ferry")) {
             return CAT_TRASPORTI;
         }
-        if (t.contains("hotel") || t.contains("airbnb") || t.contains("b&b") || t.contains("ostello")
-                || t.contains("booking") || t.contains("alloggio") || t.contains("casa vacanze")) {
+
+        // 5. Alloggio (IT, EN, ES, FR, DE)
+        if (t.contains("hotel") || t.contains("hôtel") || t.contains("airbnb") || t.contains("b&b")
+                || t.contains("ostello") || t.contains("hostel") || t.contains("hostal") || t.contains("booking")
+                || t.contains("alloggio") || t.contains("albergo") || t.contains("alojamiento") || t.contains("hébergement")
+                || t.contains("unterkunft") || t.contains("ferienwohnung") || t.contains("casa vacanze")
+                || t.contains("resort") || t.contains("pension") || t.contains("gîte")) {
             return CAT_ALLOGGIO;
         }
-        if (t.contains("cinema") || t.contains("film") || t.contains("concerto") || t.contains("teatro")
-                || t.contains("museo") || t.contains("partita") || t.contains("calcetto") || t.contains("padel")
-                || t.contains("palestra") || t.contains("bowling") || t.contains("escape room") || t.contains("stadio")) {
+
+        // 6. Svago (IT, EN, ES, FR, DE)
+        // Usiamo contieneParola per termini brevi (ski, spa, kino, cine, film)
+        if (contieneParola(t, "ski") || contieneParola(t, "spa") || contieneParola(t, "kino")
+                || contieneParola(t, "cine") || contieneParola(t, "film")
+                || t.contains("cinema") || t.contains("cinéma") || t.contains("movie") || t.contains("concerto")
+                || t.contains("concert") || t.contains("konzert") || t.contains("teatro") || t.contains("theatre")
+                || t.contains("theater") || t.contains("museo") || t.contains("museum") || t.contains("musée")
+                || t.contains("partita") || t.contains("match") || t.contains("calcetto") || t.contains("padel")
+                || t.contains("palestra") || t.contains("gym") || t.contains("fitness") || t.contains("bowling")
+                || t.contains("escape room") || t.contains("stadio") || t.contains("stadium") || t.contains("skipass")
+                || t.contains("terme") || t.contains("festival") || t.contains("entradas") || t.contains("tickets")) {
             return CAT_SVAGO;
         }
-        if (t.contains("zara") || t.contains("h&m") || t.contains("amazon") || t.contains("shopping")
-                || t.contains("vestiti") || t.contains("scarpe") || t.contains("regalo") || t.contains("compleanno")) {
+
+        // 7. Shopping (IT, EN, ES, FR, DE)
+        if (t.contains("shopping") || t.contains("vestiti") || t.contains("clothes") || t.contains("ropa")
+                || t.contains("vêtements") || t.contains("kleidung") || t.contains("scarpe") || t.contains("shoes")
+                || t.contains("zapatos") || t.contains("chaussures") || t.contains("schuhe") || t.contains("regalo")
+                || t.contains("gift") || t.contains("cadeau") || t.contains("geschenk") || t.contains("compleanno")
+                || t.contains("birthday") || t.contains("cumpleaños") || t.contains("anniversaire") || t.contains("geburtstag")
+                || t.contains("souvenir") || t.contains("zara") || t.contains("h&m") || t.contains("amazon")
+                || t.contains("outlet")) {
             return CAT_SHOPPING;
         }
-        if (t.contains("farmacia") || t.contains("medico") || t.contains("visita") || t.contains("medicine")
-                || t.contains("dentista") || t.contains("tamponi")) {
+
+        // 8. Salute (IT, EN, ES, FR, DE)
+        // Usiamo 'visita medica' o 'visita dottore' invece del generico 'visita' per non intercettare 'visita guidata'
+        if (t.contains("farmacia") || t.contains("pharmacy") || t.contains("pharmacie") || t.contains("apotheke")
+                || t.contains("medico") || t.contains("médico") || t.contains("médecin") || t.contains("arzt")
+                || t.contains("doctor") || t.contains("dottore") || t.contains("visita medica") || t.contains("visita dottore")
+                || t.contains("medicine") || t.contains("medicines") || t.contains("médicaments") || t.contains("medikamente")
+                || t.contains("dentista") || t.contains("dentist") || t.contains("zahnarzt") || t.contains("hospital")
+                || t.contains("hôpital") || t.contains("krankenhaus") || t.contains("tamponi") || t.contains("clinica")
+                || t.contains("clinic")) {
             return CAT_SALUTE;
         }
+
         return null;
     }
 

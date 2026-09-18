@@ -86,6 +86,7 @@ public abstract class BaseSpesaFragment extends Fragment {
     protected View azioneSalva;
 
     protected long dataSelezionataTimestamp = System.currentTimeMillis();
+    protected boolean categoriaSelezionataManualmente = false;
 
     public static class DatiFormValidi {
         public final String titolo;
@@ -200,15 +201,23 @@ public abstract class BaseSpesaFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (categoriaSelezionataManualmente || menuCategoria == null || getContext() == null) {
+                    return;
+                }
                 String test = s != null ? s.toString() : "";
                 String indovinataStd = CategoriaUtil.indovinaCategoriaDaTitolo(test);
-                if (indovinataStd != null && menuCategoria != null && getContext() != null) {
+                if (indovinataStd != null) {
                     String indovinata = CategoriaUtil.getNomeLocalizzatoCategoria(requireContext(), indovinataStd);
                     String corrente = menuCategoria.getText() != null ? menuCategoria.getText().toString() : "";
-                    String altroLoc = getString(R.string.cat_altro);
-                    if (corrente.isEmpty() || corrente.equalsIgnoreCase(altroLoc) || corrente.equalsIgnoreCase(CategoriaUtil.CAT_ALTRO) || corrente.equalsIgnoreCase("Other")) {
+                    if (!indovinata.equalsIgnoreCase(corrente)) {
                         menuCategoria.setText(indovinata, false);
                         HapticUtil.tick(menuCategoria);
+                    }
+                } else if (test.trim().isEmpty()) {
+                    String altroLoc = getString(R.string.cat_altro);
+                    String corrente = menuCategoria.getText() != null ? menuCategoria.getText().toString() : "";
+                    if (!corrente.equalsIgnoreCase(altroLoc)) {
+                        menuCategoria.setText(altroLoc, false);
                     }
                 }
             }
@@ -297,6 +306,9 @@ public abstract class BaseSpesaFragment extends Fragment {
         if (menuCategoria.getText() == null || menuCategoria.getText().toString().isEmpty()) {
             menuCategoria.setText(categorie[0], false);
         }
+        menuCategoria.setOnItemClickListener((parent, view, position, id) -> {
+            categoriaSelezionataManualmente = true;
+        });
         menuCategoria.setOnClickListener(v -> menuCategoria.showDropDown());
     }
 
