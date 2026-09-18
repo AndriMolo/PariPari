@@ -107,14 +107,14 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
 
     private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            int navBarBottom = systemBars.bottom;
+            Insets insetsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+            int bottomInset = insetsBottom.bottom;
             float density = getResources().getDisplayMetrics().density;
 
             ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) binding.azioneSalva.getLayoutParams();
             if (lp != null) {
                 int baseMargin = (int) (20 * density);
-                lp.bottomMargin = baseMargin + navBarBottom;
+                lp.bottomMargin = baseMargin + bottomInset;
                 lp.rightMargin = baseMargin;
                 binding.azioneSalva.setLayoutParams(lp);
             }
@@ -124,8 +124,19 @@ public class ModificaSpesaFragment extends BaseSpesaFragment {
                     binding.scrollModificaSpesa.getPaddingLeft(),
                     binding.scrollModificaSpesa.getPaddingTop(),
                     binding.scrollModificaSpesa.getPaddingRight(),
-                    baseScrollPadding + navBarBottom
+                    baseScrollPadding + bottomInset
             );
+
+            if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+                View focused = binding.getRoot().findFocus();
+                if (focused != null) {
+                    focused.post(() -> {
+                        if (binding != null) {
+                            binding.scrollModificaSpesa.requestChildFocus(focused, focused);
+                        }
+                    });
+                }
+            }
             return insets;
         });
         ViewCompat.requestApplyInsets(binding.getRoot());

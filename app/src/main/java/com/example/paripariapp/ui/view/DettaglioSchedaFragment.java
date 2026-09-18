@@ -137,19 +137,38 @@ public class DettaglioSchedaFragment extends Fragment {
     }
 
     private void setupWindowInsets() {
+        binding.bottomNavScheda.addOnLayoutChangeListener((v1, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            int navHeight = bottom - top;
+            if (navHeight > 0 && binding != null) {
+                float density = getResources().getDisplayMetrics().density;
+                int marginAboveNav = (int) (24 * density);
+
+                binding.containerSezioni.setPadding(0, 0, 0, navHeight);
+
+                ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) binding.fabNuovaSpesa.getLayoutParams();
+                if (lp != null && lp.bottomMargin != navHeight + marginAboveNav) {
+                    lp.bottomMargin = navHeight + marginAboveNav;
+                    binding.fabNuovaSpesa.setLayoutParams(lp);
+                }
+            }
+        });
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             int navBarBottom = systemBars.bottom;
             float density = getResources().getDisplayMetrics().density;
 
-            int baseNavHeight = (int) (56 * density);
-            int totalBottomNavHeight = baseNavHeight + navBarBottom;
+            int navHeight = binding.bottomNavScheda.getHeight();
+            if (navHeight <= 0) {
+                navHeight = (int) (80 * density) + navBarBottom;
+            }
 
-            binding.containerSezioni.setPadding(0, 0, 0, totalBottomNavHeight);
+            int marginAboveNav = (int) (24 * density);
+            binding.containerSezioni.setPadding(0, 0, 0, navHeight);
 
             ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) binding.fabNuovaSpesa.getLayoutParams();
             if (lp != null) {
-                lp.bottomMargin = totalBottomNavHeight + (int) (16 * density);
+                lp.bottomMargin = navHeight + marginAboveNav;
                 binding.fabNuovaSpesa.setLayoutParams(lp);
             }
             return insets;

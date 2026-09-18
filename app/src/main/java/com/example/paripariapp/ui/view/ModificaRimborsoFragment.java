@@ -116,8 +116,8 @@ public class ModificaRimborsoFragment extends Fragment {
 
     private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            int navBarBottom = systemBars.bottom;
+            Insets insetsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+            int bottomInset = insetsBottom.bottom;
             float density = getResources().getDisplayMetrics().density;
 
             int basePadding = (int) (32 * density);
@@ -125,8 +125,19 @@ public class ModificaRimborsoFragment extends Fragment {
                     binding.scrollModificaRimborso.getPaddingLeft(),
                     binding.scrollModificaRimborso.getPaddingTop(),
                     binding.scrollModificaRimborso.getPaddingRight(),
-                    basePadding + navBarBottom
+                    basePadding + bottomInset
             );
+
+            if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+                View focused = binding.getRoot().findFocus();
+                if (focused != null) {
+                    focused.post(() -> {
+                        if (binding != null) {
+                            binding.scrollModificaRimborso.requestChildFocus(focused, focused);
+                        }
+                    });
+                }
+            }
             return insets;
         });
         ViewCompat.requestApplyInsets(binding.getRoot());
