@@ -368,6 +368,10 @@ public class DettaglioSpesaFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (binding != null) {
+            binding.ivScontrinoDettaglio.setImageDrawable(null);
+            binding.recyclerQuoteDettaglio.setAdapter(null);
+        }
         super.onDestroyView();
         binding = null;
     }

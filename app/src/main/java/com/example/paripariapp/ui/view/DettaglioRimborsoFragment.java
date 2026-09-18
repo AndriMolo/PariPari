@@ -42,6 +42,7 @@ public class DettaglioRimborsoFragment extends Fragment {
     private static final String ARG_SPESA_ID = "arg_spesa_id";
     private static final String ARG_SCHEDA_ID = "arg_scheda_id";
     private static final String ARG_VALUTA = "arg_valuta";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMMM yyyy");
 
     private FragmentDettaglioRimborsoBinding binding;
     private DettaglioSchedaViewModel viewModel;
@@ -206,8 +207,7 @@ public class DettaglioRimborsoFragment extends Fragment {
         binding.tvTitoloDettaglio.setText(com.example.paripariapp.util.SpesaUtil.formattaTitoloSpesa(requireContext(), spesa));
 
         // 3. Data
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault());
-        String dataFmt = formatter.format(
+        String dataFmt = DATE_FORMATTER.format(
                 Instant.ofEpochMilli(spesa.getDataSpesa()).atZone(ZoneId.systemDefault())
         );
         binding.tvDataDettaglio.setText(dataFmt);
