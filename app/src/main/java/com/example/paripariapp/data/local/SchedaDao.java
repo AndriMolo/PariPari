@@ -55,7 +55,7 @@ public interface SchedaDao {
     @Query("UPDATE schede SET titolo = :nuovoTitolo, data_aggiornamento = :dataAggiornamento, sync_status = :syncStatus WHERE id = :schedaId")
     void updateTitolo(String schedaId, String nuovoTitolo, long dataAggiornamento, int syncStatus);
 
-    @Query("SELECT * FROM schede WHERE codice_invito = :codice LIMIT 1")
+    @Query("SELECT * FROM schede WHERE codice_invito = :codice AND sync_status != " + SyncStatus.PENDING_DELETE + " LIMIT 1")
     Scheda getSchedaByCodiceInvito(String codice);
 
     @Query("UPDATE schede SET codice_invito = :codice WHERE id = :schedaId")

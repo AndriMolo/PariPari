@@ -78,11 +78,7 @@ public class SpeseFragment extends Fragment {
         adapter = new SchedaAdapter(scheda -> {
             confermaEliminazioneInSospeso();
             if (scheda != null) {
-                Intent intent = new Intent(requireContext(), DettaglioSchedaActivity.class);
-                intent.putExtra(DettaglioSchedaActivity.EXTRA_SCHEDA_ID, scheda.getId());
-                intent.putExtra(DettaglioSchedaActivity.EXTRA_TITOLO, scheda.getTitolo());
-                intent.putExtra(DettaglioSchedaActivity.EXTRA_VALUTA, scheda.getValutaPredefinita());
-                startActivity(intent);
+                DettaglioSchedaActivity.avvia(requireContext(), scheda.getId(), scheda.getTitolo(), scheda.getValutaPredefinita());
             }
         });
 
@@ -348,6 +344,9 @@ public class SpeseFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (binding != null) {
+            binding.recyclerSchede.setAdapter(null);
+        }
         if (snackbarElimina != null && snackbarElimina.isShown()) {
             snackbarElimina.dismiss();
         }

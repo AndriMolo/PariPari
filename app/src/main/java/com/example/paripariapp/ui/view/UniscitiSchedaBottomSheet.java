@@ -285,7 +285,8 @@ public class UniscitiSchedaBottomSheet extends BottomSheetDialogFragment {
                 if (!isAdded() || getContext() == null) return;
                 AppSnackbar.showFromFragment(UniscitiSchedaBottomSheet.this, getString(R.string.msg_unione_successo, titolo));
 
-                DettaglioSchedaActivity.avvia(requireContext(), schedaId, titolo);
+                String valutaGruppo = previewGruppo != null ? previewGruppo.getValutaPredefinita() : null;
+                DettaglioSchedaActivity.avvia(requireContext(), schedaId, titolo, valutaGruppo);
                 dismiss();
             }
 
